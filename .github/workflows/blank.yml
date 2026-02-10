@@ -1,4 +1,4 @@
-name: Test Workflow
+name: Docker CI
 
 on:
   push:
@@ -8,35 +8,44 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  build:
+    name: Build Docker Image
     runs-on: self-hosted
 
     steps:
       - name: Checkout du dépôt
         uses: actions/checkout@v4
 
-      - name: Afficher infos système
+      - name: Build image Docker
         run: |
-          echo "Runner prêt"
-          uname -a
-          pwd
+          docker build -t my-app:latest .
 
-      - name: Installer dépendances (exemple)
+      - name: Vérifier image
+        run: docker images
+
+  test:
+    name: Test Docker Container
+    runs-on: self-hosted
+    needs: build
+
+    steps:
+      - name: Lancer le conteneur
         run: |
-          echo "Installation des dépendances..."
-          # Exemple Node.js :
-          # npm install
-          # Exemple Python :
-          # pip install -r requirements.txt
+          docker run -d --name test-container my-app:latest
 
-      - name: Lancer les tests
+      - name: Vérifier que le conteneur tourne
+        run: docker ps
+
+      - name: Exécuter les tests
         run: |
-          echo "Exécution des tests..."
-          # Exemple Node.js :
-          # npm test
-          # Exemple Python :
-          # pytest
+          docker exec test-container echo "Tests en cours..."
+          # Exemple :
+          # docker exec test-container pytest
+          # docker exec test-container npm test
 
-      - name: Fin du workflow
-        run: echo "Tests terminés avec succès ✅"
+      - name: Nettoyage
+        run: |
+          docker stop test-container
+          docker rm test-container
+
 
