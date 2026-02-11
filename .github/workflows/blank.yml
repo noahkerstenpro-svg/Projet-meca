@@ -1,31 +1,28 @@
-name: Docker CI/CD Pipeline
+name: Deploy Docker Compose on Server
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main  # Branche de production
 
 jobs:
-  ci-cd:
-    runs-on: self-hosted
+  deploy:
+    runs-on: [self-hosted, linux, docker]
 
     steps:
-      # 1️⃣ Checkout du code
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      # 2️⃣ Login Docker Hub (CD)
-      - name: Login Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-
-      # 3️⃣ Build image (CI)
-      - name: Build Docker image
-        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/my-app:latest .
-
-      # 4️⃣ Test container (CI)
-      - name: Run tests
-        run: docker run --rm ${{ secrets.DOCKER_USERNAME }}/my-app:latest
-
-      # 5️⃣ Push image (CD)
-      - name: Push Docker image
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/my-app:latest
-
+      - name: Deploy with Docker Compose
+        run: |
+          # Aller dans le dossier du projet (peut être le root si checkout l'a fait là)
+          cd $GITHUB_WORKSPACE
+          
+          # Optionnel : mettre à jour les images si tu les utilises
+          docker-compose pull
+          
+          # Lancer ou mettre à jour les conteneurs
+          docker-compose up -d --remove-orphans
+          
+          # Nettoyer les conteneurs et images obsolètes
+          docker system prune -f
