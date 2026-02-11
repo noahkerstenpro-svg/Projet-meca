@@ -21,4 +21,5 @@ jobs:
           id
           echo "Repertoire courant : "
           pwd
+          ls
           echo "fin!!"
