@@ -1,50 +1,28 @@
-name: Docker CI
+name: Docker Test (Self Hosted)
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   pull_request:
-    branches: ["main"]
-  workflow_dispatch:
+    branches: [ "main" ]
 
 jobs:
-  build:
-    name: Build Docker Image
+  docker-test:
     runs-on: self-hosted
 
     steps:
-      - name: Checkout du dépôt
+      - name: Checkout du code
         uses: actions/checkout@v4
 
-      - name: Build image Docker
-        run: |
-          docker build -t my-app:latest .
+      - name: Vérifier Docker
+        run: docker --version
 
-      - name: Vérifier image
-        run: docker images
+      - name: Build de l'image Docker
+        run: docker build -t my-app:test .
 
-  test:
-    name: Test Docker Container
-    runs-on: self-hosted
-    needs: build
+      - name: Lancer les tests dans le conteneur
+        run: docker run --rm my-app:test
 
-    steps:
-      - name: Lancer le conteneur
-        run: |
-          docker run -d --name test-container my-app:latest
-
-      - name: Vérifier que le conteneur tourne
-        run: docker ps
-
-      - name: Exécuter les tests
-        run: |
-          docker exec test-container echo "Tests en cours..."
-          # Exemple :
-          # docker exec test-container pytest
-          # docker exec test-container npm test
-
-      - name: Nettoyage
-        run: |
           docker stop test-container
           docker rm test-container
 
