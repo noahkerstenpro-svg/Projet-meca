@@ -16,13 +16,9 @@ jobs:
       - name: Deploy with Docker Compose
         run: |
           # Aller dans le dossier du projet (peut être le root si checkout l'a fait là)
-          cd $GITHUB_WORKSPACE
-          
-          # Optionnel : mettre à jour les images si tu les utilises
-          docker-compose pull
-          
-          # Lancer ou mettre à jour les conteneurs
-          docker-compose up -d --remove-orphans
-          
-          # Nettoyer les conteneurs et images obsolètes
-          docker system prune -f
+          echo "-----Test container--------------"
+          echo "Utilisateur courant : "
+          id
+          echo "Repertoire courant : "
+          pwd
+          echo "fin!!"
