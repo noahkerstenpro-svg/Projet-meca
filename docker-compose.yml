@@ -1,0 +1,85 @@
+services:
+
+  # ===============================
+  # Service NGINX (serveur web)
+  # ===============================
+  nginx:
+    image: nginx:stable                 # Image officielle Nginx version stable
+    container_name: meca-nginx          # Nom du conteneur
+    ports:
+      - "80:80"                         # Port 80 de ton PC -> Port 80 du conteneur
+    volumes:
+      - ./src:/var/www/html              # Dossier local ./src monté dans le conteneur
+      - ./.docker/nginx/conf.d:/etc/nginx/conf.d
+                                        # Fichier de configuration Nginx personnalisé
+    working_dir: /var/www/html           # Répertoire de travail dans le conteneur
+    depends_on:
+      - php                             # Nginx démarre après PHP
+    networks:
+      - meca-network                    # Connexion au réseau du projet
+
+  # ===============================
+  # Service PHP (application)
+  # ===============================
+  php:
+    build: ./.docker/php                # Construit l’image depuis le Dockerfile situé ici
+    image: meca-php:1.0                 # Nom donné à l’image construite
+    container_name: meca-php            # Nom du conteneur
+    working_dir: /var/www/html           # Dossier de travail interne
+    volumes:
+      - ./src:/var/www/html          # Partage du code entre PC et conteneur
+    depends_on:
+      - mysql                           # PHP démarre après MySQL
+    networks:
+      - meca-network                    # Même réseau que les autres services
+
+  # ===============================
+  # Service MySQL (base de données)
+  # ===============================
+  mysql:
+    image: mysql:8.0                    # Image officielle MySQL version 8
+    container_name: meca-mysql          # Nom du conteneur
+    environment:
+      MYSQL_ROOT_PASSWORD: root         # Mot de passe root
+      MYSQL_ROOT_HOST: '%'              # Autorise connexions depuis n'importe quel hôte
+    ports:
+      - "3306:3306"                     # Port base de données
+    volumes:
+      - mysqldata:/var/lib/mysql        # Volume Docker pour stocker les données
+      - ./init-db:/docker-entrypoint-initdb.d
+                                        # Scripts SQL exécutés au démarrage
+    networks:
+      - meca-network
+
+  # ===============================
+  # Service PhpMyAdmin (interface web BDD)
+  # ===============================
+  phpmyadmin:
+    image: phpmyadmin:5                 # Image officielle PhpMyAdmin
+    container_name: meca-phpmyadmin     # Nom du conteneur
+    ports:
+      - "8080:80"                       # http://localhost:8080
+    environment:
+      PMA_HOST: mysql                   # Nom du service MySQL (PAS le container_name)
+      PMA_PORT: 3306                    # Port MySQL interne
+    depends_on:
+      - mysql                           # Démarre après MySQL
+    networks:
+      - meca-network
+
+# ===============================
+# Déclaration des volumes Docker
+# ===============================
+volumes:
+  mysqldata:                            # Volume nommé pour stocker les données MySQL
+
+# ===============================
+# Déclaration du réseau Docker
+# ===============================
+networks:
+  meca-network:                         # Réseau interne du projet
+
+
+
+
+
