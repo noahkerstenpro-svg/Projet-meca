@@ -1,6 +1,6 @@
 services:
 
-  # Service NGINX (serveur web)
+  # Service NGINX (serveur web) noah Gagny
   nginx:
     image: nginx:stable                 # Image officielle Nginx version stable
     container_name: meca-nginx          # Nom du conteneur
