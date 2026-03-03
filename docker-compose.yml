@@ -1,8 +1,6 @@
 services:
 
-  # ===============================
   # Service NGINX (serveur web)
-  # ===============================
   nginx:
     image: nginx:stable                 # Image officielle Nginx version stable
     container_name: meca-nginx          # Nom du conteneur
@@ -18,9 +16,7 @@ services:
     networks:
       - meca-network                    # Connexion au réseau du projet
 
-  # ===============================
   # Service PHP (application)
-  # ===============================
   php:
     build: ./conf_docker/php                # Construit l’image depuis le Dockerfile situé ici
     image: meca-php:1.0                 # Nom donné à l’image construite
@@ -33,9 +29,7 @@ services:
     networks:
       - meca-network                    # Même réseau que les autres services
 
-  # ===============================
   # Service MySQL (base de données)
-  # ===============================
   mysql:
     image: mysql:8.0                    # Image officielle MySQL version 8
     container_name: meca-mysql          # Nom du conteneur
@@ -51,9 +45,7 @@ services:
     networks:
       - meca-network
 
-  # ===============================
   # Service PhpMyAdmin (interface web BDD)
-  # ===============================
   phpmyadmin:
     image: phpmyadmin:5                 # Image officielle PhpMyAdmin
     container_name: meca-phpmyadmin     # Nom du conteneur
@@ -67,15 +59,11 @@ services:
     networks:
       - meca-network
 
-# ===============================
 # Déclaration des volumes Docker
-# ===============================
 volumes:
   mysqldata:                            # Volume nommé pour stocker les données MySQL
 
-# ===============================
 # Déclaration du réseau Docker
-# ===============================
 networks:
   meca-network:                         # Réseau interne du projet
 
