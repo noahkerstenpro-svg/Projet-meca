@@ -12,10 +12,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Pull latest images
-        run: docker compose pull
-
+        
       - name: Restart containers
         run: docker compose up -d --remove-orphans
 
