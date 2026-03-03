@@ -3,7 +3,7 @@ name: Deploy Docker Compose on Server
 on:
   push:
     branches:
-      - main  # Branche de production
+      - main
 
 jobs:
   deploy:
@@ -13,5 +13,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Deploy with Docker Compose
-        run: docker-compose up -d
+      - name: Pull latest images
+        run: docker compose pull
+
+      - name: Restart containers
+        run: docker compose up -d --remove-orphans
+
+      - name: Check running containers
+        run: docker compose ps
+
+      - name: Cleanup unused images
+        run: docker image prune -f
