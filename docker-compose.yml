@@ -7,10 +7,10 @@ services:
     ports:
       - "80:80"                         # Port 80 de ton PC -> Port 80 du conteneur
     volumes:
-      - ./src:/var/www/html              # Dossier local ./src monté dans le conteneur
+      - ./src:/var/www/html             # Dossier local ./src monté dans le conteneur
       - ./conf_docker/nginx/conf.d:/etc/nginx/conf.d
-                                        # Fichier de configuration Nginx personnalisé
-    working_dir: /var/www/html           # Répertoire de travail dans le conteneur
+                                        # Fichiers de configuration Nginx personnalisés
+    working_dir: /var/www/html          # Répertoire de travail dans le conteneur
     depends_on:
       - php                             # Nginx démarre après PHP
     networks:
@@ -18,12 +18,12 @@ services:
 
   # Service PHP (application)
   php:
-    build: ./conf_docker/php                # Construit l’image depuis le Dockerfile situé ici
+    build: ./conf_docker/php            # Construit l’image depuis le Dockerfile situé ici
     image: meca-php:1.0                 # Nom donné à l’image construite
     container_name: meca-php            # Nom du conteneur
-    working_dir: /var/www/html           # Dossier de travail interne
+    working_dir: /var/www/html          # Dossier de travail interne
     volumes:
-      - ./src:/var/www/html          # Partage du code entre PC et conteneur
+      - ./src:/var/www/html             # Partage du code entre PC et conteneur
     depends_on:
       - mysql                           # PHP démarre après MySQL
     networks:
@@ -59,6 +59,7 @@ services:
     networks:
       - meca-network
 
+
 # Déclaration des volumes Docker
 volumes:
   mysqldata:                            # Volume nommé pour stocker les données MySQL
@@ -66,8 +67,3 @@ volumes:
 # Déclaration du réseau Docker
 networks:
   meca-network:                         # Réseau interne du projet
-
-
-
-
-
