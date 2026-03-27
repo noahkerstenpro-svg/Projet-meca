@@ -1,0 +1,41 @@
+*filter
+:ufw-before-input - [0:0]
+:ufw-before-output - [0:0]
+:ufw-before-forward - [0:0]
+:ufw-not-local - [0:0]
+
+# allow all on loopback
+-A ufw-before-input -i lo -j ACCEPT
+-A ufw-before-output -o lo -j ACCEPT
+
+# allow established sessions
+-A ufw-before-input -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A ufw-before-output -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A ufw-before-forward -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+
+# drop invalid packets
+-A ufw-before-input -m conntrack --ctstate INVALID -j DROP
+
+# ICMP
+-A ufw-before-input -p icmp --icmp-type echo-request -j ACCEPT
+-A ufw-before-input -p icmp --icmp-type destination-unreachable -j ACCEPT
+-A ufw-before-input -p icmp --icmp-type time-exceeded -j ACCEPT
+-A ufw-before-input -p icmp --icmp-type parameter-problem -j ACCEPT
+
+# DHCP
+-A ufw-before-input -p udp --sport 67 --dport 68 -j ACCEPT
+
+# =========================
+# SURICATA NFQUEUE (SAFE SSH)
+# =========================
+
+# SSH protégé (NE JAMAIS COUPER)
+-A ufw-before-input -p tcp --dport 22 -j NFQUEUE --queue-num 0 --queue-bypass
+-A ufw-before-output -p tcp --sport 22 -j NFQUEUE --queue-num 0 --queue-bypass
+
+# Tout le reste passe par Suricata IPS
+-A ufw-before-input -j NFQUEUE --queue-num 0
+-A ufw-before-output -j NFQUEUE --queue-num 0
+-A ufw-before-forward -j NFQUEUE --queue-num 0
+
+COMMIT
