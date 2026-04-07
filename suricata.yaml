@@ -4,24 +4,27 @@
 
 vars:
   address-groups:
-    HOME_NET: [192.168.1.0/24]"
+    HOME_NET: "[192.168.1.0/24,10.89.1.0/24]"
 
-lAAAAAogging:
-  dAAAAAefault-log-dir: /var/log/suricata
+logging:
+  default-log-dir: /var/log/suricata
   default-log-level: info
-
-af-packet:
-  - interface: enp6s18
-    cluster-id: 99
-    cluster-type: cluster_flow
-    defrag: yes
-    use-mmap: yes
-    ring-size: 200000
-
 
 threading:
   set-cpu-affinity: yes
   max-pending-packets: 1024
+
+rule-files:
+  - /var/lib/suricata/rules/local.rules
+
+unix-command:
+  enabled: yes
+  filename: /var/run/suricata-command.socket
+
+nfq:
+  mode: accept
+  queue: 0
+  bypass: no
 
 outputs:
   - fast:
@@ -29,12 +32,11 @@ outputs:
       filename: /var/log/suricata/fast.log
       append: yes
 
-# Chemin des règles
-rule-files:
-  - /var/lib/suricata/rules/local.rules
+  - eve-log:
+      enabled: yes
+      filetype: regular
+      filename: /var/log/suricata/eve.json
+      types:
+        - alert
+        - drop
 
-# NFQUEUE pour mode IPS
-nfq:
-  mode: accept
-  queue: 0
-  bypass: yes
