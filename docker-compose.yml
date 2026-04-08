@@ -1,104 +1,60 @@
 version: '3.8'
 
-# ----------------------------
-# Réseau interne pour tous les services
-# ----------------------------
 networks:
   meca-network:
     driver: bridge
 
-# ----------------------------
-# Volumes pour persistance MySQL
-# ----------------------------
 volumes:
   mysqldata:
 
-# ----------------------------
-# Définition des services
-# ----------------------------
 services:
 
-  # ----------------------------
-  # PHP-FPM (FastCGI)
-  # ----------------------------
   php:
-    image: php:8.2-fpm                  # Image officielle PHP avec FPM
+    image: php:8.2-fpm
     container_name: meca-php
     volumes:
-      - ./src:/var/www/html             # Monte ton code local dans le conteneur
+      - ./src:/var/www/html
     dns:
-      - 8.8.8.8                         # DNS pour éviter les problèmes de résolution
+      - 8.8.8.8
       - 1.1.1.1
     networks:
-      - meca-network                     # Réseau interne commun pour Nginx
+      - meca-network
 
-  # ----------------------------
-  # Nginx (serveur web)
-  # ----------------------------
   nginx:
     image: nginx:stable
     container_name: meca-nginx
     ports:
-      - "80:80"                          # Expose le port 80 pour ton navigateur
+      - "80:80"
     volumes:
-      - ./src:/var/www/html              # Même code que PHP-FPM
-      - ./conf_docker/nginx/conf.d:/etc/nginx/conf.d   # Config Nginx personnalisée
+      - ./src:/var/www/html
+      - ./conf_docker/nginx/conf.d:/etc/nginx/conf.d
     depends_on:
-      - php                               # Nginx démarre après PHP-FPM
+      - php
     networks:
-      - meca-network                     # Même réseau pour communiquer avec PHP-FPM
+      - meca-network
 
-  # ----------------------------
-  # MySQL (base de données)
-  # ----------------------------
   mysql:
     image: mysql:8.0
     container_name: meca-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: root           # Mot de passe root
-      MYSQL_ROOT_HOST: '%'                # Autorise connexions depuis n'importe où
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_HOST: '%'
     ports:
-      - "3306:3306"                       # Expose MySQL sur ton PC
+      - "3306:3306"
     volumes:
-      - mysqldata:/var/lib/mysql          # Volume pour persister les données
+      - mysqldata:/var/lib/mysql
     networks:
       - meca-network
 
-  # ----------------------------
-  # PhpMyAdmin (interface web BDD)
-  # ----------------------------
   phpmyadmin:
     image: phpmyadmin:5
     container_name: meca-phpmyadmin
     ports:
-      - "8080:80"                          # Accessible via http://localhost:8080
+      - "8080:80"
     environment:
-      PMA_HOST: mysql                      # Nom du service MySQL
+      PMA_HOST: mysql
       PMA_PORT: 3306
-    depends_on:
-      - mysql                              # Démarre après MySQL
-    networks:
-      - meca-network
-   HEAD
-
-  # Service Apache + PHP
-  web:
-    image: php:8.2-apache
-    container_name: meca-web
-    ports:
-      - "8081:80"
-    volumes:
-      - ./site:/var/www/html
     depends_on:
       - mysql
     networks:
       - meca-network
-
-# Déclaration des volumes Docker
-volumes:
-  mysqldata:                            # Volume nommé pour stocker les données MySQL
-
-# Déclaration du réseau Docker
-networks:
-  meca-network:                         # Réseau interne du projet
-
