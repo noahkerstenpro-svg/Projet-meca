@@ -79,3 +79,26 @@ services:
       - mysql                              # Démarre après MySQL
     networks:
       - meca-network
+   HEAD
+
+  # Service Apache + PHP
+  web:
+    image: php:8.2-apache
+    container_name: meca-web
+    ports:
+      - "8081:80"
+    volumes:
+      - ./site:/var/www/html
+    depends_on:
+      - mysql
+    networks:
+      - meca-network
+
+# Déclaration des volumes Docker
+volumes:
+  mysqldata:                            # Volume nommé pour stocker les données MySQL
+
+# Déclaration du réseau Docker
+networks:
+  meca-network:                         # Réseau interne du projet
+
