@@ -15,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ldap_set_option($ldap, LDAP_OPT_PROTOCOL_VERSION, 3);
         ldap_set_option($ldap, LDAP_OPT_REFERRALS, 0);
 
+        // 🔥 IMPORTANT
         $userPrincipal = $username . '@ciel.com';
 
         if (@ldap_bind($ldap, $userPrincipal, $password)) {
