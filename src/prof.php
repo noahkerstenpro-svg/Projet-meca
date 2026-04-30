@@ -5,8 +5,105 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'prof') {
     header('Location: login.php');
     exit;
 }
+
+$name = $_SESSION['name'] ?? $_SESSION['username'];
 ?>
 
-<h1>Accueil professeur</h1>
-<p>Bienvenue <?= htmlspecialchars($_SESSION['name']) ?></p>
-<a href="logout.php">Déconnexion</a>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Espace Professeur</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f3f4f6;
+            margin: 0;
+        }
+
+        header {
+            background: #111827;
+            color: white;
+            padding: 20px;
+        }
+
+        main {
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .actions {
+            margin-top: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .btn {
+            padding: 15px 25px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+        }
+
+        .blue { background: #2563eb; }
+        .green { background: #16a34a; }
+        .orange { background: #ea580c; }
+        .red { background: #dc2626; }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Atelier mécanique - Professeur</h1>
+</header>
+
+<main>
+    <div class="container">
+        <div class="card">
+            <h2>Bienvenue <?= htmlspecialchars($name) ?></h2>
+            <p>Rôle : Professeur</p>
+
+            <div class="actions">
+
+                <a class="btn blue" href="ordre_reparation.php">
+                    Créer un ordre de réparation
+                </a>
+
+                <a class="btn green" href="liste_reparations.php">
+                    Suivre les réparations
+                </a>
+
+                <a class="btn orange" href="validation.php">
+                    Valider les réparations
+                </a>
+
+                <a class="btn green" href="http://192.168.11.11:3000/" target="_blank">
+                    Accéder à GLPI
+                </a>
+
+                <a class="btn red" href="logout.php">
+                    Déconnexion
+                </a>
+
+            </div>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>
