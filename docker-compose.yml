@@ -10,7 +10,7 @@ volumes:
 services:
 
   php:
-    image: php:8.2-fpm
+    build: .
     container_name: meca-php
     volumes:
       - ./src:/var/www/html
