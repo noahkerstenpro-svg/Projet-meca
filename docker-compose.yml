@@ -9,17 +9,17 @@ volumes:
 
 services:
 
-php:
-  build:
-    context: .
-    dockerfile: conf_docker/php/Dockerfile
-  container_name: meca-php
-  volumes:
-    - ./src:/var/www/html
-  dns:
-    - 192.168.11.75
-  networks:
-    - meca-network
+  php:
+    build:
+      context: .
+      dockerfile: conf_docker/php/Dockerfile
+    container_name: meca-php
+    volumes:
+      - ./src:/var/www/html
+    dns:
+      - 192.168.11.75
+    networks:
+      - meca-network
 
   nginx:
     image: nginx:stable
