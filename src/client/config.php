@@ -1,6 +1,6 @@
 <?php
-define('DB_HOST', '192.168.11.11');
-define('DB_PORT', '8080');
+define('DB_HOST', 'localhost');
+define('DB_PORT', '3306');
 define('DB_NAME', 'Meca');
 define('DB_USER', 'root');
 define('DB_PASS', 'root');
@@ -8,7 +8,7 @@ define('DB_PASS', 'root');
 function getDB() {
     try {
         $pdo = new PDO(
-            'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8',
+            'mysql:host=' . DB_HOST . ';port=' . ;dbname=' . DB_NAME . ';charset=utf8',
             DB_USER,
             DB_PASS
         );
