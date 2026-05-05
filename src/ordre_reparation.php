@@ -347,6 +347,7 @@
 
 <!-- TOOLBAR -->
 <div class="toolbar">
+ <button class="btn btn-primary" onclick="saveForm()">💾 Enregistrer</button>
   <span class="toolbar-title">📋 Ordre de Réparation — Cité scolaire de Brocéliande</span>
   <div class="toolbar-actions">
     <button class="btn btn-outline" onclick="resetForm()">🗑 Réinitialiser</button>
