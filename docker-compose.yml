@@ -11,8 +11,7 @@ services:
 
   php:
     build: .
-    build:
-      context: .
+    context: .
       dockerfile: conf_docker/php/Dockerfile
     container_name: meca-php
     volumes:
