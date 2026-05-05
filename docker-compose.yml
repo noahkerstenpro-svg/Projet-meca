@@ -11,12 +11,14 @@ services:
 
   php:
     build: .
+    build:
+      context: .
+      dockerfile: conf_docker/php/Dockerfile
     container_name: meca-php
     volumes:
       - ./src:/var/www/html
     dns:
-      - 8.8.8.8
-      - 1.1.1.1
+      - 192.168.11.75
     networks:
       - meca-network
 
