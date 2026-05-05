@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Connexion / Inscription</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f1f2f3;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    background-color: #525151;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+.container {
+    max-width: 500px;
+    margin: 100px auto;
+    background: white;
+    padding: 50px;
+    border-radius: 25px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.text h1 {
+    font-size: 80px;
+    text-align: center;
+    padding: 80px 20px;
+}
+
+h2 {
+    text-align: center;
+    font-size: 40px;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 15px;
+    border-radius: 15px;
+    border: 1px solid #ccc;
+}
+
+input:focus, select:focus {
+            outline: none;
+            border-color: #eb5e00;
+        }
+
+button {
+    margin-top: 25px;
+    width: 200px;
+    padding: 12px;
+    margin-left: 150px;
+    background-color: #eb5e00;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+}
+
+button:hover {
+            background-color: #d65300;
+        }
+
+.switch {
+    text-align: center;
+    margin-top: 20px;
+    cursor: pointer;
+    color: #525151;
+}
+
+/* FOOTER */
+footer {
+    position: fixed;
+    bottom: 19px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+    <h1>Atelier Mécanique - Bac Professionnel de Brocéliande</h1>
+</header>
+
+<div class="container">
+    <h2 id="title">Connexion</h2>
+<input type="text" id="firstname" placeholder="Prénom" style="display:none;">
+<input type="text" id="lastname" placeholder="Nom" style="display:none;">
+<input type="text" id="username" placeholder="Adresse mail">
+<input type="password" id="password" placeholder="Mot de passe">
+
+<button onclick="handleAuth()">Se connecter</button>
+
+<div class="switch" onclick="toggleMode()">
+    Pas de compte ? S'inscrire
+</div>
+
+</div>
+
+<script>
+let isLogin = true;
+
+function toggleMode() {
+    isLogin = !isLogin;
+
+    document.getElementById("title").innerText = isLogin ? "Connexion" : "Inscription";
+    document.querySelector("button").innerText = isLogin ? "Se connecter" : "S'inscrire";
+    document.querySelector(".switch").innerText = isLogin 
+        ? "Pas de compte ? S'inscrire" 
+        : "Déjà un compte ? Se connecter";
+
+    document.getElementById("firstname").style.display = isLogin ? "none" : "block";
+    document.getElementById("lastname").style.display = isLogin ? "none" : "block";
+}
+
+function handleAuth() {
+    let firstname = document.getElementById("firstname").value.trim();
+    let lastname = document.getElementById("lastname").value.trim();
+    let username = document.getElementById("username").value.trim();
+    let password = document.getElementById("password").value.trim();
+
+    if (isLogin) {
+
+        if (!username || !password) {
+            alert("Tous les champs sont obligatoires !");
+            return;
+        }
+
+        let storedUser = localStorage.getItem("user");
+        let storedPass = localStorage.getItem("pass");
+
+        if (username === storedUser && password === storedPass) {
+            localStorage.setItem("auth", "true");
+            window.location.href = "reservation.html";
+        } else {
+            alert("Identifiants ou mots de passe incorrects !");
+        }
+
+    } else {
+
+        if (!firstname || !lastname || !username || !password) {
+            alert("Tous les champs sont obligatoires !");
+            return;
+        }
+
+        localStorage.setItem("firstname", firstname);
+        localStorage.setItem("lastname", lastname);
+        localStorage.setItem("user", username);
+        localStorage.setItem("pass", password);
+
+        alert("Compte créé avec succès !");
+        toggleMode();
+    }
+}
+</script>
+
+<footer>
+    <p>© 2026 Méca Brocéliande</p>
+</footer>
+
+</body>
+</html>
