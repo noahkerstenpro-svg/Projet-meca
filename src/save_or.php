@@ -5,13 +5,18 @@ $pdo = new PDO("mysql:host=localhost;dbname=Meca;charset=utf8", "root", "");
 $prenom = $_POST['client_prenom'] ?? '';
 $nom = $_POST['client_nom'] ?? '';
 $adresse = $_POST['client_adresse'] ?? '';
-$mdp = null;
+$numero = $_POST['client_tel'] ?? '';
+$mail = $_POST['client_email'] ?? '';
 
-$sqlClient = "INSERT INTO Clients (prenom, nom, adresse, mdp)
-VALUES (?, ?, ?, ?)";
+// mot de passe vide (temporaire)
+$mdp = "";
+
+// INSERT CLIENT
+$sqlClient = "INSERT INTO Clients (prenom, nom, adresse, mdp, numéro, mail)
+VALUES (?, ?, ?, ?, ?, ?)";
 
 $stmt = $pdo->prepare($sqlClient);
-$stmt->execute([$prenom, $nom, $adresse, $mdp]);
+$stmt->execute([$prenom, $nom, $adresse, $mdp, $numero, $mail]);
 
 $id_client = $pdo->lastInsertId();
 
@@ -34,7 +39,6 @@ $id_vehicule = $pdo->lastInsertId();
 $date = $_POST['date_reception'] ?? null;
 $commentaire = $_POST['info_client'] ?? '';
 
-// ⚠️ IMPORTANT : prestation_id obligatoire
 $prestation_id = 1;
 
 $sqlIntervention = "INSERT INTO intervention 
