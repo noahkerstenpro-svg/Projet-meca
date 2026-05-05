@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Connexion / Inscription</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f1f2f3;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    background-color: #525151;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.6rem;
+}
+
+.container {
+    max-width: 500px;
+    margin: 100px auto;
+    background: white;
+    padding: 50px;
+    border-radius: 25px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    flex: 1;
+}
+
+h2 {
+    text-align: center;
+    font-size: 40px;
+    margin-bottom: 10px;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 15px;
+    border-radius: 15px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+input:focus {
+    outline: none;
+    border-color: #eb5e00;
+}
+
+button {
+    margin-top: 25px;
+    width: 200px;
+    padding: 12px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: #eb5e00;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #d65300;
+}
+
+.switch {
+    text-align: center;
+    margin-top: 20px;
+    cursor: pointer;
+    color: #525151;
+}
+
+.message {
+    text-align: center;
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 14px;
+    display: none;
+}
+
+.message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+footer {
+    text-align: center;
+    padding: 15px;
+}
+</style>
+
+</head>
+
+<body>
+
+<header>
+    <h1>Atelier Mécanique - Bac Professionnel de Brocéliande</h1>
+</header>
+
+<div class="container">
+    <h2 id="title">Connexion</h2>
+
+    <input type="text"     id="firstname" placeholder="Prénom"       style="display:none;">
+    <input type="text"     id="lastname"  placeholder="Nom"          style="display:none;">
+    <input type="email"    id="username"  placeholder="Adresse mail">
+    <input type="password" id="password"  placeholder="Mot de passe">
+
+    <button onclick="handleAuth()">Se connecter</button>
+
+    <div class="message" id="message"></div>
+
+    <div class="switch" onclick="toggleMode()">
+        Pas de compte ? S'inscrire
+    </div>
+</div>
+
+<script>
+let isLogin = true;
+
+function toggleMode() {
+    isLogin = !isLogin;
+
+    document.getElementById("title").innerText      = isLogin ? "Connexion" : "Inscription";
+    document.querySelector("button").innerText      = isLogin ? "Se connecter" : "S'inscrire";
+    document.querySelector(".switch").innerText     = isLogin
+        ? "Pas de compte ? S'inscrire"
+        : "Déjà un compte ? Se connecter";
+
+    document.getElementById("firstname").style.display = isLogin ? "none" : "block";
+    document.getElementById("lastname").style.display  = isLogin ? "none" : "block";
+
+    // Réinitialiser les champs et le message
+    document.getElementById("firstname").value = "";
+    document.getElementById("lastname").value  = "";
+    document.getElementById("username").value  = "";
+    document.getElementById("password").value  = "";
+    hideMessage();
+}
+
+function showMessage(text, type) {
+    const msg = document.getElementById("message");
+    msg.innerText   = text;
+    msg.className   = "message " + type;
+    msg.style.display = "block";
+}
+
+function hideMessage() {
+    const msg = document.getElementById("message");
+    msg.style.display = "none";
+}
+
+function handleAuth() {
+    const firstname = document.getElementById("firstname").value.trim();
+    const lastname  = document.getElementById("lastname").value.trim();
+    const username  = document.getElementById("username").value.trim();
+    const password  = document.getElementById("password").value.trim();
+
+    // ---- INSCRIPTION ----
+    if (!isLogin) {
+        if (!firstname || !lastname || !username || !password) {
+            showMessage("Tous les champs sont obligatoires !", "error");
+            return;
+        }
+
+        fetch("auth.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: `action=inscription&prenom=${encodeURIComponent(firstname)}&nom=${encodeURIComponent(lastname)}&adresse=${encodeURIComponent(username)}&mdp=${encodeURIComponent(password)}`
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showMessage("✅ Compte créé avec succès ! Vous pouvez vous connecter.", "success");
+                setTimeout(() => {
+                    toggleMode(); // Repasse en mode connexion
+                }, 2000);
+            } else {
+                showMessage("❌ " + data.message, "error");
+            }
+        })
+        .catch(() => showMessage("❌ Erreur de connexion au serveur.", "error"));
+
+    // ---- CONNEXION ----
+    } else {
+        if (!username || !password) {
+            showMessage("Tous les champs sont obligatoires !", "error");
+            return;
+        }
+
+        fetch("auth.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: `action=connexion&adresse=${encodeURIComponent(username)}&mdp=${encodeURIComponent(password)}`
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showMessage("✅ Connexion réussie ! Redirection...", "success");
+                setTimeout(() => {
+                    window.location.href = "reservation.html";
+                }, 1500);
+            } else {
+                showMessage("❌ " + data.message, "error");
+            }
+        })
+        .catch(() => showMessage("❌ Erreur de connexion au serveur.", "error"));
+    }
+}
+</script>
+
+<footer>
+    <p>© 2026 Méca Brocéliande</p>
+</footer>
+
+</body>
+</html>
