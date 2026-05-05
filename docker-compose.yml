@@ -8,10 +8,9 @@ volumes:
   mysqldata:
 
 services:
-
   php:
-    build: .
-    context: .
+    build:
+      context: .
       dockerfile: conf_docker/php/Dockerfile
     container_name: meca-php
     volumes:
@@ -39,7 +38,7 @@ services:
     container_name: meca-mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_ROOT_HOST: '%'
+      MYSQL_ROOT_HOST: "%"
     ports:
       - "3306:3306"
     volumes:
