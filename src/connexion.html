@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Connexion / Inscription</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f1f2f3;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    background-color: #525151;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+.container {
+    max-width: 500px;
+    margin: 100px auto;
+    background: white;
+    padding: 50px;
+    border-radius: 25px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+h2 {
+    text-align: center;
+    font-size: 40px;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 15px;
+    border-radius: 15px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+input:focus {
+    outline: none;
+    border-color: #eb5e00;
+}
+
+button {
+    margin-top: 25px;
+    width: 200px;
+    padding: 12px;
+    margin-left: 150px;
+    background-color: #eb5e00;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #d65300;
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.switch {
+    text-align: center;
+    margin-top: 20px;
+    cursor: pointer;
+    color: #525151;
+}
+
+.message {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 14px;
+    min-height: 20px;
+}
+
+.message.error   { color: #c0392b; }
+.message.success { color: #27ae60; }
+
+footer {
+    position: fixed;
+    bottom: 19px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+}
+</style>
+
+</head>
+
+<body>
+
+<header>
+    <h1>Atelier Mécanique - Bac Professionnel de Brocéliande</h1>
+</header>
+
+<div class="container">
+    <h2 id="title">Connexion</h2>
+
+    <input type="text"     id="firstname" placeholder="Prénom"        style="display:none;">
+    <input type="text"     id="lastname"  placeholder="Nom"           style="display:none;">
+    <input type="text"     id="username"  placeholder="Adresse mail">
+    <input type="password" id="password"  placeholder="Mot de passe">
+
+    <div class="message" id="message"></div>
+
+    <button id="btn" onclick="handleAuth()">Se connecter</button>
+
+    <div class="switch" onclick="toggleMode()">
+        Pas de compte ? S'inscrire
+    </div>
+</div>
+
+<script>
+let isLogin = true;
+
+function toggleMode() {
+    isLogin = !isLogin;
+    document.getElementById("title").innerText  = isLogin ? "Connexion"   : "Inscription";
+    document.getElementById("btn").innerText    = isLogin ? "Se connecter": "S'inscrire";
+    document.querySelector(".switch").innerText = isLogin
+        ? "Pas de compte ? S'inscrire"
+        : "Déjà un compte ? Se connecter";
+    document.getElementById("firstname").style.display = isLogin ? "none" : "block";
+    document.getElementById("lastname").style.display  = isLogin ? "none" : "block";
+    setMessage('', '');
+}
+
+function setMessage(text, type) {
+    const el = document.getElementById("message");
+    el.innerText  = text;
+    el.className  = "message " + (type || '');
+}
+
+async function handleAuth() {
+    const firstname = document.getElementById("firstname").value.trim();
+    const lastname  = document.getElementById("lastname").value.trim();
+    const username  = document.getElementById("username").value.trim();
+    const password  = document.getElementById("password").value.trim();
+    const btn       = document.getElementById("btn");
+
+    if (!username || !password || (!isLogin && (!firstname || !lastname))) {
+        setMessage("Tous les champs sont obligatoires !", "error");
+        return;
+    }
+
+    btn.disabled = true;
+    setMessage("Chargement...", "");
+
+    try {
+        const response = await fetch("auth.php", {
+            method:  "POST",
+            headers: { "Content-Type": "application/json" },
+            body:    JSON.stringify({
+                action:    isLogin ? "login" : "register",
+                firstname, lastname, username, password
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            if (isLogin) {
+                window.location.href = result.redirect;
+            } else {
+                setMessage(result.message, "success");
+                // Bascule vers connexion après inscription réussie
+                setTimeout(() => {
+                    toggleMode();
+                    setMessage("Vous pouvez maintenant vous connecter.", "success");
+                }, 1500);
+            }
+        } else {
+            setMessage(result.message, "error");
+        }
+
+    } catch (err) {
+        setMessage("Erreur réseau. Vérifiez votre connexion.", "error");
+    } finally {
+        btn.disabled = false;
+    }
+}
+</script>
+
+<footer>
+    <p>© 2026 Méca Brocéliande</p>
+</footer>
+
+</body>
+</html>
