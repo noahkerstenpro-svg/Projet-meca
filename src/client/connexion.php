@@ -82,9 +82,6 @@ body {
     margin: 0;
     font-family: Arial, sans-serif;
     background-color: #f1f2f3;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
 }
 
 header {
