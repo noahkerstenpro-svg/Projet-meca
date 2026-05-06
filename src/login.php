@@ -198,7 +198,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             type="text"
             id="username"
             name="username"
-            placeholder="ex : noah"
+            placeholder="ex : prénom"
             required
         >
 
