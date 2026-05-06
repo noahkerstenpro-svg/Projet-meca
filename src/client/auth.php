@@ -1,83 +1,82 @@
 <?php
-session_start();
+// ─── Configuration BDD ─────────────────────────────────────────────────────
+$host     = 'meca-mysql';   // nom du container Docker MySQL
+$port     = '3306';
+$dbname   = 'Meca';
+$user     = 'root';
+$password = '';             // ton mot de passe MySQL
+
 header('Content-Type: application/json');
-require_once 'config.php';
 
-$data   = json_decode(file_get_contents('php://input'), true);
-$action = $data['action'] ?? '';
-
-// ── CONNEXION ──────────────────────────────────────────────────────────────
-if ($action === 'login') {
-
-    $email    = trim($data['username'] ?? '');
-    $password = $data['password'] ?? '';
-
-    if (!$email || !$password) {
-        echo json_encode(['success' => false, 'message' => 'Tous les champs sont obligatoires.']);
-        exit;
-    }
-
-    $pdo  = getDB();
-    $stmt = $pdo->prepare('SELECT * FROM Clients WHERE adresse = :adresse LIMIT 1');
-    $stmt->execute([':adresse' => $email]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if ($user && password_verify($password, $user['mdp'])) {
-        $_SESSION['auth']      = true;
-        $_SESSION['id']        = $user['id_clients'];
-        $_SESSION['prenom']    = $user['prenom'];
-        $_SESSION['nom']       = $user['nom'];
-        $_SESSION['adresse']   = $user['adresse'];
-        echo json_encode(['success' => true, 'redirect' => 'reservation.html']);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Identifiant ou mot de passe incorrect.']);
-    }
+try {
+    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$dbname;charset=utf8", $user, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    echo json_encode(['success' => false, 'message' => 'Erreur BDD : ' . $e->getMessage()]);
     exit;
 }
 
-// ── INSCRIPTION ────────────────────────────────────────────────────────────
-if ($action === 'register') {
+$data = json_decode(file_get_contents('php://input'), true);
+$action = $data['action'] ?? '';
 
+// ─── CONNEXION ─────────────────────────────────────────────────────────────
+if ($action === 'login') {
+    $email    = trim($data['username'] ?? '');
+    $password = trim($data['password'] ?? '');
+
+    if (!$email || !$password) {
+        echo json_encode(['success' => false, 'message' => 'Champs manquants.']);
+        exit;
+    }
+
+    $stmt = $pdo->prepare("SELECT * FROM Clients WHERE adresse_mail = ?");
+    $stmt->execute([$email]);
+    $client = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$client) {
+        echo json_encode(['success' => false, 'message' => 'Adresse mail introuvable.']);
+        exit;
+    }
+
+    // Vérification mot de passe (texte brut pour l'instant)
+    if ($client['mots_de_passe'] !== $password) {
+        echo json_encode(['success' => false, 'message' => 'Mot de passe incorrect.']);
+        exit;
+    }
+
+    session_start();
+    $_SESSION['client_id']  = $client['id_clients'];
+    $_SESSION['client_nom'] = $client['prenom'] . ' ' . $client['nom'];
+
+    echo json_encode(['success' => true, 'redirect' => 'clients.php']);
+    exit;
+}
+
+// ─── INSCRIPTION ───────────────────────────────────────────────────────────
+if ($action === 'register') {
     $prenom   = trim($data['firstname'] ?? '');
     $nom      = trim($data['lastname']  ?? '');
     $email    = trim($data['username']  ?? '');
-    $password = $data['password'] ?? '';
+    $password = trim($data['password']  ?? '');
 
     if (!$prenom || !$nom || !$email || !$password) {
         echo json_encode(['success' => false, 'message' => 'Tous les champs sont obligatoires.']);
         exit;
     }
 
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        echo json_encode(['success' => false, 'message' => 'Adresse mail invalide.']);
-        exit;
-    }
-
-    $pdo  = getDB();
-
-    // Vérifie si l'email existe déjà
-    $check = $pdo->prepare('SELECT id_clients FROM Clients WHERE adresse = :adresse LIMIT 1');
-    $check->execute([':adresse' => $email]);
-    if ($check->fetch()) {
+    // Vérifier si l'email existe déjà
+    $stmt = $pdo->prepare("SELECT id_clients FROM Clients WHERE adresse_mail = ?");
+    $stmt->execute([$email]);
+    if ($stmt->fetch()) {
         echo json_encode(['success' => false, 'message' => 'Cette adresse mail est déjà utilisée.']);
         exit;
     }
 
-    $hash = password_hash($password, PASSWORD_BCRYPT);
-    $stmt = $pdo->prepare(
-        'INSERT INTO Clients (prenom, nom, adresse, mdp) VALUES (:prenom, :nom, :adresse, :mdp)'
-    );
-    $stmt->execute([
-        ':prenom'  => $prenom,
-        ':nom'     => $nom,
-        ':adresse' => $email,
-        ':mdp'     => $hash,
-    ]);
+    $stmt = $pdo->prepare("INSERT INTO Clients (prenom, nom, adresse_mail, mots_de_passe, numéro, adresse_postal) VALUES (?, ?, ?, ?, '', '')");
+    $stmt->execute([$prenom, $nom, $email, $password]);
 
     echo json_encode(['success' => true, 'message' => 'Compte créé avec succès !']);
     exit;
 }
 
-// Action inconnue
-echo json_encode(['success' => false, 'message' => 'Action invalide.']);
-?>
+echo json_encode(['success' => false, 'message' => 'Action inconnue.']);
