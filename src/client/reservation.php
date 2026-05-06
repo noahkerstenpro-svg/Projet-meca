@@ -1,0 +1,173 @@
+<?php
+session_start();
+if (!isset($_SESSION['client_id'])) {
+    header('Location: connexion.php');
+    exit;
+}
+?>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Réservation - Méca Brocéliande</title>
+
+    <style>
+         body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f1f2f3;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: #525151;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 80px auto;
+            background: white;
+            padding: 50px 70px;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form {
+            margin-bottom: 15px;
+        }
+
+        label {
+            font-size: 14px;
+            color: #555;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            line-height: 20px;
+            margin-top: 5px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            height: 42px; 
+            box-sizing: border-box;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #eb5e00;
+        }
+
+        input[type="date"] {
+            height: 42px;
+        }
+
+        button {
+            margin-top: 20px;
+            width: 100%;
+            padding: 12px;
+            background-color: #eb5e00;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #d65300;
+        }
+
+        .logout {
+            background-color: #525151;
+            margin-top: 15px;
+        }
+
+        .logout:hover {
+            background-color: #333;
+        }
+
+        footer { 
+            position: fixed; 
+            bottom: 19px; 
+            left: 0; 
+            width: 100%; 
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Atelier Mécanique - Bac Professionnel de Brocéliande</h1>
+</header>
+
+<div class="container">
+    <h2>Réserver un créneau</h2>
+
+    <p style="text-align:center; color:#525151; margin-bottom: 20px;">
+        Bonjour, <strong><?= htmlspecialchars($_SESSION['client_prenom'] . ' ' . $_SESSION['client_nom']) ?></strong>
+    </p>
+
+    <form onsubmit="reserver(event)">
+        <div class="form">
+            <label>Véhicule</label>
+            <input id="vehicule" placeholder="Ex : Renault Clio" required>
+        </div>
+
+        <div class="form">
+            <label>Date</label>
+            <input type="date" id="date" required>
+        </div>
+
+        <div class="form">
+            <label>Heure</label>
+            <select id="heure" required>
+                <option value="" disabled selected>Choisir une heure</option>
+                <option>09:00</option>
+                <option>10:00</option>
+                <option>11:00</option>
+                <option>14:00</option>
+                <option>15:00</option>
+                <option>16:00</option>
+            </select>
+        </div>
+
+        <div class="form">
+            <label>Problème</label>
+            <input id="probleme" placeholder="Décrivez votre problème" required>
+        </div>
+
+        <button type="submit">Réserver</button>
+    </form>
+
+    <button class="logout" onclick="window.location.href='logout1.php'">Se déconnecter</button>
+</div>
+
+<script>
+function reserver(e) {
+    e.preventDefault();
+    let vehicule = document.getElementById("vehicule").value;
+    let date     = document.getElementById("date").value;
+    let heure    = document.getElementById("heure").value;
+    alert("Réservation confirmée pour votre " + vehicule + " le " + date + " à " + heure);
+}
+</script>
+
+<footer>
+    <p>© 2026 Méca Brocéliande</p>
+</footer>
+
+</body>
+</html>
