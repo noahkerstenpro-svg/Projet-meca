@@ -1,15 +1,4 @@
-<?php
-session_start();
-
-if (
-    !isset($_SESSION['username']) ||
-    !in_array($_SESSION['role'], ['prof', 'eleve'])
-) {
-    header('Location: login.php');
-    exit;
-}
-?>
-
+<?php // ordre.php ?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -361,14 +350,15 @@ if (
 <div class="toolbar">
   <span class="toolbar-title">📋 Ordre de Réparation — Cité scolaire de Brocéliande</span>
   <div class="toolbar-actions">
-    <button type="button" class="btn btn-outline" onclick="resetForm()">🗑 Réinitialiser</button>
-    <button type="button" class="btn btn-primary" onclick="window.print()">🖨 Imprimer / PDF</button>
+    <button class="btn btn-outline" type="button" onclick="resetForm()">🗑 Réinitialiser</button>
+    <button class="btn btn-primary" type="button" onclick="window.print()">🖨 Imprimer / PDF</button>
+    <button class="btn btn-primary" type="submit" form="orForm">💾 Enregistrer</button>
   </div>
 </div>
 
 <!-- FORM -->
 <div class="page-wrapper">
-  <form id="orForm" autocomplete="off">
+  <form id="orForm" action="save.php" method="POST" autocomplete="off">
 
     <!-- ═══ TITRE ═══ -->
     <div class="form-header">Ordre de Réparation</div>
@@ -627,6 +617,11 @@ if (
       </div>
     </div>
 
+    <!-- Bouton Enregistrer en bas -->
+    <div style="margin:12px 10px 20px; text-align:right;">
+      <button class="btn btn-primary" type="submit">💾 Enregistrer</button>
+    </div>
+
   </form><!-- end #orForm -->
 
   <!-- ═══ CONDITIONS GÉNÉRALES ═══ -->
@@ -640,7 +635,7 @@ if (
     <p style="margin-bottom:12px;">Le forfait petites fournitures couvre uniquement le petit matériel (petits colliers, étain, gaine...) nécessaire à la réalisation d'une intervention de qualité, il ne comprend pas le nettoyant frein ou tout autre matériel engendrant des coûts importants pour l'établissement.</p>
     <div style="text-align:right;">
       <label style="font-size:11px; display:flex; align-items:center; gap:6px; justify-content:flex-end;">
-        <input type="checkbox"> J'accepte les conditions générales
+        <input type="checkbox" name="cgv_accept"> J'accepte les conditions générales
       </label>
       <div style="margin-top:8px; font-size:10px; color:var(--light); font-style:italic;">Signature du client (précédée de la mention lu et approuvé)</div>
       <div style="border-bottom:1px solid var(--border-strong); width:200px; height:40px; margin-left:auto; margin-top:4px;"></div>
@@ -660,7 +655,7 @@ if (
       <label style="display:flex; align-items:center; gap:6px; font-size:11px; padding:2px 0; border-bottom:1px solid #e8e8f4;">
         <input type="checkbox" name="ctrl_<?= strtolower(preg_replace('/[^a-zA-Z]/', '_', $c)) ?>">
         <span><?= $c ?></span>
-        <input type="text" style="flex:1; min-width:40px; border-bottom:1px solid #ccc; font-size:10px;" placeholder="état">
+        <input type="text" name="etat_<?= strtolower(preg_replace('/[^a-zA-Z]/', '_', $c)) ?>" style="flex:1; min-width:40px; border-bottom:1px solid #ccc; font-size:10px;" placeholder="état">
       </label>
       <?php endforeach; ?>
     </div>

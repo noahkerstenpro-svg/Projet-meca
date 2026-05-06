@@ -1,7 +1,7 @@
 <?php
 session_start();
-if (!isset($_SESSION['auth']) || $_SESSION['auth'] !== true) {
-    header('Location: connexion.html');
+if (!isset($_SESSION['client_id'])) {
+    header('Location: connexion.php');
     exit;
 }
 ?>
@@ -117,7 +117,7 @@ if (!isset($_SESSION['auth']) || $_SESSION['auth'] !== true) {
     <h2>Réserver un créneau</h2>
 
     <p style="text-align:center; color:#525151; margin-bottom: 20px;">
-        Bonjour, <strong><?= htmlspecialchars($_SESSION['prenom'] . ' ' . $_SESSION['nom']) ?></strong>
+        Bonjour, <strong><?= htmlspecialchars($_SESSION['client_prenom'] . ' ' . $_SESSION['client_nom']) ?></strong>
     </p>
 
     <form onsubmit="reserver(event)">

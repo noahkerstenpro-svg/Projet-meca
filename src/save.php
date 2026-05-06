@@ -4,11 +4,17 @@ one,
 <?php
 // save_or.php
 
+// ⚙️ Connexion BDD
+$host = "localhost";
+$db   = "Meca";
+$user = "root";
+$pass = "root"; // adapte si besoin
+
 try {
     $pdo = new PDO(
-        "mysql:host=127.0.0.1;dbname=Meca;charset=utf8mb4",
+        "mysql:host=192.168.11.11;dbname=Meca;charset=utf8mb4",
         "root",
-        "",
+        "root",
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
 } catch (PDOException $e) {
