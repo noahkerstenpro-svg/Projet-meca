@@ -27,7 +27,7 @@ if ($q !== '') {
         SELECT c.nom, c.prenom, v.marque, v.modele, v.vin, i.date_intervention, i.commentaire
         FROM intervention i
         JOIN Vehicules v ON i.vehicule_id = v.id_vehicules
-        JOIN clients c ON v.client_id = c.id_clients
+        JOIN Clients c ON v.client_id = c.id_clients
         WHERE c.nom LIKE ? OR c.prenom LIKE ? OR v.vin LIKE ? OR v.marque LIKE ? OR v.modele LIKE ?
     ";
 
