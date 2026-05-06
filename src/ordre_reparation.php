@@ -1,3 +1,15 @@
+<?php
+session_start();
+
+if (
+    !isset($_SESSION['username']) ||
+    !in_array($_SESSION['role'], ['prof', 'eleve'])
+) {
+    header('Location: login.php');
+    exit;
+}
+?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
