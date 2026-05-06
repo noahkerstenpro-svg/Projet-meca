@@ -4,7 +4,7 @@
 $host = "localhost";
 $db   = "Meca";
 $user = "root";
-$pass = ""; // adapte si besoin
+$pass = "root"; // adapte si besoin
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass, [
