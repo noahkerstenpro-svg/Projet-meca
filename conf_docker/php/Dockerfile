@@ -1,4 +1,15 @@
 FROM php:8.2-fpm
+RUN apt-get update && apt-get install -y \
+    libzip-dev \
+    zip \
+    unzip \
+    libldap2-dev \
+    ldap-utils \
+    && docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu/ \
+    && docker-php-ext-install pdo pdo_mysql ldap
+
+# Optionnel mais utile pour debug
+RUN php -m | grep ldap || trueFROM php:8.2-fpm
 
 RUN apt-get update && apt-get install -y \
  HEAD
