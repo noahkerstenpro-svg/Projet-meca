@@ -57,6 +57,19 @@ $stmt->execute([
     $_POST['info_client'] ?? ''
 ]);
 
+<?php
+
+$retour = 'login.php';
+
+if ($_SESSION['role'] === 'prof') {
+    $retour = 'prof.php';
+}
+
+if ($_SESSION['role'] === 'eleve') {
+    $retour = 'eleve.php';
+}
+
 echo "<h2>✔ Ordre de réparation enregistré !</h2>";
-echo "<a href='index.php'>Retour</a>";
+echo "<a href='$retour'>Retour</a>";
+
 ?>
