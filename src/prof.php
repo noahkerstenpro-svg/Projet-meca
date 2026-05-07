@@ -84,7 +84,7 @@ $name = $_SESSION['name'] ?? $_SESSION['username'];
                     Créer un ordre de réparation
                 </a>
 
-                <a class="btn green" href="liste_reparations.php">
+                <a class="btn green" href="recherche_or.php">
                     Suivre les réparations
                 </a>
 
