@@ -57,19 +57,11 @@ $stmt->execute([
     $_POST['info_client'] ?? ''
 ]);
 
-<?php
-
-$retour = 'login.php';
+echo "<h2>✔ Ordre de réparation enregistré !</h2>";
 
 if ($_SESSION['role'] === 'prof') {
-    $retour = 'prof.php';
+    echo "<a href='prof.php'>Retour à l'accueil professeur</a>";
+} elseif ($_SESSION['role'] === 'eleve') {
+    echo "<a href='eleve.php'>Retour à l'accueil élève</a>";
 }
 
-if ($_SESSION['role'] === 'eleve') {
-    $retour = 'eleve.php';
-}
-
-echo "<h2>✔ Ordre de réparation enregistré !</h2>";
-echo "<a href='$retour'>Retour</a>";
-
-?>
