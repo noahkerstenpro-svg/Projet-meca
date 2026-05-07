@@ -185,7 +185,7 @@ $name = $_SESSION['name'] ?? $_SESSION['username'];
                 <a class="action-card" href="http://192.168.11.11:3000/" target="_blank">
                     <div class="icon">🛠️</div>
                     <h3>Accéder à GLPI</h3>
-                    <p>Ouvrir la plateforme GLPI dans un nouvel onglet.</p>
+                    <p>Demande de support informatique.</p>
                 </a>
 
                 <a class="action-card logout" href="logout.php">
