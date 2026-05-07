@@ -58,5 +58,5 @@ $stmt->execute([
 ]);
 
 echo "<h2>✔ Ordre de réparation enregistré !</h2>";
-echo "<a href='ordre.php'>Retour</a>";
+echo "<a href='index.php'>Retour</a>";
 ?>
