@@ -1,5 +1,5 @@
 <?php
-require 'vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 use Dompdf\Dompdf;
 
 $pdo = new PDO("mysql:host=192.168.11.11;dbname=Meca;charset=utf8mb4", "root", "root");
