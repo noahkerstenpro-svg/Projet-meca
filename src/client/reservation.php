@@ -27,19 +27,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo = new PDO("mysql:host=$host;port=3306;dbname=$dbname;charset=utf8", $user, $pass);
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-            // 1) Insérer le véhicule dans Vehicules (marque/modèle + client_id)
-            //    On génère un VIN factice si le client n'en a pas.
-            $stmtVeh = $pdo->prepare("
-                INSERT INTO Vehicules (vin, `marque/modèle`, client_id)
-                VALUES (:vin, :marque, :client_id)
+            // 1) Vérifier si le véhicule existe déjà pour ce client
+            $stmtCheck = $pdo->prepare("
+                SELECT id_vehicules FROM Vehicules
+                WHERE `marque/modèle` = :marque AND client_id = :client_id
+                LIMIT 1
             ");
-            $vin = strtoupper(substr(md5(uniqid()), 0, 10)); // VIN provisoire
-            $stmtVeh->execute([
-                ':vin'       => $vin,
+            $stmtCheck->execute([
                 ':marque'    => $vehicule,
                 ':client_id' => $client_id,
             ]);
-            $vehicule_id = $pdo->lastInsertId();
+            $existingVeh = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+            if ($existingVeh) {
+                // Véhicule déjà connu : on réutilise son id
+                $vehicule_id = $existingVeh['id_vehicules'];
+            } else {
+                // Nouveau véhicule : on l'insère
+                $stmtVeh = $pdo->prepare("
+                    INSERT INTO Vehicules (vin, `marque/modèle`, client_id)
+                    VALUES (:vin, :marque, :client_id)
+                ");
+                $vin = strtoupper(substr(md5(uniqid()), 0, 10)); // VIN provisoire
+                $stmtVeh->execute([
+                    ':vin'       => $vin,
+                    ':marque'    => $vehicule,
+                    ':client_id' => $client_id,
+                ]);
+                $vehicule_id = $pdo->lastInsertId();
+            }
 
             // 2) Insérer l'intervention (prestation_id = NULL car non choisi ici)
             $stmtInt = $pdo->prepare("
