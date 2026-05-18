@@ -18,10 +18,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($vehicule && $date && $heure && $probleme) {
 
         // --- Connexion BDD ---
-        $host = 'localhost';
+        $host = '172.0.0.1';
         $dbname = 'Meca';
-        $user   = 'root';   // à adapter
-        $pass   = '';        // à adapter
+        $user   = 'root';
+        $pass   = 'root';
 
         try {
             $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $user, $pass);
