@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OBD Bluetooth Control</title>
+<style>
+:root{
+  --g:#00c853;--a:#ffab00;--r:#f44336;--bl:#4fc3f7;
+  --bg:#0e1010;--s:#131717;--b:#1e2a1e;
+  --t:#a8c8a8;--d:#4a6a4a;--m:'Courier New',Courier,monospace
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:var(--m);color:var(--t);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:36px 14px}
+#app{width:100%;max-width:700px;border:1px solid var(--b);border-radius:4px;padding:22px;background:var(--s)}
+
+#hdr{display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--b)}
+.blink{width:8px;height:8px;border-radius:50%;background:var(--g);animation:bk 2s infinite;flex-shrink:0}
+@keyframes bk{0%,100%{opacity:1}50%{opacity:.2}}
+#hdr h1{font-size:12px;color:var(--g);letter-spacing:2.5px;font-weight:normal;text-transform:uppercase}
+#hdr .v{margin-left:auto;font-size:11px;color:var(--d)}
+
+#cfg{background:#0a0e0a;border:1px solid var(--b);border-radius:3px;padding:14px 16px;margin-bottom:18px}
+#cfg h3{font-size:10px;color:var(--d);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:11px}
+.cfg-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px}
+.cfg-grid2{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:flex-end}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg label{font-size:10px;color:var(--d);letter-spacing:1px;text-transform:uppercase}
+.fg input{background:#070b07;border:1px solid var(--b);border-radius:3px;padding:7px 9px;font-family:var(--m);font-size:11px;color:var(--t);outline:none;width:100%;transition:border-color .15s}
+.fg input:focus{border-color:var(--g)}
+
+.slbl{font-size:10px;color:var(--d);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
+.brow{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.btn{flex:1;min-width:130px;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 14px;background:#0a0e0a;border:1px solid var(--b);border-radius:3px;font-family:var(--m);font-size:11px;color:var(--t);cursor:pointer;transition:.15s;letter-spacing:.5px}
+.btn:hover:not(:disabled){border-color:var(--g);color:var(--g);background:#0c150c}
+.btn:active:not(:disabled){transform:scale(.97)}
+.btn:disabled{opacity:.38;cursor:not-allowed}
+.btn.danger:hover:not(:disabled){border-color:var(--r);color:var(--r);background:#150909}
+.btn.accent:hover:not(:disabled){border-color:var(--a);color:var(--a);background:#13100a}
+.btn.save:hover:not(:disabled){border-color:var(--bl);color:var(--bl);background:#090e13}
+.btn.sm{flex:none;padding:7px 13px;font-size:10px;min-width:0}
+
+#term{background:#070b07;border:1px solid var(--b);border-radius:3px;height:220px;overflow-y:auto;padding:11px 13px;font-size:11px;line-height:1.75;margin-bottom:18px}
+#term::-webkit-scrollbar{width:3px}
+#term::-webkit-scrollbar-thumb{background:var(--b)}
+.ln{display:flex;gap:7px}
+.ts{color:var(--d);min-width:66px;flex-shrink:0}
+.ok{color:var(--g)}.er{color:var(--r)}.wa{color:var(--a)}.inf{color:#5ab8b8}.mu{color:var(--d)}.cm{color:#8080a0}
+
+#mbg{display:none;background:rgba(0,0,0,.65);border-radius:4px;padding:30px 20px;margin-bottom:18px;min-height:260px;align-items:center;justify-content:center}
+#mbg.open{display:flex}
+#modal{background:var(--s);border:1px solid var(--b);border-radius:4px;padding:20px;width:100%;max-width:460px}
+#modal h2{font-size:11px;color:var(--g);letter-spacing:2px;font-weight:normal;text-transform:uppercase;margin-bottom:14px}
+.mrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.mrow.full{grid-template-columns:1fr}
+.mbtns{display:flex;gap:8px;margin-top:14px}
+
+#twrap{background:#0a0e0a;border:1px solid var(--b);border-radius:3px;overflow:hidden;margin-bottom:18px;display:none}
+#twrap h3{font-size:10px;color:var(--d);letter-spacing:1.5px;text-transform:uppercase;padding:9px 13px;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:8px}
+#twrap h3 .cnt{color:var(--g)}
+#vtable{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}
+#vtable th{text-align:left;padding:7px 11px;color:var(--d);font-weight:normal;border-bottom:1px solid var(--b);font-size:10px;letter-spacing:1px}
+#vtable td{padding:7px 11px;border-bottom:1px solid #0f130f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#vtable tr:last-child td{border-bottom:none}
+#vtable tr:hover td{background:#0c120c}
+.badge{display:inline-block;padding:2px 7px;border-radius:2px;font-size:10px;background:#1a3a1a;color:var(--g)}
+
+#stbar{display:flex;align-items:center;flex-wrap:wrap;gap:14px;padding-top:12px;border-top:1px solid var(--b);font-size:10px;color:var(--d)}
+.si{display:flex;align-items:center;gap:5px}
+.sd{width:6px;height:6px;border-radius:50%;background:var(--d);transition:.3s}
+.sd.on{background:var(--g)}.sd.w{background:var(--a)}.sd.e{background:var(--r)}
+#ltime{margin-left:auto}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="hdr">
+    <div class="blink"></div>
+    <h1>OBD Bluetooth Control</h1>
+    <span class="v">simulation // MySQL réel</span>
+  </div>
+
+  <div id="cfg">
+    <h3>config mysql</h3>
+    <div class="cfg-grid">
+      <div class="fg"><label>hôte</label><input id="db-host" value="127.0.0.1"></div>
+      <div class="fg"><label>port</label><input id="db-port" value="3306"></div>
+      <div class="fg"><label>base</label><input id="db-name" value="obd_db"></div>
+      <div class="fg"><label>utilisateur</label><input id="db-user" value="root"></div>
+    </div>
+    <div class="cfg-grid2">
+      <div class="fg"><label>mot de passe</label><input id="db-pass" type="password" placeholder="(vide si aucun)"></div>
+      <div class="fg"><label>table</label><input id="db-table" value="id_vehicules"></div>
+      <button class="btn sm" onclick="testDB()">tester connexion</button>
+    </div>
+  </div>
+
+  <div class="slbl">bluetooth — simulation — 01:23:45:67:89:BA</div>
+  <div class="brow">
+    <button class="btn" id="b-conn" onclick="doConnect()"><span>⬡</span> Connexion</button>
+    <button class="btn danger" id="b-reset" onclick="doReset()"><span>↺</span> Reset Bluetooth</button>
+  </div>
+
+  <div class="slbl">diagnostic obd-ii — simulation</div>
+  <div class="brow">
+    <button class="btn accent" id="b-vin" onclick="doVin()"><span>◈</span> Lecture VIN</button>
+    <button class="btn save" id="b-save" onclick="openModal()" disabled><span>⊕</span> Enregistrer en BDD</button>
+  </div>
+
+  <div id="term"></div>
+
+  <div id="mbg">
+    <div id="modal">
+      <h2>enregistrer le véhicule</h2>
+      <div class="mrow">
+        <div class="fg"><label>VIN (lu)</label><input id="f-vin" readonly></div>
+        <div class="fg"><label>client_id</label><input id="f-client" placeholder="ex: CLI-042"></div>
+      </div>
+      <div class="mrow full">
+        <div class="fg"><label>marque / modèle</label><input id="f-marque" placeholder="ex: Peugeot 308 1.6 HDi 2019"></div>
+      </div>
+      <div class="mbtns">
+        <button class="btn save sm" onclick="doSave()"><span>⊕</span> Enregistrer</button>
+        <button class="btn danger sm" onclick="closeModal()">annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="twrap">
+    <h3>véhicules enregistrés — <span class="cnt" id="cnt">0</span></h3>
+    <div style="overflow-x:auto">
+      <table id="vtable">
+        <thead><tr>
+          <th style="width:50px">id</th>
+          <th style="width:155px">VIN</th>
+          <th>marque / modèle</th>
+          <th style="width:100px">client_id</th>
+          <th style="width:70px">statut</th>
+        </tr></thead>
+        <tbody id="vtbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="stbar">
+    <div class="si"><div class="sd" id="d-bt"></div><span id="l-bt">bluetooth: idle</span></div>
+    <div class="si"><div class="sd" id="d-obd"></div><span id="l-obd">obd: —</span></div>
+    <div class="si"><div class="sd" id="d-db"></div><span id="l-db">mysql: non connecté</span></div>
+    <span id="ltime">—</span>
+  </div>
+
+</div>
+<script>
+const MAC="01:23:45:67:89:BA";
+const term=document.getElementById('term');
+let lastVin=null, records=[];
+
+function now(){return new Date().toTimeString().slice(0,8)}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function log(msg,cls='inf'){
+  const d=document.createElement('div');
+  d.className='ln';
+  const isc=msg.startsWith('$');
+  d.innerHTML=`<span class="ts">${isc?'':'['+now()+']'}</span><span class="${isc?'cm':cls}">${esc(msg)}</span>`;
+  term.appendChild(d);
+  term.scrollTop=term.scrollHeight;
+  document.getElementById('ltime').textContent=now();
+}
+
+function setSt(id,cls,lbl){
+  document.getElementById('d-'+id).className='sd'+(cls?' '+cls:'');
+  document.getElementById('l-'+id).textContent=lbl;
+}
+
+const BTNS=['b-conn','b-reset','b-vin','b-save'];
+function lockAll(){BTNS.forEach(i=>{const e=document.getElementById(i);if(e)e.disabled=true})}
+function unlockAll(){
+  document.getElementById('b-conn').disabled=false;
+  document.getElementById('b-reset').disabled=false;
+  document.getElementById('b-vin').disabled=false;
+  document.getElementById('b-save').disabled=!lastVin;
+}
+
+function dbCfg(){
+  return{
+    host:document.getElementById('db-host').value.trim(),
+    port:document.getElementById('db-port').value.trim(),
+    db:document.getElementById('db-name').value.trim(),
+    user:document.getElementById('db-user').value.trim(),
+    password:document.getElementById('db-pass').value,
+    table:document.getElementById('db-table').value.trim()
+  };
+}
+
+async function testDB(){
+  log('test connexion MySQL...','inf');
+  setSt('db','w','mysql: test…');
+  try{
+    const r=await fetch('/db/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(dbCfg())});
+    const d=await r.json();
+    if(d.ok){log(d.msg,'ok');setSt('db','on','mysql: connecté');}
+    else{log('ERREUR: '+d.msg,'er');setSt('db','e','mysql: erreur');}
+  }catch(e){log('Impossible de joindre le backend: '+e,'er');setSt('db','e','mysql: erreur');}
+}
+
+function lineClass(l){
+  if(l.startsWith('$')) return 'cm';
+  if(/erreur|error|fail|echec|exception/i.test(l)) return 'er';
+  if(/success|ok|connecté|trusted|paired|yes/i.test(l)) return 'ok';
+  if(/vérif|conseil|relancez|reset/i.test(l)) return 'wa';
+  return 'mu';
+}
+
+function streamSSE(url,onLine,onDone){
+  lockAll();
+  const es=new EventSource(url);
+  es.onmessage=e=>{
+    const d=JSON.parse(e.data);
+    if(d.done){es.close();unlockAll();onDone&&onDone(d);}
+    else if(d.line!==undefined) onLine&&onLine(d.line);
+  };
+  es.onerror=()=>{es.close();unlockAll();log('erreur connexion backend','er');};
+}
+
+function doConnect(){
+  const btn=document.getElementById('b-conn');
+  btn.innerHTML='<span>◌</span> Pairing…';
+  setSt('bt','w','bluetooth: pairing…');
+  streamSSE('/connect',
+    l=>log(l,lineClass(l)),
+    d=>{
+      setSt('bt','on','bluetooth: paired');
+      btn.innerHTML='<span>✓</span> Connecté';
+    }
+  );
+}
+
+function doReset(){
+  const btn=document.getElementById('b-reset');
+  btn.innerHTML='<span>◌</span> Reset…';
+  setSt('bt','w','bluetooth: reset…');
+  setSt('obd','','obd: —');
+  lastVin=null;
+  document.getElementById('b-save').disabled=true;
+  streamSSE('/reset',
+    l=>log(l,lineClass(l)),
+    ()=>{
+      btn.innerHTML='<span>↺</span> Reset Bluetooth';
+      document.getElementById('b-conn').innerHTML='<span>⬡</span> Connexion';
+      setSt('bt','','bluetooth: idle');
+    }
+  );
+}
+
+function doVin(){
+  const btn=document.getElementById('b-vin');
+  btn.innerHTML='<span>◌</span> Lecture…';
+  setSt('obd','w','obd: connexion…');
+  streamSSE('/vin',
+    l=>log(l,lineClass(l)),
+    d=>{
+      btn.innerHTML='<span>◈</span> Lecture VIN';
+      if(d.status==='ok'&&d.vin){
+        lastVin=d.vin;
+        setSt('obd','on','obd: connecté');
+        document.getElementById('b-save').disabled=false;
+      }
+    }
+  );
+}
+
+function openModal(){
+  if(!lastVin){log('aucun VIN disponible','er');return;}
+  document.getElementById('f-vin').value=lastVin;
+  document.getElementById('f-client').value='';
+  document.getElementById('f-marque').value='';
+  document.getElementById('mbg').classList.add('open');
+}
+function closeModal(){document.getElementById('mbg').classList.remove('open');}
+
+async function doSave(){
+  const vin=document.getElementById('f-vin').value.trim();
+  const client=document.getElementById('f-client').value.trim();
+  const marque=document.getElementById('f-marque').value.trim();
+  if(!client||!marque){log('client_id et marque/modèle sont requis','er');return;}
+  closeModal();
+  log('envoi vers MySQL...','inf');
+  try{
+    const r=await fetch('/db/save',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({cfg:dbCfg(),data:{vin,marque,client}})
+    });
+    const d=await r.json();
+    if(d.ok){
+      log('$ '+d.sql,'cm');
+      log(`enregistré — id: ${d.id}`,'ok');
+      setSt('db','on','mysql: ok');
+      addRow({id:d.id,vin,marque_modele:marque,client_id:client});
+    }else{
+      log('ERREUR MySQL: '+d.msg,'er');
+      setSt('db','e','mysql: erreur');
+    }
+  }catch(e){log('Impossible de joindre le backend: '+e,'er');}
+}
+
+function addRow(rec){
+  document.getElementById('twrap').style.display='block';
+  records.push(rec);
+  document.getElementById('cnt').textContent=records.length;
+  const tb=document.getElementById('vtbody');
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td style="color:var(--d)">${esc(rec.id)}</td>
+    <td style="color:var(--g);font-size:10px">${esc(rec.vin)}</td>
+    <td>${esc(rec.marque_modele||'')}</td>
+    <td style="color:var(--a)">${esc(rec.client_id||'')}</td>
+    <td><span class="badge">saved</span></td>`;
+  tb.insertBefore(tr,tb.firstChild);
+}
+
+log('OBD Panel prêt — BT et VIN en simulation','mu');
+log('MySQL : remplir la config et tester la connexion','mu');
+</script>
+</body>
+</html>
