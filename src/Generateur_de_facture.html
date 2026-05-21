@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Générateur de facture</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial;
+      margin: 20px;
+      background: #f5f5f5;
+    }
+    h1 { text-align: center; }
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 800px;
+      margin: auto;
+    }
+    input {
+      margin: 5px;
+      padding: 5px;
+    }
+    table {
+      width: 100%;
+      margin-top: 15px;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+    button {
+      margin: 10px 5px;
+      padding: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Générateur de facture</h1>
+
+  <h3>Informations générales</h3>
+  <input type="text" id="date" placeholder="Date de réception">
+  <input type="text" id="ordre" placeholder="Ordre de réparation">
+  <input type="text" id="prof" placeholder="Professeur référent">
+
+  <h3>Informations client</h3>
+  <input type="text" id="client" placeholder="Nom et prénom du client">
+  <input type="text" id="cty" placeholder="Adresse du client">
+  <input type="text" id="tel" placeholder="Téléphone">
+  <input type="text" id="mail" placeholder="Adresse email">
+
+  <h3>Ajouter un produit</h3>
+  <input type="text" id="desc" placeholder="Description du produit">
+  <input type="number" id="qty" placeholder="Quantité">
+  <input type="text" id="ref" placeholder="Référence">
+  <input type="number" id="price" placeholder="Prix unitaire TTC">
+  <button onclick="addItem()">Ajouter</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th>Quantité</th>
+        <th>Référence</th>
+        <th>Prix TTC</th>
+        <th>Prix total TTC</th>
+        <th>Supprimer</th>
+      </tr>
+    </thead>
+    <tbody id="items"></tbody>
+  </table>
+
+  <h3>Main d'oeuvre</h3>
+  <input type="number" id="oeuvre" placeholder="Nombre d'heures">
+  <input type="number" id="taux" placeholder="Taux horaire (€/h)">
+  <button onclick="calculerMO()">Appliquer main d'oeuvre</button>
+  <p id="moInfo"></p>
+
+  <h3>Total : <span id="total">0.00</span> €</h3>
+
+  <h3>Restitution</h3>
+  <input type="text" id="dateRestitution" placeholder="Date de restitution">
+
+  <br>
+  <button onclick="generatePDF()">Télécharger en PDF</button>
+</div>
+
+<script>
+  let items = [];
+  let totalPieces = 0;
+  let totalMO = 0;
+
+  function recalculerTotal() {
+    let total = totalPieces + totalMO;
+    document.getElementById("total").innerText = total.toFixed(2);
+  }
+
+  function addItem() {
+    let desc  = document.getElementById("desc").value.trim();
+    let qty   = parseFloat(document.getElementById("qty").value);
+    let ref   = document.getElementById("ref").value.trim();
+    let price = parseFloat(document.getElementById("price").value);
+
+    if (!desc || isNaN(qty) || isNaN(price)) {
+      alert("Veuillez remplir au minimum la description, la quantite et le prix !");
+      return;
+    }
+
+    let itemTotal = qty * price;
+    totalPieces += itemTotal;
+
+    let id = Date.now();
+    items.push({ id, desc, qty, ref, price, itemTotal });
+
+    let tbody = document.getElementById("items");
+    let row = document.createElement("tr");
+    row.id = "row-" + id;
+    row.innerHTML = `
+      <td>${desc}</td>
+      <td>${qty}</td>
+      <td>${ref || "-"}</td>
+      <td>${price.toFixed(2)} €</td>
+      <td>${itemTotal.toFixed(2)} €</td>
+      <td><button onclick="removeItem(${id}, ${itemTotal})">X</button></td>
+    `;
+    tbody.appendChild(row);
+
+    recalculerTotal();
+
+    document.getElementById("desc").value  = "";
+    document.getElementById("qty").value   = "";
+    document.getElementById("ref").value   = "";
+    document.getElementById("price").value = "";
+  }
+
+  function removeItem(id, itemTotal) {
+    totalPieces -= itemTotal;
+    items = items.filter(i => i.id !== id);
+    let row = document.getElementById("row-" + id);
+    if (row) row.remove();
+    recalculerTotal();
+  }
+
+  function calculerMO() {
+    let heures = parseFloat(document.getElementById("oeuvre").value);
+    let taux   = parseFloat(document.getElementById("taux").value);
+
+    if (isNaN(heures) || isNaN(taux)) {
+      alert("Veuillez entrer un nombre d'heures et un taux horaire valides.");
+      return;
+    }
+
+    totalMO = heures * taux;
+    document.getElementById("moInfo").innerText =
+      "Main d'oeuvre : " + heures + "h x " + taux + " €/h = " + totalMO.toFixed(2) + " €";
+    recalculerTotal();
+  }
+
+  function generatePDF() {
+    const { jsPDF } = window.jspdf;
+    let doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+  
+    doc.setDrawColor(0);
+    doc.setLineWidth(0.8);
+    doc.rect(10, 8, pageWidth - 20, 14);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("ORDRE DE REPARATION", pageWidth / 2, 18, { align: "center" });
+
+ 
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.text("Cité Scolaire de Brocéliande", pageWidth / 2, 30, { align: "center" });
+    doc.setFontSize(10);
+    doc.text("4 avenue de Brocéliande", pageWidth / 2, 37, { align: "center" });
+    doc.text("Bellevue - Coëtquidan",   pageWidth / 2, 43, { align: "center" });
+    doc.text("56380 GUER",              pageWidth / 2, 49, { align: "center" });
+
+    doc.setLineWidth(0.4);
+    doc.line(10, 54, pageWidth - 10, 54);
+
+  
+    let date  = document.getElementById("date").value  || "-";
+    let ordre = document.getElementById("ordre").value || "-";
+    let prof  = document.getElementById("prof").value  || "-";
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text("Informations generales", 10, 62);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text("Date de récéption : "    + date,  10, 70);
+    doc.text("Ordre de réparation : N" + ordre, 10, 77);
+    doc.text("Professeur référent : "  + prof,  10, 84);
+
+    doc.line(10, 89, pageWidth - 10, 89);
+
+    // ── Infos client ──────────────────────────────────────────────
+    let client = document.getElementById("client").value || "-";
+    let cty    = document.getElementById("cty").value    || "-";
+    let tel    = document.getElementById("tel").value    || "-";
+    let mail   = document.getElementById("mail").value   || "-";
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text("Informations client", 10, 97);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text("Nom et prénom : " + client, 10, 105);
+    doc.text("Adresse postal : "       + cty,    10, 112);
+    doc.text("Téléphone : "     + tel,    10, 119);
+    doc.text("Mail : "          + mail,   10, 126);
+
+    doc.line(10, 131, pageWidth - 10, 131);
+
+    // ── Tableau des pièces ────────────────────────────────────────
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text("Detail de la facture", 10, 139);
+
+    const colX    = [10, 70, 100, 130, 160];
+    const headers = ["Forfait/Fournitures/Consommables :", "Quantite :", "Reference :", "Prix :", "Total TTC :"];
+    let y = 147;
+
+    doc.setFontSize(9);
+    doc.setFillColor(220, 220, 220);
+    doc.rect(10, y - 5, pageWidth - 20, 8, "F");
+    headers.forEach((h, i) => {
+      doc.setFont("helvetica", "bold");
+      doc.text(h, colX[i] + 1, y);
+    });
+    y += 8;
+
+    doc.setFont("helvetica", "normal");
+    items.forEach(item => {
+      doc.text(String(item.desc),                 colX[0] + 1, y);
+      doc.text(String(item.qty),                  colX[1] + 1, y);
+      doc.text(String(item.ref || "-"),           colX[2] + 1, y);
+      doc.text(item.price.toFixed(2) + " €",     colX[3] + 1, y);
+      doc.text(item.itemTotal.toFixed(2) + " €",  colX[4] + 1, y);
+      y += 8;
+    });
+
+    if (items.length === 0) {
+      doc.text("Aucune piece ajoutee.", 10, y);
+      y += 8;
+    }
+
+    doc.line(10, y, pageWidth - 10, y);
+    y += 8;
+
+    // ── Main d'oeuvre ─────────────────────────────────────────────
+    let heures = parseFloat(document.getElementById("oeuvre").value);
+    let taux   = parseFloat(document.getElementById("taux").value);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    if (!isNaN(heures) && !isNaN(taux)) {
+      doc.text(
+        "Main d'oeuvre : " + heures + "h x " + taux + " €/h = " + totalMO.toFixed(2) + " €",
+        10, y
+      );
+    } else {
+      doc.text("Main d'oeuvre : non renseignee", 10, y);
+    }
+    y += 10;
+
+    // ── Total général ─────────────────────────────────────────────
+    let totalGlobal = totalPieces + totalMO;
+    doc.setFontSize(13);
+    doc.setFont("helvetica", "bold");
+    doc.text("TOTAL TTC : " + totalGlobal.toFixed(2) + " €", 10, y);
+
+    // ── Tableau en bas de page ───────────
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const tableLeft  = 10;
+    const tableW     = pageWidth - 20;
+    const headerH    = 9;
+    const signH      = 28;
+    const colWidths  = [tableW * 0.28, tableW * 0.18, tableW * 0.18, tableW * 0.18, tableW * 0.18];
+    const tableH     = headerH + signH;
+
+    // Positionner le tableau à 10mm du bas de page
+    let yTable = pageHeight - tableH - 10;
+
+    let dateRest = document.getElementById("dateRestitution").value || "-";
+
+    const colLabels = [
+      "Date de restitution",
+      "Signature referent",
+      "Signature client",
+      "Signature DDF",
+      "Visa gestion"
+    ];
+
+    let xCursor = tableLeft;
+    colLabels.forEach((label, i) => {
+      doc.setLineWidth(0.4);
+      doc.setDrawColor(0);
+      doc.rect(xCursor, yTable, colWidths[i], headerH);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      doc.text(label, xCursor + colWidths[i] / 2, yTable + 6, { align: "center" });
+      xCursor += colWidths[i];
+    });
+    yTable += headerH;
+
+    // Zone de contenu : date à gauche, cases vides pour signatures
+    xCursor = tableLeft;
+    colWidths.forEach((w, i) => {
+      doc.rect(xCursor, yTable, w, signH);
+      if (i === 0) {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.text(dateRest, xCursor + w / 2, yTable + signH / 2, { align: "center" });
+      }
+      xCursor += w;
+    });
+
+    doc.save("Ordre_de_reparation.pdf");
+  }
+</script>
+
+</body>
+</html>
