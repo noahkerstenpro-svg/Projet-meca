@@ -1,148 +1,101 @@
 <?php
-// recherche_or.php
+/**
+ * recherche_client.php
+ * Endpoint AJAX — Recherche de clients dans la BDD Meca
+ * Retourne un tableau JSON de clients correspondant à la saisie
+ */
 
+session_start();
+
+// Vérification de session (même protection que ordre_reparation.php)
+if (
+    !isset($_SESSION['username']) ||
+    !in_array($_SESSION['role'], ['prof', 'eleve'])
+) {
+    http_response_code(403);
+    echo json_encode([]);
+    exit;
+}
+
+// ── Paramètres de connexion à la BDD ──────────────────────────────────────────
+// Adaptez ces valeurs à votre configuration locale
+$host   = '192.168.11.11';
+$port   = '8080';
+$dbname = 'Meca';
+$user   = 'root';        // ← à adapter
+$pass   = 'root';            // ← à adapter
+
+// ── Lecture des paramètres de recherche ───────────────────────────────────────
+$prenom = trim($_GET['prenom'] ?? '');
+$nom    = trim($_GET['nom']    ?? '');
+
+// Sécurité : on exige au moins 2 caractères dans l'un des champs
+if (strlen($prenom) < 2 && strlen($nom) < 2) {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode([]);
+    exit;
+}
+
+// ── Connexion PDO ─────────────────────────────────────────────────────────────
 try {
     $pdo = new PDO(
-        "mysql:host=192.168.11.11;dbname=Meca;charset=utf8mb4",
-        "root",
-        "root",
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+        "mysql:host=$host;port=$port;dbname=$dbname;charset=utf8",
+        $user,
+        $pass,
+        [
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        ]
     );
 } catch (PDOException $e) {
-    die("Erreur de connexion : " . $e->getMessage());
+    http_response_code(500);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['erreur' => 'Connexion BDD impossible']);
+    exit;
 }
 
-$q = $_GET['q'] ?? '';
-$resultats = [];
+// ── Construction de la requête dynamique ─────────────────────────────────────
+// On filtre sur prénom ET/OU nom selon ce qui est renseigné
+$conditions = [];
+$params     = [];
 
-if ($q !== '') {
-    $like = "%$q%";
+if ($prenom !== '') {
+    $conditions[] = 'prenom LIKE :prenom';
+    $params[':prenom'] = $prenom . '%';   // recherche "commence par"
+}
+if ($nom !== '') {
+    $conditions[] = 'nom LIKE :nom';
+    $params[':nom'] = $nom . '%';
+}
 
-    $sql = "
-        SELECT 
-            i.id_intervention,
-            i.date_intervention,
-            i.commentaire,
-            c.nom, c.prenom, c.numéro, c.adresse_mail,
-            v.marque, v.modele, v.vin
-        FROM intervention i
-        JOIN Vehicules v ON i.vehicule_id = v.id_vehicules
-        JOIN Clients c ON v.client_id = c.id_clients
-        WHERE c.nom LIKE ? 
-        OR c.prenom LIKE ? 
-        OR v.vin LIKE ? 
-        OR v.marque LIKE ? 
-        OR v.modele LIKE ?
-    ";
+// Si les deux sont renseignés on cherche les clients qui matchent les deux
+$where = implode(' AND ', $conditions);
 
+$sql = "
+    SELECT
+        id_clients,
+        prenom,
+        nom,
+        adresse_mail,
+        numero,
+        adresse_postal
+    FROM Clients
+    WHERE $where
+    ORDER BY nom ASC, prenom ASC
+    LIMIT 10
+";
+
+try {
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([$like, $like, $like, $like, $like]);
-    $resultats = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $stmt->execute($params);
+    $clients = $stmt->fetchAll();
+} catch (PDOException $e) {
+    http_response_code(500);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['erreur' => 'Erreur requête']);
+    exit;
 }
-?>
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title>Recherche OR</title>
-<style>
-body {
-    font-family: Arial, sans-serif;
-    background: #f4f4f8;
-    padding: 20px;
-}
-h2 {
-    color: #2c2c6e;
-}
-input[type=text] {
-    padding: 8px 10px;
-    width: 300px;
-    border: 1px solid #bbb;
-    border-radius: 4px;
-}
-button {
-    padding: 8px 14px;
-    background: #2c2c6e;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-button:hover {
-    background: #1a1a5e;
-}
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 25px;
-    background: white;
-    border-radius: 6px;
-    overflow: hidden;
-}
-th {
-    background: #2c2c6e;
-    color: white;
-    padding: 10px;
-    text-align: left;
-}
-td {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-}
-.action-btn {
-    padding: 6px 10px;
-    background: #4a4a9a;
-    color: white;
-    border-radius: 4px;
-    text-decoration: none;
-}
-.action-btn:hover {
-    background: #2c2c6e;
-}
-</style>
-</head>
-<body>
 
-<h2>🔍 Recherche d’un ordre de réparation</h2>
-
-<form method="GET">
-    <input type="text" name="q" placeholder="Nom, VIN, modèle..." value="<?= htmlspecialchars($q) ?>" required>
-    <button type="submit">Rechercher</button>
-</form>
-
-<?php if ($q !== ''): ?>
-<h3>Résultats pour « <?= htmlspecialchars($q) ?> »</h3>
-
-<?php if (count($resultats) === 0): ?>
-<p>Aucun résultat trouvé.</p>
-
-<?php else: ?>
-<table>
-<tr>
-    <th>ID OR</th>
-    <th>Client</th>
-    <th>Véhicule</th>
-    <th>VIN</th>
-    <th>Date</th>
-    <th>PDF</th>
-</tr>
-
-<?php foreach ($resultats as $r): ?>
-<tr>
-    <td><?= $r['id_intervention'] ?></td>
-    <td><?= $r['prenom'] . " " . $r['nom'] ?></td>
-    <td><?= $r['marque'] . " " . $r['modele'] ?></td>
-    <td><?= $r['vin'] ?></td>
-    <td><?= $r['date_intervention'] ?></td>
-    <td>
-        <a class="action-btn" href="pdf_or.php?id=<?= $r['id_intervention'] ?>" target="_blank">📄 Voir PDF</a>
-    </td>
-</tr>
-<?php endforeach; ?>
-
-</table>
-<?php endif; ?>
-<?php endif; ?>
-
-</body>
-</html>
+// ── Réponse JSON ─────────────────────────────────────────────────────────────
+header('Content-Type: application/json; charset=utf-8');
+echo json_encode($clients, JSON_UNESCAPED_UNICODE);
