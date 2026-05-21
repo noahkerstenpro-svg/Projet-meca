@@ -13,35 +13,17 @@ if (
     !in_array($_SESSION['role'], ['prof', 'eleve'])
 ) {
     http_response_code(403);
-    echo json_encode([]);
-    exit;
-}
-
-// ── Paramètres de connexion à la BDD ──────────────────────────────────────────
-// Adaptez ces valeurs à votre configuration locale
-$host   = '192.168.11.11';
-$port   = '8080';
-$dbname = 'Meca';
-$user   = 'root';        // ← à adapter
-$pass   = 'root';            // ← à adapter
-
-// ── Lecture des paramètres de recherche ───────────────────────────────────────
-$prenom = trim($_GET['prenom'] ?? '');
-$nom    = trim($_GET['nom']    ?? '');
-
-// Sécurité : on exige au moins 2 caractères dans l'un des champs
-if (strlen($prenom) < 2 && strlen($nom) < 2) {
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode([]);
     exit;
 }
 
-// ── Connexion PDO ─────────────────────────────────────────────────────────────
+// ── Connexion BDD — même config que recherche_or.php ─────────────────────────
 try {
     $pdo = new PDO(
-        "mysql:host=$host;port=$port;dbname=$dbname;charset=utf8",
-        $user,
-        $pass,
+        "mysql:host=192.168.11.11;dbname=Meca;charset=utf8mb4",
+        "root",
+        "root",
         [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -54,6 +36,17 @@ try {
     exit;
 }
 
+// ── Lecture des paramètres de recherche ───────────────────────────────────────
+$prenom = trim($_GET['prenom'] ?? '');
+$nom    = trim($_GET['nom']    ?? '');
+
+// Sécurité : on exige au moins 2 caractères dans l'un des champs
+if (strlen($prenom) < 2 && strlen($nom) < 2) {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode([]);
+    exit;
+}
+
 // ── Construction de la requête dynamique ─────────────────────────────────────
 // On filtre sur prénom ET/OU nom selon ce qui est renseigné
 $conditions = [];
@@ -61,23 +54,23 @@ $params     = [];
 
 if ($prenom !== '') {
     $conditions[] = 'prenom LIKE :prenom';
-    $params[':prenom'] = $prenom . '%';   // recherche "commence par"
+    $params[':prenom'] = $prenom . '%';
 }
 if ($nom !== '') {
     $conditions[] = 'nom LIKE :nom';
     $params[':nom'] = $nom . '%';
 }
 
-// Si les deux sont renseignés on cherche les clients qui matchent les deux
 $where = implode(' AND ', $conditions);
 
+// Note : la colonne téléphone s'appelle `numéro` (avec accent) dans ta BDD
 $sql = "
     SELECT
         id_clients,
         prenom,
         nom,
         adresse_mail,
-        numero,
+        `numéro`       AS numero,
         adresse_postal
     FROM Clients
     WHERE $where
@@ -92,7 +85,7 @@ try {
 } catch (PDOException $e) {
     http_response_code(500);
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['erreur' => 'Erreur requête']);
+    echo json_encode(['erreur' => 'Erreur requête : ' . $e->getMessage()]);
     exit;
 }
 
