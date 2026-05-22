@@ -346,12 +346,59 @@ if (
 
   /* ── PRINT ── */
   @media print {
+    @page { size: A4; margin: 8mm; }
+
     body { background: white; font-size: 11px; }
-    .toolbar { display: none; }
+
+    /* Masquer toolbar et boutons */
+    .toolbar,
+    button[type=button],
+    button[type=submit],
+    .btn { display: none !important; }
+
     .page-wrapper { box-shadow: none; border: none; margin: 0; max-width: 100%; }
-    input, textarea, select {
-      border-bottom: 1px solid #999 !important;
+
+    /* Inputs affichent leur valeur proprement */
+    input[type=text],
+    input[type=date],
+    input[type=number],
+    input[type=email],
+    input[type=tel] {
+      border: none !important;
+      border-bottom: 1px solid #ccc !important;
+      background: transparent !important;
+      font-size: 11px !important;
+      color: #000 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
+
+    textarea {
+      border: none !important;
+      border-bottom: 1px dashed #ccc !important;
+      background: transparent !important;
+      font-size: 11px !important;
+      color: #000 !important;
+    }
+
+    /* Masquer les placeholders */
+    input::placeholder,
+    textarea::placeholder { color: transparent !important; }
+
+    /* Dropdown suggestions : masquer */
+    #clientSuggestions { display: none !important; }
+
+    /* Conserver les couleurs des en-têtes */
+    .form-header,
+    .section-header,
+    .vehicle-table th,
+    .fact-table th,
+    .fact-table .total-row td {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* Saut de page avant conditions générales */
     .conditions-section { page-break-before: always; }
   }
 </style>
@@ -820,7 +867,7 @@ function rechercheClient() {
   }
 
   rechercheTimeout = setTimeout(() => {
-    fetch(`recherche_client.php?prenom=${encodeURIComponent(prenom)}&nom=${encodeURIComponent(nom)}`)
+    fetch(`recherche_or.php?ajax=1&prenom=${encodeURIComponent(prenom)}&nom=${encodeURIComponent(nom)}`)
       .then(r => r.json())
       .then(clients => afficherSuggestions(clients))
       .catch(() => fermerSuggestions());
