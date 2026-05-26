@@ -17,208 +17,247 @@ $name = $_SESSION['name'] ?? $_SESSION['username'];
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Espace Élève - Atelier mécanique</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espace Élève</title>
 
     <style>
-        * {
-            box-sizing: border-box;
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
         }
 
-        body {
-            margin: 0;
-            min-height: 100vh;
+        body{
             font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #2563eb, #111827);
-            color: #111827;
+            min-height:100vh;
+            background:
+                linear-gradient(135deg,#2563eb 0%, #1e3a8a 40%, #111827 100%);
+            color:white;
         }
 
-        header {
-            padding: 25px 40px;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        header{
+            padding:25px 40px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
         }
 
-        header h1 {
-            margin: 0;
-            font-size: 26px;
+        .title{
+            font-size:30px;
+            font-weight:bold;
         }
 
-        .badge {
-            background: rgba(255,255,255,0.15);
-            padding: 10px 16px;
-            border-radius: 999px;
-            font-weight: bold;
+        .user-box{
+            background:rgba(255,255,255,0.12);
+            padding:12px 18px;
+            border-radius:14px;
+            backdrop-filter: blur(8px);
+            border:1px solid rgba(255,255,255,0.1);
         }
 
-        main {
-            padding: 40px 20px;
+        main{
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            padding:30px;
         }
 
-        .container {
-            max-width: 1000px;
-            margin: auto;
+        .dashboard{
+            width:100%;
+            max-width:1100px;
+
+            background:rgba(255,255,255,0.12);
+            border:1px solid rgba(255,255,255,0.1);
+
+            backdrop-filter: blur(12px);
+
+            border-radius:25px;
+            padding:40px;
+
+            box-shadow:
+                0 15px 40px rgba(0,0,0,0.25);
         }
 
-        .welcome-card {
-            background: white;
-            border-radius: 22px;
-            padding: 35px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.30);
+        .welcome{
+            margin-bottom:40px;
         }
 
-        .logo {
-            width: 75px;
-            height: 75px;
-            border-radius: 50%;
-            background: #2563eb;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 34px;
-            margin-bottom: 20px;
+        .welcome h1{
+            font-size:38px;
+            margin-bottom:10px;
         }
 
-        h2 {
-            margin: 0;
-            font-size: 28px;
+        .welcome p{
+            color:rgba(255,255,255,0.75);
+            font-size:18px;
         }
 
-        .subtitle {
-            color: #6b7280;
-            margin-top: 8px;
-            margin-bottom: 30px;
+        .cards{
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+            gap:25px;
         }
 
-        .actions {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 18px;
+        .card{
+            background:white;
+            color:#111827;
+
+            border-radius:22px;
+
+            padding:30px;
+
+            text-decoration:none;
+
+            transition:0.25s;
+
+            box-shadow:
+                0 10px 25px rgba(0,0,0,0.12);
         }
 
-        .action-card {
-            text-decoration: none;
-            color: #111827;
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
-            border-radius: 18px;
-            padding: 22px;
-            transition: 0.2s;
+        .card:hover{
+            transform:translateY(-8px) scale(1.02);
+
+            box-shadow:
+                0 18px 40px rgba(0,0,0,0.18);
         }
 
-        .action-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.12);
-            border-color: #2563eb;
+        .icon{
+            font-size:50px;
+            margin-bottom:18px;
         }
 
-        .icon {
-            font-size: 34px;
-            margin-bottom: 12px;
+        .card h3{
+            margin-bottom:10px;
+            font-size:22px;
         }
 
-        .action-card h3 {
-            margin: 0 0 8px;
-            font-size: 18px;
+        .card p{
+            color:#6b7280;
+            line-height:1.5;
         }
 
-        .action-card p {
-            margin: 0;
-            color: #6b7280;
-            font-size: 14px;
+        .logout{
+            background:#dc2626;
+            color:white;
         }
 
-        .logout {
-            background: #fee2e2;
-            border-color: #fecaca;
+        .logout p{
+            color:rgba(255,255,255,0.85);
         }
 
-        .logout:hover {
-            border-color: #dc2626;
+        footer{
+            text-align:center;
+            padding:25px;
+            color:rgba(255,255,255,0.7);
+            font-size:14px;
         }
 
-        .footer {
-            margin-top: 25px;
-            text-align: center;
-            color: rgba(255,255,255,0.75);
-            font-size: 13px;
+        @media(max-width:700px){
+
+            header{
+                flex-direction:column;
+                gap:15px;
+            }
+
+            .welcome h1{
+                font-size:28px;
+            }
+
+            .dashboard{
+                padding:25px;
+            }
+
         }
+
     </style>
 </head>
 
 <body>
 
 <header>
-    <h1>Atelier mécanique</h1>
-    <div class="badge">Espace Élève</div>
+
+    <div class="title">
+        🔧 Atelier mécanique
+    </div>
+
+    <div class="user-box">
+        👨‍🎓 <?= htmlspecialchars($name) ?>
+    </div>
+
 </header>
 
 <main>
-    <div class="container">
-        <div class="welcome-card">
 
-            <div class="logo">👨‍🎓</div>
+    <div class="dashboard">
 
-            <h2>Bienvenue <?= htmlspecialchars($name) ?></h2>
+        <div class="welcome">
+            <h1>Bienvenue <?= htmlspecialchars($name) ?></h1>
 
-            <p class="subtitle">
-                Vous êtes connecté à l'espace élève.
+            <p>
+                Accédez rapidement aux outils de gestion des réparations.
             </p>
-
-            <div class="actions">
-
-                <a class="action-card" href="ordre_reparation.php">
-                    <div class="icon">📝</div>
-
-                    <h3>Créer un ordre</h3>
-
-                    <p>
-                        Créer un nouvel ordre de réparation.
-                    </p>
-                </a>
-
-                <a class="action-card" href="mes_reparations.php">
-                    <div class="icon">🔧</div>
-
-                    <h3>Mes réparations</h3>
-
-                    <p>
-                        Consulter les réparations enregistrées.
-                    </p>
-                </a>
-
-                <a class="action-card" href="recherche_or.php">
-                    <div class="icon">🔍</div>
-
-                    <h3>Rechercher un OR</h3>
-
-                    <p>
-                        Rechercher un ordre de réparation.
-                    </p>
-                </a>
-
-                <a class="action-card logout" href="logout.php">
-                    <div class="icon">🚪</div>
-
-                    <h3>Déconnexion</h3>
-
-                    <p>
-                        Fermer votre session en toute sécurité.
-                    </p>
-                </a>
-
-            </div>
         </div>
 
-        <div class="footer">
-            Projet Atelier mécanique - Lycée Brocéliande
+        <div class="cards">
+
+            <a class="card" href="ordre_reparation.php">
+
+                <div class="icon">📝</div>
+
+                <h3>Créer un OR</h3>
+
+                <p>
+                    Créer un nouvel ordre de réparation atelier.
+                </p>
+
+            </a>
+
+            <a class="card" href="mes_reparations.php">
+
+                <div class="icon">🔧</div>
+
+                <h3>Mes réparations</h3>
+
+                <p>
+                    Consulter les interventions enregistrées.
+                </p>
+
+            </a>
+
+            <a class="card" href="recherche_or.php">
+
+                <div class="icon">🔍</div>
+
+                <h3>Recherche OR</h3>
+
+                <p>
+                    Rechercher rapidement un ordre de réparation.
+                </p>
+
+            </a>
+
+            <a class="card logout" href="logout.php">
+
+                <div class="icon">🚪</div>
+
+                <h3>Déconnexion</h3>
+
+                <p>
+                    Quitter votre session utilisateur.
+                </p>
+
+            </a>
+
         </div>
+
     </div>
+
 </main>
 
-</body>
-</html>
+<footer>
+    Projet Atelier mécanique - Lycée Brocéliande
+</footer>
+
 </body>
 </html>
