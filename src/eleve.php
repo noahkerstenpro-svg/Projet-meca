@@ -211,19 +211,7 @@ $name = $_SESSION['name'] ?? $_SESSION['username'];
                     Créer un nouvel ordre de réparation atelier.
                 </p>
 
-            </a>
-
-            <a class="card" href="mes_reparations.php">
-
-                <div class="icon">🔧</div>
-
-                <h3>Mes réparations</h3>
-
-                <p>
-                    Consulter les interventions enregistrées.
-                </p>
-
-            </a>
+          </a>
 
             <a class="card" href="recherche_or.php">
 
