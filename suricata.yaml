@@ -1,18 +1,22 @@
 %YAML 1.1
 ---
-# Suricata IPS + NFQUEUE
-
+# Suricata IPS - DMZ Lycée Brocéliande
 vars:
   address-groups:
-    HOME_NET: "[192.168.1.0/24,10.89.1.0/24]"
+    HOME_NET: "[192.168.11.0/24,172.18.0.0/16,172.22.0.0/16]"
 
 logging:
   default-log-dir: /var/log/suricata
   default-log-level: info
 
 threading:
-  set-cpu-affinity: yes
-  max-pending-packets: 1024
+  set-cpu-affinity: no
+  max-pending-packets: 256
+
+nfq:
+  mode: accept
+  queue: 0
+  bypass: no
 
 rule-files:
   - /var/lib/suricata/rules/local.rules
@@ -21,17 +25,11 @@ unix-command:
   enabled: yes
   filename: /var/run/suricata-command.socket
 
-nfq:
-  mode: accept
-  queue: 0
-  bypass: no
-
 outputs:
   - fast:
       enabled: yes
       filename: /var/log/suricata/fast.log
       append: yes
-
   - eve-log:
       enabled: yes
       filetype: regular
@@ -39,4 +37,3 @@ outputs:
       types:
         - alert
         - drop
-
