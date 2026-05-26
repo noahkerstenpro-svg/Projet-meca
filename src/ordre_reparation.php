@@ -433,6 +433,10 @@ if (
         <span class="cell-label">Ordre de réparation</span>
         <input type="text" name="ordre_num" id="ordre_num" placeholder="ex: N 99/°25-26" style="font-size:11px;">
       </div>
+      <div class="prof-cell">
+        <span class="cell-label">Professeur Référent</span>
+        <input type="text" name="prof" placeholder="Nom du professeur référent" style="margin-bottom:6px; font-weight:600;">
+      </div>
     </div>
 
     <!-- ═══ CLIENT / PROF ═══ -->
@@ -520,7 +524,6 @@ if (
           <td colspan="2">
             <div style="display:flex; align-items:center; gap:8px;">
               <input type="text" name="vin" id="vinInput" placeholder="17 caractères" maxlength="17" style="text-transform:uppercase; letter-spacing:0.08em; font-family:monospace;">
-              <button type="button" onclick="readVinOBD()" title="Lecture OBD" style="background:var(--accent);color:white;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;font-size:11px;white-space:nowrap;">🔌 OBD</button>
             </div>
           </td>
         </tr>
