@@ -431,7 +431,6 @@ if (
       </div>
       <div class="order-cell">
         <span class="cell-label">Ordre de réparation</span>
-        <div class="order-num" id="orderNumDisplay">N 99/°25-26</div>
         <input type="text" name="ordre_num" id="ordre_num" placeholder="ex: N 99/°25-26" style="font-size:11px;">
       </div>
     </div>
