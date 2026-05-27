@@ -399,8 +399,7 @@ if (
   <span class="toolbar-title">📋 Ordre de Réparation — Cité scolaire de Brocéliande</span>
   <div class="toolbar-actions">
     <button class="btn btn-outline" type="button" onclick="resetForm()">🗑 Réinitialiser</button>
-    <input type="text" id="factureRef" placeholder="Référence (ex: 2026/AP/MB147)" style="padding:5px 10px; border-radius:4px; border:1.5px solid rgba(255,255,255,0.5); background:rgba(255,255,255,0.1); color:white; font-family:inherit; font-size:12px; width:200px;" title="Référence à rappeler lors du règlement">
-    <button class="btn btn-primary" type="button" onclick="genererFacturePDF()" title="Télécharger la Facture Titre Exécutoire en PDF">📄 Facture PDF</button>
+    <button class="btn btn-primary" type="button" onclick="genererFacturePDF()" title="Télécharger la facture en PDF">📄 Facture PDF</button>
     <button class="btn btn-primary" type="button" onclick="window.print()">🖨 Imprimer / PDF</button>
     <button class="btn btn-primary" type="submit" form="orForm">💾 Enregistrer</button>
   </div>
@@ -808,7 +807,7 @@ function resetForm() {
 
 
 // ══════════════════════════════════════════════
-// GÉNÉRATION FACTURE PDF — TITRE EXÉCUTOIRE
+// GÉNÉRATION FACTURE PDF
 // ══════════════════════════════════════════════
 function genererFacturePDF() {
   const { jsPDF } = window.jspdf;
@@ -816,348 +815,304 @@ function genererFacturePDF() {
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
 
-  // Palette
-  const BLACK  = [0, 0, 0];
-  const DARK   = [30, 30, 30];
-  const MID    = [80, 80, 80];
-  const LIGHT  = [200, 200, 200];
-  const HEADER_BG = [220, 220, 230];
-  const ROW_ODD   = [255, 255, 204]; // jaune pâle comme sur le document
-  const WHITE  = [255, 255, 255];
-  const RED_TEXT = [192, 0, 0];
-  const BLUE_DARK = [0, 0, 128];
+  const ACCENT   = [44, 44, 110];
+  const LIGHT_BG = [232, 232, 244];
+  const BORDER   = [176, 176, 200];
+  const MID      = [74, 74, 106];
+  const WHITE    = [255, 255, 255];
+  const INK      = [26, 26, 46];
 
-  function sc(r,g,b)  { doc.setTextColor(r,g,b); }
-  function sf(r,g,b)  { doc.setFillColor(r,g,b); }
-  function sd(r,g,b)  { doc.setDrawColor(r,g,b); }
-  function lw(t)      { doc.setLineWidth(t); }
-  function rect(x,y,w,h,s) { doc.rect(x,y,w,h,s||'D'); }
+  function setColor(r, g, b)  { doc.setTextColor(r, g, b); }
+  function setFill(r, g, b)   { doc.setFillColor(r, g, b); }
+  function setDraw(r, g, b)   { doc.setDrawColor(r, g, b); }
 
-  // ── Récupération des données du formulaire ──
-  const prenom   = document.getElementById('client_prenom')?.value?.trim() || '';
-  const nom      = document.getElementById('client_nom')?.value?.trim() || '';
-  const adresse  = document.getElementById('client_adresse')?.value?.trim() || '';
-  const nomComplet = ('M.' + (prenom + ' ' + nom).trim()).toUpperCase();
+  // ── HEADER ──
+  setFill(...ACCENT);
+  doc.rect(0, 0, W, 26, 'F');
 
-  const dateRec  = document.getElementById('date_reception')?.value || '';
-  const annee    = dateRec ? new Date(dateRec).getFullYear() : new Date().getFullYear();
-  const dateAff  = dateRec
-    ? new Date(dateRec).toLocaleDateString('fr-FR', {day:'2-digit',month:'long',year:'numeric'})
-    : new Date().toLocaleDateString('fr-FR', {day:'2-digit',month:'long',year:'numeric'});
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(18);
+  setColor(...WHITE);
+  doc.text('FACTURE', W / 2, 11, { align: 'center' });
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.text('ORDRE DE RÉPARATION', W / 2, 17, { align: 'center' });
 
-  const orNum    = document.getElementById('ordre_num')?.value?.trim() || '—';
-  const refField = document.getElementById('factureRef')?.value?.trim() || '';
+  const orNum = document.getElementById('ordre_num')?.value?.trim() || '—';
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.text('N° OR : ' + orNum, W - 10, 10, { align: 'right' });
 
-  // Calculer les lignes & total
+  const dateRec = document.getElementById('date_reception')?.value || '';
+  const dateAff = dateRec
+    ? new Date(dateRec).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' })
+    : new Date().toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' });
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.text('Date : ' + dateAff, W - 10, 16, { align: 'right' });
+
+  // ── ÉMETTEUR / CLIENT ──
+  let y = 32;
+
+  setFill(...LIGHT_BG);
+  setDraw(...BORDER);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(10, y, 82, 38, 2, 2, 'FD');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  setColor(...ACCENT);
+  doc.text('ÉMETTEUR', 14, y + 6);
+  setColor(...INK);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.text('Cité Scolaire de Brocéliande', 14, y + 13);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  setColor(...MID);
+  doc.text('4 avenue de Brocéliande', 14, y + 19);
+  doc.text('Bellevue – Coëtquidan', 14, y + 24.5);
+  doc.text('56380 GUER', 14, y + 30);
+
+  const prof = document.querySelector('[name=prof]')?.value?.trim() || '—';
+  doc.setFontSize(7.5);
+  setColor(...ACCENT);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Prof référent :', 14, y + 36);
+  doc.setFont('helvetica', 'bold');
+  setColor(...INK);
+  doc.text(prof, 43, y + 36);
+
+  setFill(...WHITE);
+  setDraw(...ACCENT);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(W / 2 + 4, y, W / 2 - 14, 38, 2, 2, 'FD');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  setColor(...ACCENT);
+  doc.text('CLIENT', W / 2 + 8, y + 6);
+
+  const prenom  = document.getElementById('client_prenom')?.value?.trim() || '';
+  const nom     = document.getElementById('client_nom')?.value?.trim() || '';
+  const adresse = document.getElementById('client_adresse')?.value?.trim() || '—';
+  const tel     = document.getElementById('client_tel')?.value?.trim() || '—';
+  const email   = document.getElementById('client_email')?.value?.trim() || '—';
+  const nomComplet = (prenom + ' ' + nom).trim() || '—';
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  setColor(...INK);
+  doc.text(nomComplet.toUpperCase(), W / 2 + 8, y + 13);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  setColor(...MID);
+  doc.text(adresse, W / 2 + 8, y + 20);
+  doc.text('Tél : ' + tel,   W / 2 + 8, y + 26.5);
+  doc.text('Mail : ' + email, W / 2 + 8, y + 33);
+  y += 44;
+
+  // ── VÉHICULE ──
+  setFill(...LIGHT_BG);
+  setDraw(...BORDER);
+  doc.setLineWidth(0.3);
+  doc.rect(10, y, W - 20, 8, 'FD');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  setColor(...ACCENT);
+  doc.text('VÉHICULE', 14, y + 5.5);
+  const marque = document.querySelector('[name=marque]')?.value?.trim() || '—';
+  const modele = document.querySelector('[name=modele]')?.value?.trim() || '—';
+  const immat  = document.querySelector('[name=immat]')?.value?.trim() || '—';
+  const km     = document.querySelector('[name=km]')?.value?.trim() || '—';
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  setColor(...INK);
+  doc.text(marque + ' ' + modele + '   |   Immat : ' + immat + '   |   Km : ' + km, 45, y + 5.5);
+  y += 14;
+
+  // ── TABLEAU FACTURATION ──
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  setColor(...ACCENT);
+  doc.text('DÉTAIL DE LA FACTURATION', 10, y);
+  y += 5;
+
+  const colX = [10, 88, 106, 130, 160];
+  const colW = [78, 18, 24, 30, W - 160 - 10];
+  const headers = ['Désignation', 'Qté', 'Référence', 'Prix unit. TTC', 'Total TTC'];
+  const rowH = 7;
+
+  setFill(...ACCENT);
+  doc.rect(10, y, W - 20, rowH, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  setColor(...WHITE);
+  headers.forEach((h, i) => {
+    const align = i >= 3 ? 'right' : (i === 1 ? 'center' : 'left');
+    const tx = i >= 3 ? colX[i] + colW[i] - 2 : (i === 1 ? colX[i] + colW[i] / 2 : colX[i] + 2);
+    doc.text(h, tx, y + 4.8, { align });
+  });
+  y += rowH;
+
+  let totalPieces = 0;
+  let rowIndex = 0;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+
   const factTbody = document.getElementById('factRows');
   const factRows  = factTbody ? Array.from(factTbody.querySelectorAll('tr')) : [];
-  const lignes = [];
-  let grandTotal = 0;
-
   for (const tr of factRows) {
     const idx  = tr.id.replace('factRow-', '');
     const desc = tr.querySelector('[name=fact_desc_' + idx + ']')?.value?.trim() || '';
     const qte  = parseFloat(tr.querySelector('[name=fact_qte_'  + idx + ']')?.value) || 0;
+    const ref  = tr.querySelector('[name=fact_ref_'  + idx + ']')?.value?.trim() || '';
     const prix = parseFloat(tr.querySelector('[name=fact_prix_' + idx + ']')?.value) || 0;
     if (!desc && qte === 0 && prix === 0) continue;
     const total = qte * prix;
-    grandTotal += total;
-    lignes.push({ desc, qte, prix, total });
-  }
-  // Forfait recyclage toujours présent
-  lignes.push({ desc: 'Frais fixe (Recyclage)', qte: 1, prix: 2.00, total: 2.00, isFRC: true });
-  grandTotal += 2.00;
-
-  // MO
-  const moH = parseFloat(document.getElementById('moHeures')?.value) || 0;
-  const moT = parseFloat(document.getElementById('tauxH')?.value) || 0;
-  if (moH > 0 && moT > 0) {
-    const moTotal = moH * moT;
-    lignes.push({ desc: "Main d'œuvre (" + moH + " h × " + moT.toFixed(2) + " €/h)", qte: 1, prix: moTotal, total: moTotal, isMO: true });
-    grandTotal += moTotal;
-  }
-
-  // Conversion nombre en lettres (simplifié)
-  function nombreEnLettres(n) {
-    const units = ['','un','deux','trois','quatre','cinq','six','sept','huit','neuf','dix',
-      'onze','douze','treize','quatorze','quinze','seize','dix-sept','dix-huit','dix-neuf'];
-    const tens  = ['','','vingt','trente','quarante','cinquante','soixante','soixante','quatre-vingt','quatre-vingt'];
-    if (n === 0) return 'zéro';
-    if (n < 20) return units[n];
-    if (n < 100) {
-      const t = Math.floor(n/10), u = n%10;
-      if (t===7) return 'soixante-' + units[10+u];
-      if (t===9) return 'quatre-vingt-' + (u===0?'s':units[u]);
-      return tens[t] + (u===1&&t!==8?' et ':u>0?'-':'') + (u>0?units[u]:'');
+    totalPieces += total;
+    if (rowIndex % 2 === 0) {
+      setFill(245, 245, 252);
+      doc.rect(10, y, W - 20, rowH, 'F');
     }
-    return n + '';
-  }
-
-  const totalEntier = Math.round(grandTotal);
-  const totalLettres = nombreEnLettres(totalEntier).charAt(0).toUpperCase() + nombreEnLettres(totalEntier).slice(1) + ' euro' + (totalEntier > 1 ? 's' : '');
-
-  // ════════════════════════════════════════
-  // MISE EN PAGE — TITRE EXÉCUTOIRE
-  // ════════════════════════════════════════
-
-  let y = 8;
-  sd(...DARK); lw(0.4);
-
-  // ── Bloc titre centré ──
-  rect(10, y, W - 20, 7);
-  sf(...HEADER_BG); doc.rect(10, y, W - 20, 7, 'F');
-  sd(...DARK); doc.rect(10, y, W - 20, 7, 'D');
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(8); sc(...DARK);
-  doc.text('ETABLISSEMENT PUBLIC', W / 4, y + 4.5, { align: 'center' });
-  doc.text('NOM ET ADRESSE DU DEBITEUR', 3 * W / 4, y + 4.5, { align: 'center' });
-  y += 7;
-
-  // ── Ligne séparation verticale dans le bloc émetteur/débiteur ──
-  const midX = W / 2;
-  const blkH = 42;
-  rect(10, y, W - 20, blkH); // contour global
-
-  // Colonne gauche : établissement
-  doc.line(midX, y, midX, y + blkH); // séparation verticale
-
-  // Logo / nom école
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(11); sc(...BLUE_DARK);
-  doc.text('cité scolaire', 14, y + 8);
-  doc.text('Brocéliande', 14, y + 14);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(7); sc(...MID);
-  doc.text('académie', 14, y + 19);
-  doc.text('de Rennes', 14, y + 23);
-  doc.text('Éducation nationale', 14, y + 27);
-
-  // Coordonnées établissement
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); sc(...DARK);
-  doc.text('Tel. : 02.97.70.70.00', 14, y + 33);
-  doc.text('Fax : 02.97.75.73.53', 14, y + 37);
-  doc.text('Couriel : gestion.0560018n@ac-rennes.fr', 14, y + 41);
-
-  // Nom débiteur (colonne droite)
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(13); sc(...DARK);
-  doc.text(nomComplet, midX + 4, y + 18);
-  if (adresse) {
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); sc(...MID);
-    const adrLines = doc.splitTextToSize(adresse, midX - 18);
-    doc.text(adrLines, midX + 4, y + 26);
-  }
-  y += blkH;
-
-  // ── Titre TITRE EXÉCUTOIRE ──
-  y += 6;
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(14); sc(...DARK);
-  doc.text('TITRE EXECUTOIRE', W / 2, y, { align: 'center' });
-  y += 5;
-  doc.setFont('helvetica', 'bolditalic'); doc.setFontSize(10); sc(...DARK);
-  doc.text('valant facture', W / 2, y, { align: 'center' });
-  y += 5;
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(7); sc(...MID);
-  const legalText = "Le présent titre est exécutoire en application de l'article L 252A du livre des procédures fiscales\npris, émis et rendu exécutoire conformément aux dispositions de l'article R421-68 du code de l'Education.";
-  doc.text(legalText, W / 2, y, { align: 'center' });
-  y += 10;
-
-  // ── Tableau 4 colonnes : exercice / date / imputation / références ──
-  const tblX = 10, tblW = W - 20, tblH = 8;
-  const cols4 = [tblW * 0.25, tblW * 0.25, tblW * 0.25, tblW * 0.25];
-  let cx = tblX;
-  const hdrs4 = ["exercice d'origine", "émis ou rendu exécutoire le", "imputation budgétaire", "références\nà rappeler lors du règlement"];
-  sf(...HEADER_BG); doc.rect(tblX, y, tblW, tblH, 'F');
-  sd(...DARK); lw(0.3); doc.rect(tblX, y, tblW, tblH, 'D');
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); sc(...DARK);
-  hdrs4.forEach((h, i) => {
-    if (i > 0) doc.line(cx, y, cx, y + tblH);
-    const lines = h.split('\n');
-    lines.forEach((l, li) => doc.text(l, cx + cols4[i]/2, y + 3 + li * 3.5, {align:'center'}));
-    cx += cols4[i];
-  });
-  y += tblH;
-
-  // Valeurs de la ligne exercice
-  cx = tblX;
-  sf(...WHITE); doc.rect(tblX, y, tblW, 8, 'FD');
-  sd(...DARK); doc.rect(tblX, y, tblW, 8, 'D');
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(9); sc(...DARK);
-  const vals4 = [String(annee), dateAff, '', refField || '— à compléter —'];
-  vals4.forEach((v, i) => {
-    if (i > 0) { sd(...DARK); doc.line(cx, y, cx, y + 8); }
-    sc(i === 3 && !refField ? [192, 0, 0] : DARK);
-    doc.text(v, cx + cols4[i]/2, y + 5.5, {align:'center'});
-    cx += cols4[i];
-  });
-  y += 8;
-
-  // ── Texte de demande de versement ──
-  y += 4;
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); sc(...DARK);
-  doc.text('Je vous prie de bien vouloir verser à réception du présent titre exécutoire, la somme dont le montant figure dans la colonne', W/2, y, {align:'center'});
-  y += 4.5;
-  doc.text('"somme due" selon les indications données en dessous du présent titre.', W/2, y, {align:'center'});
-  y += 8;
-
-  // ── Section OBJET ET DÉCOMPTE DE LA RECETTE ──
-  sf(...HEADER_BG); doc.rect(tblX, y, tblW, 7, 'F');
-  sd(...DARK); lw(0.3); doc.rect(tblX, y, tblW, 7, 'D');
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); sc(...DARK);
-  doc.text('OBJET ET DECOMPTE DE LA RECETTE', W/2, y + 4.5, {align:'center'});
-  y += 7;
-
-  // Ligne objet (nom client + réf OR)
-  const travaux = document.querySelector('[name=travaux]')?.value?.trim() || '';
-  const objetText = nomComplet.replace('M.','').trim() + ' - réparation du ' + dateAff;
-  sf(...WHITE); doc.rect(tblX, y, tblW, 7, 'FD');
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); sc(...DARK);
-  doc.text(objetText, W/2, y + 4.5, {align:'center'});
-  y += 7;
-
-  // En-têtes tableau CALCUL
-  const cW = { nature: tblW*0.48, prix: tblW*0.20, nb: tblW*0.12, somme: tblW*0.20 };
-  sf(...HEADER_BG); doc.rect(tblX, y, tblW, 7, 'F');
-  sd(...DARK); doc.rect(tblX, y, tblW, 7, 'D');
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(7); sc(...DARK);
-  doc.text('CALCUL', W/2, y + 4.5, {align:'center'});
-  y += 7;
-
-  sf(...HEADER_BG); doc.rect(tblX, y, tblW, 6, 'F');
-  sd(...DARK); doc.rect(tblX, y, tblW, 6, 'D');
-  doc.text('NATURE', tblX + cW.nature/2, y + 4, {align:'center'});
-  doc.line(tblX + cW.nature, y, tblX + cW.nature, y + 6);
-  doc.text('PRIX UNITAIRE TTC', tblX + cW.nature + cW.prix/2, y + 4, {align:'center'});
-  doc.line(tblX + cW.nature + cW.prix, y, tblX + cW.nature + cW.prix, y + 6);
-  doc.text('NOMBRE', tblX + cW.nature + cW.prix + cW.nb/2, y + 4, {align:'center'});
-  doc.line(tblX + cW.nature + cW.prix + cW.nb, y, tblX + cW.nature + cW.prix + cW.nb, y + 6);
-  doc.text('SOMME DUE', tblX + cW.nature + cW.prix + cW.nb + cW.somme/2, y + 4, {align:'center'});
-  y += 6;
-
-  // Lignes de détail
-  const rowH2 = 7;
-  lignes.forEach((lg, idx) => {
-    sf(idx % 2 === 0 ? ROW_ODD : WHITE);
-    doc.rect(tblX, y, tblW, rowH2, 'F');
-    sd(...DARK); lw(0.2); doc.rect(tblX, y, tblW, rowH2, 'D');
-    doc.setFont('helvetica', lg.isFRC ? 'bold' : 'normal'); doc.setFontSize(8); sc(...DARK);
-    doc.text(lg.desc, tblX + 3, y + 4.8);
-    doc.line(tblX + cW.nature, y, tblX + cW.nature, y + rowH2);
-    doc.text(lg.prix.toFixed(2) + ' €', tblX + cW.nature + cW.prix/2, y + 4.8, {align:'center'});
-    doc.line(tblX + cW.nature + cW.prix, y, tblX + cW.nature + cW.prix, y + rowH2);
-    doc.text(String(lg.qte), tblX + cW.nature + cW.prix + cW.nb/2, y + 4.8, {align:'center'});
-    doc.line(tblX + cW.nature + cW.prix + cW.nb, y, tblX + cW.nature + cW.prix + cW.nb, y + rowH2);
+    setDraw(...BORDER);
+    doc.setLineWidth(0.2);
+    doc.line(10, y + rowH, W - 10, y + rowH);
+    setColor(...INK);
+    doc.text(desc || '—', colX[0] + 2, y + 4.8);
+    doc.text(String(qte), colX[1] + colW[1] / 2, y + 4.8, { align: 'center' });
+    doc.text(ref || '—', colX[2] + 2, y + 4.8);
+    doc.text(prix.toFixed(2) + ' €', colX[3] + colW[3] - 2, y + 4.8, { align: 'right' });
     doc.setFont('helvetica', 'bold');
-    doc.text(lg.total.toFixed(2) + ' €', tblX + cW.nature + cW.prix + cW.nb + cW.somme/2, y + 4.8, {align:'center'});
-    y += rowH2;
-  });
-
-  // 2 lignes vides
-  for (let e = 0; e < 2; e++) {
-    sf(...WHITE); doc.rect(tblX, y, tblW, rowH2, 'FD');
-    sd(...DARK); lw(0.2); doc.rect(tblX, y, tblW, rowH2, 'D');
-    [cW.nature, cW.nature+cW.prix, cW.nature+cW.prix+cW.nb].forEach(x => doc.line(tblX+x, y, tblX+x, y+rowH2));
-    y += rowH2;
+    doc.text(total.toFixed(2) + ' €', colX[4] + colW[4] - 2, y + 4.8, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    y += rowH;
+    rowIndex++;
   }
 
-  // Total des sommes dues
-  sf(...HEADER_BG); doc.rect(tblX, y, tblW, 7, 'F');
-  sd(...DARK); lw(0.3); doc.rect(tblX, y, tblW, 7, 'D');
-  [cW.nature, cW.nature+cW.prix, cW.nature+cW.prix+cW.nb].forEach(x => {
-    sd(...DARK); doc.line(tblX+x, y, tblX+x, y+7);
-  });
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(8); sc(...DARK);
-  doc.text('TOTAL DES SOMMES DUES', tblX + (cW.nature+cW.prix+cW.nb)/2, y + 4.5, {align:'center'});
-  doc.text(grandTotal.toFixed(2) + ' €', tblX + cW.nature + cW.prix + cW.nb + cW.somme/2, y + 4.5, {align:'center'});
-  y += 7;
+  // FRC
+  if (rowIndex % 2 === 0) { setFill(245, 245, 252); doc.rect(10, y, W - 20, rowH, 'F'); }
+  setDraw(...BORDER); doc.setLineWidth(0.2); doc.line(10, y + rowH, W - 10, y + rowH);
+  setColor(...MID); doc.setFont('helvetica', 'italic'); doc.setFontSize(8);
+  doc.text('Forfait recyclage', colX[0] + 2, y + 4.8);
+  doc.text('1', colX[1] + colW[1] / 2, y + 4.8, { align: 'center' });
+  doc.text('FRC', colX[2] + 2, y + 4.8);
+  doc.setFont('helvetica', 'normal'); doc.text('2.00 €', colX[3] + colW[3] - 2, y + 4.8, { align: 'right' });
+  doc.setFont('helvetica', 'bold');  doc.text('2.00 €', colX[4] + colW[4] - 2, y + 4.8, { align: 'right' });
+  y += rowH; rowIndex++;
 
-  // ── Arrêté en lettres ──
-  y += 6;
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); sc(...DARK);
-  doc.text('Arrêtez le présent titre à la somme de :', tblX, y + 4);
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(10); sc(...RED_TEXT);
-  doc.text(totalLettres, tblX + 72, y + 4);
-  y += 12;
+  // FPF
+  if (rowIndex % 2 === 0) { setFill(245, 245, 252); doc.rect(10, y, W - 20, rowH, 'F'); }
+  setDraw(...BORDER); doc.setLineWidth(0.2); doc.line(10, y + rowH, W - 10, y + rowH);
+  setColor(...MID); doc.setFont('helvetica', 'italic'); doc.setFontSize(8);
+  doc.text('Forfait petite fourniture', colX[0] + 2, y + 4.8);
+  doc.text('1', colX[1] + colW[1] / 2, y + 4.8, { align: 'center' });
+  doc.text('FPF', colX[2] + 2, y + 4.8);
+  doc.setFont('helvetica', 'normal'); doc.text('5.00 €', colX[3] + colW[3] - 2, y + 4.8, { align: 'right' });
+  doc.setFont('helvetica', 'bold');  doc.text('5.00 €', colX[4] + colW[4] - 2, y + 4.8, { align: 'right' });
+  y += rowH + 3;
 
-  // Date de l'émission
-  const today = new Date();
-  const dateFaite = today.toLocaleDateString('fr-FR', {day:'numeric', month:'long', year:'numeric'});
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); sc(...DARK);
-  doc.text('Fait à Guer, le ' + dateFaite, W - 12, y, {align:'right'});
-  y += 8;
+  // ── MAIN D'OEUVRE ──
+  const moH = parseFloat(document.getElementById('moHeures')?.value) || 0;
+  const moT = parseFloat(document.getElementById('tauxH')?.value)    || 0;
+  const moTotal = moH * moT;
+  setFill(...LIGHT_BG);
+  setDraw(...BORDER);
+  doc.setLineWidth(0.3);
+  doc.rect(10, y, W - 20, 12, 'FD');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  setColor(...ACCENT);
+  doc.text("Main d'oeuvre", 14, y + 5);
+  doc.setFont('helvetica', 'normal');
+  setColor(...INK);
+  doc.setFontSize(8);
+  if (moH > 0 && moT > 0) {
+    doc.text(moH + ' h  x  ' + moT.toFixed(2) + ' €/h', 14, y + 10);
+  } else {
+    doc.text('Non renseignée', 14, y + 10);
+  }
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  setColor(...INK);
+  doc.text(moTotal.toFixed(2) + ' €', W - 12, y + 8, { align: 'right' });
+  y += 18;
 
-  // ── Bloc signatures : Proviseur / Gestionnaire ──
-  const sigW2 = (W - 20) / 2;
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(8); sc(...DARK);
-  doc.text("L'ordonnateur : le Proviseur", tblX + sigW2/2, y, {align:'center'});
-  doc.text("le Gestionnaire", tblX + sigW2 + sigW2/2, y, {align:'center'});
-  y += 5;
-  // Cases de signature
-  sd(...LIGHT); lw(0.3);
-  doc.rect(tblX + 10, y, sigW2 - 20, 28, 'D');
-  doc.rect(tblX + sigW2 + 10, y, sigW2 - 20, 28, 'D');
-  doc.setFont('helvetica', 'italic'); doc.setFontSize(7); sc(...MID);
-  doc.text('Signature', tblX + sigW2/2, y + 16, {align:'center'});
-  doc.text('Signature', tblX + sigW2 + sigW2/2, y + 16, {align:'center'});
-  y += 34;
+  // ── TOTAL TTC ──
+  const grandTotal = totalPieces + 7 + moTotal;
+  setFill(...ACCENT);
+  doc.rect(10, y, W - 20, 14, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  setColor(...WHITE);
+  doc.text('TOTAL TTC', 16, y + 9.5);
+  doc.setFontSize(16);
+  doc.text(grandTotal.toFixed(2) + ' €', W - 14, y + 9.5, { align: 'right' });
+  y += 20;
 
-  // ── Séparateur ──
-  sd(...DARK); lw(0.5);
-  doc.line(tblX, y, tblX + tblW, y);
-  y += 4;
-
-  // ── Section comptable ──
-  const compW = tblW * 0.48, moyW = tblW * 0.52;
-  sf(...HEADER_BG); doc.rect(tblX, y, tblW, 6, 'F');
-  sd(...DARK); lw(0.3); doc.rect(tblX, y, tblW, 6, 'D');
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); sc(...DARK);
-  doc.text('COMPTABLE CHARGÉ DU RECOUVREMENT', tblX + compW/2, y + 4, {align:'center'});
-  doc.line(tblX + compW, y, tblX + compW, y + 6);
-  doc.text('Moyens de règlement', tblX + compW + moyW/2, y + 4, {align:'center'});
-  y += 6;
-
-  // Infos comptable
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(7); sc(...DARK);
-  const compLines = [
-    'Monsieur l\'agent comptable',
-    'LPO BROCELIANDE',
-    '4 avenue de Brocéliande',
-    '56380 GUER',
-    'TELEPHONE    02 97 70 70 00',
-    'SIRET :    195600 168 000 15',
-    'IBAN – FR76 1007 1560 00 00 0010 0204 182',
-    'BIC – TRPUFRP1'
-  ];
-  let yc = y + 5;
-  compLines.forEach(l => { doc.text(l, tblX + 3, yc); yc += 4; });
-
-  // Moyens de règlement
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); sc(...DARK);
-  let ym = y + 5;
-  doc.text('La somme due est à verser dès réception à l\'agent comptable de l\'établissement, au choix :', tblX + compW + 3, ym, {maxWidth: moyW - 6});
-  ym += 7;
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(7);
-  doc.text('- par chèque bancaire ou postal à l\'ordre de l\'A.C. du lycée Brocéliande', tblX + compW + 3, ym, {maxWidth: moyW - 6});
-  ym += 4.5;
-  doc.text('- en espèces à la caisse du lycée Brocéliande', tblX + compW + 3, ym);
-  ym += 7;
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5);
-  const infoText = 'Pour tout renseignement, ou si vous avez une réclamation amiable à formuler,\nadressez-vous au secrétariat de la gestion du lycée (02.97.70.70.16)\nLa contestation amiable ne suspend pas le délai de saisine du juge';
-  doc.text(infoText, tblX + compW + 3, ym, {maxWidth: moyW - 6});
-
-  // Boîte délais de voies de recours
-  const dely = y + 42;
-  if (dely < H - 10) {
-    sf(...WHITE); sd(...DARK); lw(0.3);
-    doc.rect(tblX, dely, compW, 26, 'FD');
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(7); sc(...DARK);
-    doc.text('Délais et voies de recours', tblX + 3, dely + 5);
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(6);
-    const recours = 'Le recouvrement des titres exécutoires est poursuivi jusqu\'à opposition devant la juridiction compétente\n(article R 421-68 du code de l\'Éducation)\nToute contestation sur le bien fondé d\'une créance de nature administrative doit être portée, dans le délai de deux\nmois suivant sa notification, devant la juridiction administrative compétente (décret n° 85-29 du 11/01/1985).';
-    doc.text(recours, tblX + 3, dely + 10, {maxWidth: compW - 6});
+  // ── TRAVAUX EFFECTUÉS ──
+  const travaux = document.querySelector('[name=travaux]')?.value?.trim() || '';
+  if (travaux) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    setColor(...ACCENT);
+    doc.text('TRAVAUX EFFECTUÉS', 10, y);
+    y += 5;
+    const lines = doc.splitTextToSize(travaux, W - 24);
+    const boxH = Math.max(12, lines.length * 5 + 6);
+    setFill(250, 250, 255);
+    setDraw(...BORDER);
+    doc.setLineWidth(0.3);
+    doc.rect(10, y, W - 20, boxH, 'FD');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    setColor(...INK);
+    doc.text(lines, 14, y + 5.5);
+    y += boxH + 6;
   }
 
-  // ── Pied de page ──
-  doc.setFont('helvetica', 'italic'); doc.setFontSize(6.5); sc(160, 160, 190);
-  doc.text('Cité Scolaire de Brocéliande — 4 avenue de Brocéliande, Bellevue – Coëtquidan, 56380 GUER', W/2, H - 3, {align:'center'});
+  // ── SIGNATURES ──
+  const dateRest = document.querySelector('[name=date_restitution]')?.value || '';
+  const dateRestAff = dateRest
+    ? new Date(dateRest).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' })
+    : '—';
 
-  const nomFichier = 'TitreExecutoire_' + (nom || 'client').replace(/[^a-zA-Z0-9]/g,'_') + '_' + annee + '.pdf';
+  const sigY = y + 4;
+  const sigCols = ['Date de restitution', 'Signature référent', 'Signature client', 'Signature DDF', 'Visa Gestion'];
+  const sigW = (W - 20) / sigCols.length;
+  const sigH = 28;
+
+  sigCols.forEach((label, i) => {
+    const sx = 10 + i * sigW;
+    setFill(...LIGHT_BG);
+    setDraw(...BORDER);
+    doc.setLineWidth(0.3);
+    doc.rect(sx, sigY, sigW, 8, 'FD');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    setColor(...ACCENT);
+    doc.text(label, sx + sigW / 2, sigY + 5.2, { align: 'center' });
+  });
+  sigCols.forEach((_, i) => {
+    const sx = 10 + i * sigW;
+    setFill(...WHITE);
+    setDraw(...BORDER);
+    doc.rect(sx, sigY + 8, sigW, sigH, 'FD');
+    if (i === 0) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      setColor(...INK);
+      doc.text(dateRestAff, sx + sigW / 2, sigY + 8 + sigH / 2 + 1.5, { align: 'center' });
+    }
+  });
+
+  // ── PIED DE PAGE ──
+  doc.setFont('helvetica', 'italic');
+  doc.setFontSize(6.5);
+  setColor(160, 160, 190);
+  doc.text('Cité Scolaire de Brocéliande — 4 avenue de Brocéliande, Bellevue – Coëtquidan, 56380 GUER', W / 2, H - 4, { align: 'center' });
+
+  const nomFichier = 'Facture_OR_' + orNum.replace(/[^a-zA-Z0-9]/g, '_') + '.pdf';
   doc.save(nomFichier);
 }
 
