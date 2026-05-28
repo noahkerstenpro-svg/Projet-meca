@@ -22,7 +22,7 @@ try {
             v.`marque/modèle`   AS vehicule,
             c.nom               AS client_nom,
             c.prenom            AS client_prenom,
-            c.telephone         AS client_tel,
+            c.`numéro`          AS client_tel,
             p.designation       AS prestation_nom,
             p.prix              AS prestation_prix,
             p.reference         AS prestation_ref
