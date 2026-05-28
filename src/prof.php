@@ -170,10 +170,10 @@ $name = $_SESSION['name'] ?? $_SESSION['username'];
                     <p>Créer un nouvel ordre de réparation pour l’atelier.</p>
                 </a>
 
-                <a class="action-card" href="Generateur_de_facture.html">
-                    <div class="icon">🧾</div>
-                    <h3>Générateur de facture</h3>
-                    <p>Créer et télécharger une facture PDF pour un client.</p>
+                <a class="action-card" href="rdv_client.php">
+                    <div class="icon">📅</div>
+                    <h3>Agenda des RDV</h3>
+                    <p>Consulter tous les rendez-vous clients planifiés.</p>
                 </a>
 
                 <a class="action-card" href="recherche_or.php">
