@@ -954,22 +954,25 @@ function genererFacturePDF() {
   doc.text('valant facture', W / 2, y, { align: 'center' });
   y += 5;
   doc.setFont('helvetica', 'normal'); doc.setFontSize(7); sc(...MID);
-  const legalText = "Le présent titre est exécutoire en application de l'article L 252A du livre des procédures fiscales\npris, émis et rendu exécutoire conformément aux dispositions de l'article R421-68 du code de l'Education.";
-  doc.text(legalText, W / 2, y, { align: 'center' });
+  doc.text("Le présent titre est exécutoire en application de l'article L 252A du livre des procédures fiscales", W / 2, y, { align: 'center' });
+  y += 3.5;
+  doc.text("pris, émis et rendu exécutoire conformément aux dispositions de l'article R421-68 du code de l'Education.", W / 2, y, { align: 'center' });
   y += 10;
 
   // ── Tableau 4 colonnes : exercice / date / imputation / références ──
   const tblX = 10, tblW = W - 20, tblH = 8;
   const cols4 = [tblW * 0.25, tblW * 0.25, tblW * 0.25, tblW * 0.25];
   let cx = tblX;
-  const hdrs4 = ["exercice d'origine", "émis ou rendu exécutoire le", "imputation budgétaire", "références\nà rappeler lors du règlement"];
+  const hdrs4 = ["exercice d'origine", "emis ou rendu executoire le", "imputation budgetaire", "references / a rappeler lors du reglement"];
   sf(...HEADER_BG); doc.rect(tblX, y, tblW, tblH, 'F');
   sd(...DARK); lw(0.3); doc.rect(tblX, y, tblW, tblH, 'D');
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); sc(...DARK);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(6); sc(...DARK);
   hdrs4.forEach((h, i) => {
     if (i > 0) doc.line(cx, y, cx, y + tblH);
-    const lines = h.split('\n');
-    lines.forEach((l, li) => doc.text(l, cx + cols4[i]/2, y + 3 + li * 3.5, {align:'center'}));
+    // Wrap long headers manually
+    const wrapped = doc.splitTextToSize(h, cols4[i] - 4);
+    const startY = y + (tblH - wrapped.length * 3) / 2 + 2.5;
+    wrapped.forEach((l, li) => doc.text(l, cx + cols4[i]/2, startY + li * 3, {align:'center'}));
     cx += cols4[i];
   });
   y += tblH;
@@ -982,7 +985,7 @@ function genererFacturePDF() {
   const vals4 = [String(annee), dateAff, '', refField || '— à compléter —'];
   vals4.forEach((v, i) => {
     if (i > 0) { sd(...DARK); doc.line(cx, y, cx, y + 8); }
-    sc(i === 3 && !refField ? [192, 0, 0] : DARK);
+    if (i === 3 && !refField) { sc(192, 0, 0); } else { sc(...DARK); }
     doc.text(v, cx + cols4[i]/2, y + 5.5, {align:'center'});
     cx += cols4[i];
   });
@@ -1033,7 +1036,7 @@ function genererFacturePDF() {
   // Lignes de détail
   const rowH2 = 7;
   lignes.forEach((lg, idx) => {
-    sf(idx % 2 === 0 ? ROW_ODD : WHITE);
+    if (idx % 2 === 0) { sf(...ROW_ODD); } else { sf(...WHITE); }
     doc.rect(tblX, y, tblW, rowH2, 'F');
     sd(...DARK); lw(0.2); doc.rect(tblX, y, tblW, rowH2, 'D');
     doc.setFont('helvetica', lg.isFRC ? 'bold' : 'normal'); doc.setFontSize(8); sc(...DARK);
@@ -1115,14 +1118,14 @@ function genererFacturePDF() {
   // Infos comptable
   doc.setFont('helvetica', 'normal'); doc.setFontSize(7); sc(...DARK);
   const compLines = [
-    'Monsieur l\'agent comptable',
+    "Monsieur l'agent comptable",
     'LPO BROCELIANDE',
-    '4 avenue de Brocéliande',
+    '4 avenue de Broceliande',
     '56380 GUER',
     'TELEPHONE    02 97 70 70 00',
     'SIRET :    195600 168 000 15',
-    'IBAN – FR76 1007 1560 00 00 0010 0204 182',
-    'BIC – TRPUFRP1'
+    'IBAN - FR76 1007 1560 00 00 0010 0204 182',
+    'BIC - TRPUFRP1'
   ];
   let yc = y + 5;
   compLines.forEach(l => { doc.text(l, tblX + 3, yc); yc += 4; });
@@ -1138,8 +1141,11 @@ function genererFacturePDF() {
   doc.text('- en espèces à la caisse du lycée Brocéliande', tblX + compW + 3, ym);
   ym += 7;
   doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5);
-  const infoText = 'Pour tout renseignement, ou si vous avez une réclamation amiable à formuler,\nadressez-vous au secrétariat de la gestion du lycée (02.97.70.70.16)\nLa contestation amiable ne suspend pas le délai de saisine du juge';
-  doc.text(infoText, tblX + compW + 3, ym, {maxWidth: moyW - 6});
+  doc.text("Pour tout renseignement, ou si vous avez une reclamation amiable a formuler,", tblX + compW + 3, ym, {maxWidth: moyW - 6});
+  ym += 3.5;
+  doc.text("adressez-vous au secretariat de la gestion du lycee (02.97.70.70.16)", tblX + compW + 3, ym, {maxWidth: moyW - 6});
+  ym += 3.5;
+  doc.text("La contestation amiable ne suspend pas le delai de saisine du juge", tblX + compW + 3, ym, {maxWidth: moyW - 6});
 
   // Boîte délais de voies de recours
   const dely = y + 42;
@@ -1147,10 +1153,16 @@ function genererFacturePDF() {
     sf(...WHITE); sd(...DARK); lw(0.3);
     doc.rect(tblX, dely, compW, 26, 'FD');
     doc.setFont('helvetica', 'bold'); doc.setFontSize(7); sc(...DARK);
-    doc.text('Délais et voies de recours', tblX + 3, dely + 5);
+    doc.text('Delais et voies de recours', tblX + 3, dely + 5);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(6);
-    const recours = 'Le recouvrement des titres exécutoires est poursuivi jusqu\'à opposition devant la juridiction compétente\n(article R 421-68 du code de l\'Éducation)\nToute contestation sur le bien fondé d\'une créance de nature administrative doit être portée, dans le délai de deux\nmois suivant sa notification, devant la juridiction administrative compétente (décret n° 85-29 du 11/01/1985).';
-    doc.text(recours, tblX + 3, dely + 10, {maxWidth: compW - 6});
+    const recoursLines = [
+      "Le recouvrement des titres executoires est poursuivi jusqu'a opposition devant la juridiction competente",
+      "(article R 421-68 du code de l'Education)",
+      "Toute contestation sur le bien fonde d'une creance de nature administrative doit etre portee,",
+      "dans le delai de deux mois suivant sa notification, devant la juridiction administrative competente",
+      "(decret n 85-29 du 11/01/1985)."
+    ];
+    recoursLines.forEach((l, i) => doc.text(l, tblX + 3, dely + 10 + i * 3.5, {maxWidth: compW - 6}));
   }
 
   // ── Pied de page ──
