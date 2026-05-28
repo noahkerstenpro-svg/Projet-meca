@@ -12,8 +12,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $vehicule = trim($_POST['vehicule'] ?? '');
     $date     = trim($_POST['date']     ?? '');
     $heure    = trim($_POST['heure']    ?? '');
-    $probleme = trim($_POST['probleme'] ?? '');
     $client_id = $_SESSION['client_id'];
+
+    $probleme_select = trim($_POST['probleme']       ?? '');
+    $probleme_autre  = trim($_POST['probleme_autre'] ?? '');
+    $probleme = ($probleme_select === 'Autre') ? $probleme_autre : $probleme_select;
 
     if ($vehicule && $date && $heure && $probleme) {
 
@@ -249,7 +252,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="form">
             <label>Problème</label>
-            <input name="probleme" placeholder="Décrivez votre problème" required>
+            <select name="probleme" id="probleme" onchange="afficherAutre()" required>
+                <option value="" disabled selected>Choisir une prestation</option>
+                <option>Vidange filtre à huile et niveaux</option>
+                <option>Réparation pneumatique</option>
+                <option>Changement pneumatique + équilibrage</option>
+                <option>Changement filtre habitacle</option>
+                <option>Changement filtre air</option>
+                <option>Changement filtre gazole</option>
+                <option>Changement plaquettes de freins</option>
+                <option>Changement disques + plaquettes</option>
+                <option>Réglage projecteurs</option>
+                <option>Recharge batterie d'accu</option>
+                <option>Recharge climatisation</option>
+                <option>Changement 2 amortisseurs arrière</option>
+                <option>Changement 2 amortisseurs avant</option>
+                <option>Changement courroie accessoires</option>
+                <option>Contrôle anti-pollution</option>
+                <option>Contrôle géométrie</option>
+                <option>Contrôle éclairage</option>
+                <option>Rénovation optique phare</option>
+                <option>Lecture / effacement code défaut</option>
+                <option value="Autre">Autre</option>
+            </select>
+        </div>
+
+        <div class="form" id="autre-champ" style="display:none;">
+            <label>Précisez votre problème</label>
+            <input type="text" name="probleme_autre" id="probleme_autre" placeholder="Décrivez votre problème">
         </div>
 
         <button type="submit">Réserver</button>
@@ -263,6 +293,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </footer>
 
 <script>
+function afficherAutre() {
+    const select = document.getElementById('probleme');
+    const autreChamp = document.getElementById('autre-champ');
+    const autreInput = document.getElementById('probleme_autre');
+
+    if (select.value === 'Autre') {
+        autreChamp.style.display = 'block';
+        autreInput.required = true;
+    } else {
+        autreChamp.style.display = 'none';
+        autreInput.required = false;
+        autreInput.value = '';
+    }
+}
+
 const tousLesCreneaux = ['09:00','10:00','11:00','14:00','15:00','16:00'];
 
 async function majCreneaux() {
