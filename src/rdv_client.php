@@ -66,241 +66,170 @@ function couleurHeure($heure) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agenda RDV — Méca Brocéliande</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 
     <style>
-        :root {
-            --orange:    #eb5e00;
-            --orange-dk: #c44d00;
-            --grey-900:  #1a1a1a;
-            --grey-800:  #2c2c2c;
-            --grey-700:  #3e3e3e;
-            --grey-200:  #e8e8e8;
-            --grey-100:  #f4f4f4;
-            --white:     #ffffff;
-            --matin:     #fff7f0;
-            --matin-bd:  #ffd4b0;
-            --aprem:     #f0f6ff;
-            --aprem-bd:  #b0ccff;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
         body {
-            font-family: 'DM Sans', sans-serif;
-            background: var(--grey-100);
-            color: var(--grey-900);
+            font-family: Arial, sans-serif;
+            background-color: #f1f2f3;
             min-height: 100vh;
         }
 
         /* ── HEADER ── */
         header {
-            background: var(--grey-900);
-            padding: 0 40px;
-            height: 70px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 3px solid var(--orange);
-        }
-
-        .header-brand {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .header-logo {
-            width: 38px;
-            height: 38px;
-            background: var(--orange);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Syne', sans-serif;
-            font-weight: 800;
-            font-size: 18px;
+            background-color: #525151;
             color: white;
+            padding: 20px;
+            text-align: center;
         }
 
-        .header-title {
-            font-family: 'Syne', sans-serif;
-            font-weight: 700;
-            font-size: 18px;
-            color: var(--white);
-            letter-spacing: -0.3px;
-        }
-
-        .header-title span {
-            color: var(--orange);
-        }
-
-        .header-meta {
-            font-size: 13px;
-            color: #888;
+        header h1 {
+            font-size: 24px;
+            margin: 0;
         }
 
         /* ── STATS BAR ── */
         .stats-bar {
-            background: var(--white);
-            border-bottom: 1px solid var(--grey-200);
-            padding: 20px 40px;
             display: flex;
-            gap: 40px;
-            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            padding: 30px 20px 10px;
         }
 
-        .stat {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
+        .stat-card {
+            background: white;
+            border-radius: 25px;
+            padding: 20px 40px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            min-width: 160px;
         }
 
         .stat-value {
-            font-family: 'Syne', sans-serif;
-            font-size: 26px;
-            font-weight: 800;
-            color: var(--orange);
-            line-height: 1;
+            font-size: 36px;
+            font-weight: bold;
+            color: #eb5e00;
         }
 
         .stat-label {
-            font-size: 12px;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .stat-divider {
-            width: 1px;
-            height: 40px;
-            background: var(--grey-200);
+            font-size: 13px;
+            color: #777;
+            margin-top: 4px;
         }
 
         /* ── RECHERCHE ── */
         .search-bar {
-            padding: 20px 40px;
             display: flex;
-            gap: 12px;
+            justify-content: center;
             align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 20px;
         }
 
         .search-input {
-            flex: 1;
-            max-width: 380px;
-            padding: 10px 16px 10px 40px;
-            border: 2px solid var(--grey-200);
-            border-radius: 30px;
-            font-family: 'DM Sans', sans-serif;
+            padding: 10px 20px;
+            border: 1px solid #ccc;
+            border-radius: 50px;
             font-size: 14px;
-            background: var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23999' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.656a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z'/%3E%3C/svg%3E") no-repeat 14px center;
+            font-family: Arial, sans-serif;
+            width: 320px;
             outline: none;
-            transition: border-color .2s;
+            transition: border-color 0.2s;
         }
 
-        .search-input:focus { border-color: var(--orange); }
+        .search-input:focus {
+            border-color: #eb5e00;
+        }
 
         .filter-btn {
-            padding: 10px 18px;
-            border-radius: 30px;
-            border: 2px solid var(--grey-200);
-            background: var(--white);
-            font-family: 'DM Sans', sans-serif;
+            padding: 10px 22px;
+            border-radius: 50px;
+            border: 1px solid #ccc;
+            background: white;
+            font-family: Arial, sans-serif;
             font-size: 13px;
             cursor: pointer;
-            transition: all .2s;
-            color: var(--grey-700);
+            transition: background-color 0.2s;
+            color: #525151;
         }
 
-        .filter-btn:hover, .filter-btn.active {
-            background: var(--orange);
-            border-color: var(--orange);
+        .filter-btn:hover,
+        .filter-btn.active {
+            background-color: #eb5e00;
+            border-color: #eb5e00;
             color: white;
         }
 
         /* ── AGENDA ── */
         .agenda {
-            padding: 0 40px 60px;
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 10px 20px 100px;
             display: flex;
             flex-direction: column;
-            gap: 32px;
+            gap: 30px;
         }
 
         /* ── BLOC JOUR ── */
-        .jour-bloc {
-            animation: fadeUp .4s ease both;
-        }
-
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(16px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
         .jour-header {
             display: flex;
             align-items: center;
-            gap: 16px;
-            margin-bottom: 14px;
+            gap: 14px;
+            margin-bottom: 12px;
         }
 
         .jour-date {
-            font-family: 'Syne', sans-serif;
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--grey-900);
+            font-size: 18px;
+            font-weight: bold;
+            color: #525151;
         }
 
         .jour-date .jour-nom {
-            color: var(--orange);
+            color: #eb5e00;
         }
 
         .jour-count {
-            background: var(--grey-900);
+            background: #525151;
             color: white;
             font-size: 11px;
-            font-weight: 600;
+            font-weight: bold;
             padding: 3px 10px;
             border-radius: 20px;
-            font-family: 'Syne', sans-serif;
-            letter-spacing: 0.3px;
         }
 
         .jour-line {
             flex: 1;
             height: 1px;
-            background: var(--grey-200);
+            background: #ddd;
         }
 
-        /* ── TIMELINE ── */
+        /* ── CARTE RDV ── */
         .timeline {
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
 
-        /* ── CARTE RDV ── */
         .rdv-card {
             display: grid;
             grid-template-columns: 80px 1fr auto;
-            align-items: start;
-            gap: 0;
-            background: var(--white);
-            border-radius: 14px;
+            background: white;
+            border-radius: 25px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            transition: transform .2s, box-shadow .2s;
-            cursor: default;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
         .rdv-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.10);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.13);
         }
 
         /* Bande heure */
@@ -309,75 +238,63 @@ function couleurHeure($heure) {
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 20px 10px;
-            font-family: 'Syne', sans-serif;
-            font-weight: 800;
-            font-size: 20px;
-            line-height: 1;
+            padding: 18px 10px;
+            font-weight: bold;
+            font-size: 18px;
             gap: 4px;
         }
 
         .rdv-card.matin .rdv-heure {
-            background: var(--matin);
-            color: #c44d00;
-            border-right: 3px solid var(--matin-bd);
+            background: #fff3eb;
+            color: #eb5e00;
+            border-right: 3px solid #ffd4b0;
         }
 
         .rdv-card.aprem .rdv-heure {
-            background: var(--aprem);
+            background: #f0f6ff;
             color: #2255bb;
-            border-right: 3px solid var(--aprem-bd);
+            border-right: 3px solid #b0ccff;
         }
 
-        .rdv-heure .heure-label {
+        .heure-label {
             font-size: 10px;
-            font-weight: 400;
-            font-family: 'DM Sans', sans-serif;
-            opacity: 0.7;
+            font-weight: normal;
+            color: #aaa;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
-        /* Corps de la carte */
+        /* Corps */
         .rdv-body {
-            padding: 16px 20px;
+            padding: 16px 18px;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 5px;
         }
 
         .rdv-client {
-            font-family: 'Syne', sans-serif;
-            font-weight: 700;
             font-size: 15px;
-            color: var(--grey-900);
+            font-weight: bold;
+            color: #111;
         }
 
         .rdv-vehicule {
             font-size: 13px;
             color: #888;
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
 
         .rdv-vehicule::before {
-            content: '🚗';
-            font-size: 14px;
+            content: '🚗 ';
         }
 
         .rdv-prestation {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+            display: inline-block;
             background: #fff3eb;
-            color: var(--orange-dk);
+            color: #c44d00;
             font-size: 12px;
-            font-weight: 500;
-            padding: 4px 10px;
+            padding: 4px 12px;
             border-radius: 20px;
-            width: fit-content;
             margin-top: 2px;
+            width: fit-content;
         }
 
         .rdv-prestation.autre {
@@ -385,86 +302,76 @@ function couleurHeure($heure) {
             color: #555;
         }
 
-        /* Infos droite */
+        /* Meta droite */
         .rdv-meta {
-            padding: 16px 20px;
+            padding: 16px 18px;
             display: flex;
             flex-direction: column;
             align-items: flex-end;
             justify-content: space-between;
-            gap: 8px;
+            gap: 6px;
             min-width: 120px;
         }
 
         .rdv-tel {
             font-size: 12px;
             color: #aaa;
-            text-align: right;
-        }
-
-        .rdv-prix {
-            font-family: 'Syne', sans-serif;
-            font-weight: 800;
-            font-size: 18px;
-            color: var(--orange);
-        }
-
-        .rdv-prix.gratuit {
-            font-size: 12px;
-            color: #aaa;
-            font-weight: 400;
-            font-family: 'DM Sans', sans-serif;
         }
 
         .rdv-ref {
             font-size: 11px;
             color: #bbb;
-            font-family: 'Syne', sans-serif;
-            letter-spacing: 0.5px;
+        }
+
+        .rdv-prix {
+            font-size: 18px;
+            font-weight: bold;
+            color: #eb5e00;
+        }
+
+        .rdv-prix.gratuit {
+            font-size: 12px;
+            color: #aaa;
+            font-weight: normal;
         }
 
         /* ── VIDE ── */
         .vide {
             text-align: center;
-            padding: 80px 20px;
+            padding: 60px 20px;
             color: #bbb;
+            font-size: 16px;
         }
 
         .vide-icon {
             font-size: 48px;
-            margin-bottom: 16px;
-        }
-
-        .vide-text {
-            font-family: 'Syne', sans-serif;
-            font-size: 18px;
-            color: #ccc;
+            margin-bottom: 14px;
         }
 
         /* ── ERREUR ── */
         .erreur-bdd {
-            margin: 40px;
+            margin: 40px auto;
+            max-width: 600px;
             background: #fdecea;
             color: #b00020;
             border: 1px solid #f5c2c7;
-            border-radius: 12px;
+            border-radius: 25px;
             padding: 20px;
             font-size: 14px;
         }
 
         /* ── FOOTER ── */
         footer {
+            position: fixed;
+            bottom: 19px;
+            left: 0;
+            width: 100%;
             text-align: center;
-            padding: 20px;
-            font-size: 12px;
-            color: #bbb;
-            border-top: 1px solid var(--grey-200);
+            font-size: 13px;
+            color: #999;
         }
 
-        /* ── RESPONSIVE ── */
         @media (max-width: 600px) {
-            header, .stats-bar, .search-bar, .agenda { padding-left: 16px; padding-right: 16px; }
-            .stats-bar { gap: 20px; flex-wrap: wrap; }
             .rdv-card { grid-template-columns: 70px 1fr; }
             .rdv-meta { display: none; }
         }
@@ -473,11 +380,7 @@ function couleurHeure($heure) {
 <body>
 
 <header>
-    <div class="header-brand">
-        <div class="header-logo">MB</div>
-        <div class="header-title">Méca <span>Brocéliande</span></div>
-    </div>
-    <div class="header-meta">Agenda des rendez-vous</div>
+    <h1>Atelier Mécanique - Bac Professionnel de Brocéliande</h1>
 </header>
 
 <?php if (isset($erreur)): ?>
@@ -495,19 +398,17 @@ function couleurHeure($heure) {
             if ($date >= $today) $rdvFuturs += count($list);
         }
     ?>
-    <div class="stat">
-        <span class="stat-value"><?= $totalRdv ?></span>
-        <span class="stat-label">RDV au total</span>
+    <div class="stat-card">
+        <div class="stat-value"><?= $totalRdv ?></div>
+        <div class="stat-label">RDV au total</div>
     </div>
-    <div class="stat-divider"></div>
-    <div class="stat">
-        <span class="stat-value"><?= $totalJours ?></span>
-        <span class="stat-label">Jours planifiés</span>
+    <div class="stat-card">
+        <div class="stat-value"><?= $totalJours ?></div>
+        <div class="stat-label">Jours planifiés</div>
     </div>
-    <div class="stat-divider"></div>
-    <div class="stat">
-        <span class="stat-value"><?= $rdvFuturs ?></span>
-        <span class="stat-label">À venir</span>
+    <div class="stat-card">
+        <div class="stat-value"><?= $rdvFuturs ?></div>
+        <div class="stat-label">À venir</div>
     </div>
 </div>
 
@@ -525,7 +426,7 @@ function couleurHeure($heure) {
 <?php if (empty($rdvParDate)): ?>
     <div class="vide">
         <div class="vide-icon">📅</div>
-        <div class="vide-text">Aucun rendez-vous enregistré</div>
+        <div>Aucun rendez-vous enregistré</div>
     </div>
 <?php else: ?>
 
@@ -603,7 +504,9 @@ function couleurHeure($heure) {
 
 <?php endif; ?>
 
-<footer>© 2026 Méca Brocéliande — Agenda interne</footer>
+<footer>
+    <p>© 2026 Méca Brocéliande</p>
+</footer>
 
 <script>
 let filtreActif = 'tous';
