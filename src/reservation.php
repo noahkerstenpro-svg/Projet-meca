@@ -5,6 +5,18 @@ if (!isset($_SESSION['client_id'])) {
     exit;
 }
 
+// --- Connexion BDD (partagée pour tout le fichier) ---
+$host   = 'meca-mysql';
+$dbname = 'Meca';
+$user   = 'root';
+$pass   = 'root';
+
+$pdo = new PDO("mysql:host=$host;port=3306;dbname=$dbname;charset=utf8mb4", $user, $pass);
+$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+// Charger les prestations depuis la BDD pour le menu déroulant
+$prestations = $pdo->query("SELECT id_prestation, designation FROM Prestation ORDER BY id_prestation")->fetchAll(PDO::FETCH_ASSOC);
+
 $message = '';
 $erreur  = '';
 
@@ -20,15 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($vehicule && $date && $heure && $probleme) {
 
-        // --- Connexion BDD ---
-        $host = 'meca-mysql';
-        $dbname = 'Meca';
-        $user   = 'root';
-        $pass   = 'root';
-
         try {
-            $pdo = new PDO("mysql:host=$host;port=3306;dbname=$dbname;charset=utf8", $user, $pass);
-            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            // $pdo est déjà connecté en haut du fichier
 
             // 1) Vérifier si le véhicule existe déjà pour ce client
             $stmtCheck = $pdo->prepare("
@@ -274,25 +279,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label>Problème</label>
             <select name="probleme" id="probleme" onchange="afficherAutre()" required>
                 <option value="" disabled selected>Choisir une prestation</option>
-                <option>Vidange filtre à huile et niveaux</option>
-                <option>Réparation pneumatique</option>
-                <option>Changement pneumatique + équilibrage</option>
-                <option>Changement filtre habitacle</option>
-                <option>Changement filtre air</option>
-                <option>Changement filtre gazole</option>
-                <option>Changement plaquettes de freins</option>
-                <option>Changement disques + plaquettes</option>
-                <option>Réglage projecteurs</option>
-                <option>Recharge batterie d'accu</option>
-                <option>Recharge climatisation</option>
-                <option>Changement 2 amortisseurs arrière</option>
-                <option>Changement 2 amortisseurs avant</option>
-                <option>Changement courroie accessoires</option>
-                <option>Contrôle anti-pollution</option>
-                <option>Contrôle géométrie</option>
-                <option>Contrôle éclairage</option>
-                <option>Rénovation optique phare</option>
-                <option>Lecture / effacement code défaut</option>
+                <?php foreach ($prestations as $p): ?>
+                    <option value="<?= htmlspecialchars($p['designation']) ?>">
+                        <?= htmlspecialchars($p['designation']) ?>
+                    </option>
+                <?php endforeach; ?>
                 <option value="Autre">Autre</option>
             </select>
         </div>
