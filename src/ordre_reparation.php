@@ -1112,11 +1112,7 @@ function genererFacturePDF() {
   ];
   recours.forEach((l,i) => doc.text(l, X+3, y+8+i*3.2, {maxWidth:TW-6}));
 
-  // ── 12. PIED DE PAGE ──
-  doc.setFont('helvetica','italic'); doc.setFontSize(6); sc(150,150,170);
-  doc.text('Cite Scolaire de Broceliande — 4 avenue de Broceliande, Bellevue, 56380 GUER', W/2, H-3, {align:'center'});
-
-  const nomFichier = 'TitreExecutoire_' + (nom||'client').replace(/[^a-zA-Z0-9]/g,'_') + '_' + annee + '.pdf';
+  const nomFichier = 'TitreExecutoire_' + (nom||'client').replace(/[^a-zA-Z0-9]/g,'_') + '_' + Date + '.pdf';
   doc.save(nomFichier);
 }
 
