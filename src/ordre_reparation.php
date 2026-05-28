@@ -1112,7 +1112,7 @@ function genererFacturePDF() {
   ];
   recours.forEach((l,i) => doc.text(l, X+3, y+8+i*3.2, {maxWidth:TW-6}));
 
-  const nomFichier = 'TitreExecutoire_' + (nom||'client').replace(/[^a-zA-Z0-9]/g,'_') + '_' + Date + '.pdf';
+  const nomFichier = 'TitreExecutoire_' + (nom||'client').replace(/[^a-zA-Z0-9]/g,'_') + '_' + annee + '.pdf';
   doc.save(nomFichier);
 }
 
