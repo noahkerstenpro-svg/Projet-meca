@@ -61,14 +61,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $stmtInt = $pdo->prepare("
-                INSERT INTO intervention (vehicule_id, prestation_id, date_intervention, heure_de_préstation, commentaire)
-                VALUES (:vehicule_id, NULL, :date, :heure, :commentaire)
+                INSERT INTO intervention (vehicule_id, prestation_id, date_intervention, `heure_de_préstation`, Probleme, commentaire)
+                VALUES (:vehicule_id, NULL, :date, :heure, :probleme, :commentaire)
             ");
             $stmtInt->execute([
                 ':vehicule_id'  => $vehicule_id,
                 ':date'         => $date,
                 ':heure'        => $heure,
-                ':commentaire'  => $probleme,
+                ':probleme'     => $probleme,
+                ':commentaire'  => '',
             ]);
 
             $message = "Réservation confirmée pour votre $vehicule le $date à $heure.";
