@@ -8,6 +8,38 @@ if (
     header('Location: login.php');
     exit;
 }
+
+// --- Connexion BDD ---
+$host   = 'meca-mysql';
+$dbname = 'Meca';
+$user   = 'root';
+$pass   = 'root';
+$pdo = new PDO("mysql:host=$host;port=3306;dbname=$dbname;charset=utf8mb4", $user, $pass);
+$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+// --- Pré-remplissage si ?intervention_id=X ---
+$prefill = [];
+$intervention_id = (int)($_GET['intervention_id'] ?? 0);
+if ($intervention_id > 0) {
+    $stmt = $pdo->prepare("
+        SELECT i.*, v.vin, v.`marque/modèle` AS marque_modele, v.immatriculation,
+               v.km, v.mise_circulation, v.type_veh, v.id_vehicules,
+               c.prenom AS client_prenom, c.nom AS client_nom,
+               c.adresse_postal AS client_adresse, c.`numéro` AS client_tel,
+               c.adresse_mail AS client_email, c.id_clients
+        FROM intervention i
+        JOIN Vehicules v ON v.id_vehicules = i.vehicule_id
+        JOIN Clients   c ON c.id_clients   = v.client_id
+        WHERE i.id_intervention = :id
+    ");
+    $stmt->execute([':id' => $intervention_id]);
+    $prefill = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+}
+
+// Helper pour pré-remplir un champ
+function val($key, $prefill, $default = '') {
+    return htmlspecialchars($prefill[$key] ?? $default);
+}
 ?>
 
 <?php // ordre.php ?>
@@ -405,9 +437,20 @@ if (
   </div>
 </div>
 
+<?php if (isset($_GET['saved'])): ?>
+<div style="background:#e6f9e6; color:#2a7a2a; border-bottom:2px solid #a3d9a3; padding:10px 24px; font-size:13px; font-family:'Source Sans 3',sans-serif; display:flex; align-items:center; gap:8px;">
+  ✅ <strong>Enregistré avec succès</strong> — Les données ont bien été sauvegardées en base de données.
+  <?php if ($intervention_id): ?>
+    <span style="color:#555; margin-left:8px;">ID intervention : <strong><?= $intervention_id ?></strong></span>
+  <?php endif; ?>
+</div>
+<?php endif; ?>
+
 <!-- FORM -->
 <div class="page-wrapper">
-  <form id="orForm" action="save.php" method="POST" autocomplete="off">
+  <form id="orForm" action="save_or.php" method="POST" autocomplete="off">
+    <input type="hidden" name="intervention_id" value="<?= val('id_intervention', $prefill) ?>">
+    <input type="hidden" name="vehicule_id"     value="<?= val('id_vehicules',   $prefill) ?>">
 
     <!-- ═══ TITRE ═══ -->
     <div class="form-header">Ordre de Réparation</div>
@@ -446,6 +489,7 @@ if (
             <span class="cell-label" style="font-size:9px;">Prénom</span>
             <input type="text" name="client_prenom" id="client_prenom" placeholder="Prénom"
               autocomplete="off" style="font-weight:600;"
+              value="<?= val('client_prenom', $prefill) ?>"
               oninput="rechercheClient()"
               onblur="setTimeout(()=>fermerSuggestions(),200)">
           </div>
@@ -453,6 +497,7 @@ if (
             <span class="cell-label" style="font-size:9px;">Nom</span>
             <input type="text" name="client_nom" id="client_nom" placeholder="Nom"
               autocomplete="off" style="font-weight:600; text-transform:uppercase;"
+              value="<?= val('client_nom', $prefill) ?>"
               oninput="rechercheClient()"
               onblur="setTimeout(()=>fermerSuggestions(),200)">
           </div>
@@ -465,19 +510,19 @@ if (
           border-radius:4px; max-height:180px; overflow-y:auto;
           min-width:280px; font-size:12px;
         "></div>
-        <input type="hidden" name="client_id" id="client_id">
+          <input type="hidden" name="client_id" id="client_id" value="<?= val('id_clients', $prefill) ?>">
         <div class="client-fields">
           <div class="client-field-row">
             <span class="icon">📍</span>
-            <input type="text" name="client_adresse" id="client_adresse" placeholder="Adresse">
+            <input type="text" name="client_adresse" id="client_adresse" placeholder="Adresse" value="<?= val('client_adresse', $prefill) ?>">
           </div>
           <div class="client-field-row">
             <span class="icon">📞</span>
-            <input type="tel" name="client_tel" id="client_tel" placeholder="Téléphone">
+            <input type="tel" name="client_tel" id="client_tel" placeholder="Téléphone" value="<?= val('client_tel', $prefill) ?>">
           </div>
           <div class="client-field-row">
             <span class="icon">✉️</span>
-            <input type="email" name="client_email" id="client_email" placeholder="E-mail">
+            <input type="email" name="client_email" id="client_email" placeholder="E-mail" value="<?= val('client_email', $prefill) ?>">
           </div>
         </div>
       </div>
@@ -496,10 +541,10 @@ if (
       </thead>
       <tbody>
         <tr>
-          <td><input type="text" name="marque" placeholder="ex: Renault"></td>
-          <td><input type="text" name="modele" placeholder="ex: Clio IV"></td>
-          <td><input type="text" name="type_veh" placeholder="ex: Berline"></td>
-          <td><input type="date" name="mise_circulation"></td>
+          <td><input type="text" name="marque" id="marqueInput" placeholder="ex: Renault" value="<?= val('marque_modele', $prefill) ?>"></td>
+          <td><input type="text" name="modele" id="modeleInput" placeholder="ex: Clio IV" value=""></td>
+          <td><input type="text" name="type_veh" id="typeVehInput" placeholder="ex: Berline" value="<?= val('type_veh', $prefill) ?>"></td>
+          <td><input type="date" name="mise_circulation" id="miseCircInput" value="<?= val('mise_circulation', $prefill) ?>"></td>
         </tr>
       </tbody>
     </table>
@@ -513,11 +558,26 @@ if (
       </thead>
       <tbody>
         <tr>
-          <td><input type="text" name="immat" placeholder="AB-123-CD" style="text-transform:uppercase; letter-spacing:0.1em;"></td>
-          <td><input type="number" name="km" placeholder="km" min="0"></td>
+          <td><input type="text" name="immat" id="immatInput" placeholder="AB-123-CD" style="text-transform:uppercase; letter-spacing:0.1em;" value="<?= val('immatriculation', $prefill) ?>"></td>
+          <td><input type="number" name="km" id="kmInput" placeholder="km" min="0" value="<?= val('km', $prefill) ?>"></td>
           <td colspan="2">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <input type="text" name="vin" id="vinInput" placeholder="17 caractères" maxlength="17" style="text-transform:uppercase; letter-spacing:0.08em; font-family:monospace;">
+            <div style="display:flex; align-items:center; gap:8px; position:relative;">
+              <div style="position:relative; flex:1;">
+                <input type="text" name="vin" id="vinInput" placeholder="17 caractères" maxlength="17"
+                  style="text-transform:uppercase; letter-spacing:0.08em; font-family:monospace; width:100%;"
+                  value="<?= val('vin', $prefill) ?>"
+                  oninput="rechercheVin()"
+                  onblur="setTimeout(()=>fermerSuggestionsVin(),200)"
+                  autocomplete="off">
+                <!-- Dropdown VIN -->
+                <div id="vinSuggestions" style="
+                  display:none; position:absolute; z-index:200;
+                  background:white; border:1.5px solid var(--border-strong);
+                  box-shadow:0 4px 16px rgba(44,44,110,0.18);
+                  border-radius:4px; max-height:160px; overflow-y:auto;
+                  min-width:340px; font-size:12px; left:0; top:100%;
+                "></div>
+              </div>
               <button type="button" onclick="readVinOBD()" title="Lecture OBD" style="background:var(--accent);color:white;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;font-size:11px;white-space:nowrap;">🔌 OBD</button>
             </div>
           </td>
@@ -1118,6 +1178,103 @@ function genererFacturePDF() {
 
 // ── Date du jour par défaut ──
 document.getElementById('date_reception').valueAsDate = new Date();
+
+// ══════════════════════════════════════════════
+// AUTOCOMPLETE VIN — Recherche BDD
+// ══════════════════════════════════════════════
+let vinTimeout = null;
+
+function rechercheVin() {
+  clearTimeout(vinTimeout);
+  const vin = document.getElementById('vinInput').value.trim();
+
+  if (vin.length < 3) {
+    fermerSuggestionsVin();
+    return;
+  }
+
+  vinTimeout = setTimeout(() => {
+    fetch(`recherche_vin.php?vin=${encodeURIComponent(vin)}`)
+      .then(r => r.json())
+      .then(vehicules => afficherSuggestionsVin(vehicules))
+      .catch(() => fermerSuggestionsVin());
+  }, 250);
+}
+
+function afficherSuggestionsVin(vehicules) {
+  const box = document.getElementById('vinSuggestions');
+  box.innerHTML = '';
+
+  if (!vehicules || vehicules.length === 0) {
+    fermerSuggestionsVin();
+    return;
+  }
+
+  vehicules.forEach(v => {
+    const item = document.createElement('div');
+    item.style.cssText = 'padding:8px 12px; cursor:pointer; border-bottom:1px solid #e8e8f4; transition:background 0.1s;';
+    item.innerHTML = `
+      <strong style="color:var(--accent); font-family:monospace; letter-spacing:0.08em;">${v.vin}</strong>
+      <span style="color:var(--mid); font-size:11px; margin-left:8px;">${v.marque_modele || '—'}</span>
+      <div style="font-size:11px; color:var(--light); margin-top:2px;">
+        🚗 ${v.immatriculation || 'Sans immat'} &nbsp;|&nbsp; 👤 ${v.client_prenom || ''} ${v.client_nom || ''}
+      </div>
+    `;
+    item.addEventListener('mouseenter', () => item.style.background = '#f0f0fa');
+    item.addEventListener('mouseleave', () => item.style.background = 'white');
+    item.addEventListener('mousedown', () => selectionnerVin(v));
+    box.appendChild(item);
+  });
+
+  box.style.display = 'block';
+}
+
+function selectionnerVin(v) {
+  // Remplir VIN
+  document.getElementById('vinInput').value = v.vin;
+
+  // Remplir les champs véhicule
+  const marque = v.marque_modele || '';
+  const parts  = marque.split(' ');
+  if (document.getElementById('marqueInput'))
+    document.getElementById('marqueInput').value = parts[0] || marque;
+  if (document.getElementById('modeleInput'))
+    document.getElementById('modeleInput').value = parts.slice(1).join(' ') || '';
+  if (document.getElementById('immatInput'))
+    document.getElementById('immatInput').value = v.immatriculation || '';
+  if (document.getElementById('kmInput'))
+    document.getElementById('kmInput').value = v.km || '';
+  if (document.getElementById('typeVehInput'))
+    document.getElementById('typeVehInput').value = v.type_veh || '';
+  if (document.getElementById('miseCircInput'))
+    document.getElementById('miseCircInput').value = v.mise_circulation || '';
+
+  // Remplir les champs client si disponibles
+  if (v.client_prenom) {
+    document.getElementById('client_prenom').value = v.client_prenom;
+    document.getElementById('client_nom').value    = (v.client_nom || '').toUpperCase();
+    document.getElementById('client_id').value     = v.client_id   || '';
+    document.getElementById('client_adresse').value = v.client_adresse || '';
+    document.getElementById('client_tel').value    = v.client_tel   || '';
+    document.getElementById('client_email').value  = v.client_email  || '';
+  }
+
+  fermerSuggestionsVin();
+
+  // Flash vert sur les champs remplis
+  ['marqueInput','modeleInput','immatInput','kmInput'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.borderBottomColor = '#27ae60';
+    el.style.background = 'rgba(39,174,96,0.07)';
+    setTimeout(() => { el.style.borderBottomColor = ''; el.style.background = ''; }, 1500);
+  });
+}
+
+function fermerSuggestionsVin() {
+  const box = document.getElementById('vinSuggestions');
+  if (box) box.style.display = 'none';
+}
 
 // ══════════════════════════════════════════════
 // AUTOCOMPLETE CLIENT — Recherche BDD
