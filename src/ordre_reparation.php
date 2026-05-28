@@ -896,152 +896,147 @@ function genererFacturePDF() {
 
   // ── 1. EN-TÊTE : ETABLISSEMENT  |  NOM DU DEBITEUR ──
   sf(...GREY_BG); sd(...DARK); lw(0.3);
-  bx(X, y, TW, 6, 'FD');
-  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); sc(...DARK);
-  doc.text('ETABLISSEMENT PUBLIC', X + TW*0.25, y+4, {align:'center'});
-  doc.line(X + TW/2, y, X + TW/2, y+6);
-  doc.text('NOM ET ADRESSE DU DEBITEUR', X + TW*0.75, y+4, {align:'center'});
-  y += 6;
+  bx(X, y, TW, 5, 'FD');
+  doc.setFont('helvetica','bold'); doc.setFontSize(6.5); sc(...DARK);
+  doc.text('ETABLISSEMENT PUBLIC', X + TW*0.25, y+3.5, {align:'center'});
+  doc.line(X + TW/2, y, X + TW/2, y+5);
+  doc.text('NOM ET ADRESSE DU DEBITEUR', X + TW*0.75, y+3.5, {align:'center'});
+  y += 5;
 
   // ── 2. BLOC ETABLISSEMENT | DEBITEUR (hauteur compacte) ──
-  const blkH = 52;
+  const blkH = 44;
   sf(...WHITE); bx(X, y, TW, blkH, 'FD');
   doc.line(X + TW/2, y, X + TW/2, y+blkH);
 
   // Colonne gauche — logo école
   const logoB64 = 'data:image/jpeg;base64,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';
-  doc.addImage(logoB64, 'JPEG', X+3, y+2, 26, 32);
-  doc.setFont('helvetica','normal'); doc.setFontSize(7); sc(...DARK);
-  doc.text('Tel. : 02.97.70.70.00', X+4, y+36);
-  doc.text('Fax : 02.97.75.73.53', X+4, y+40);
-  doc.text('Couriel : gestion.0560018n@ac-rennes.fr', X+4, y+44);
-  doc.text('4 avenue de Broceliande — 56380 GUER', X+4, y+48);
+  doc.addImage(logoB64, 'JPEG', X+3, y+2, 22, 28);
+  doc.setFont('helvetica','normal'); doc.setFontSize(6); sc(...DARK);
+  doc.text('Tel. : 02.97.70.70.00', X+4, y+32);
+  doc.text('Fax : 02.97.75.73.53', X+4, y+36);
+  doc.text('Couriel : gestion.0560018n@ac-rennes.fr', X+4, y+40);
+  doc.text('4 avenue de Broceliande — 56380 GUER', X+4, y+44);
 
   // Colonne droite — débiteur
   const dX = X + TW/2 + 4;
-  doc.setFont('helvetica','bold'); doc.setFontSize(12); sc(...DARK);
-  doc.text(nomComplet, dX, y+13);
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); sc(...DARK);
+  doc.text(nomComplet, dX, y+12);
   if (adresse) {
-    doc.setFont('helvetica','normal'); doc.setFontSize(8); sc(...MID);
-    doc.splitTextToSize(adresse, TW/2 - 10).forEach((l,i) => doc.text(l, dX, y+20+i*4));
+    doc.setFont('helvetica','normal'); doc.setFontSize(7); sc(...MID);
+    doc.splitTextToSize(adresse, TW/2 - 10).forEach((l,i) => doc.text(l, dX, y+18+i*3.5));
   }
   y += blkH;
 
   // ── 3. TITRE ──
-  y += 5;
-  doc.setFont('helvetica','bold'); doc.setFontSize(13); sc(...DARK);
+  y += 3;
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); sc(...DARK);
   doc.text('TITRE EXECUTOIRE', W/2, y, {align:'center'});
-  y += 4.5;
-  doc.setFont('helvetica','bolditalic'); doc.setFontSize(9); sc(...DARK);
-  doc.text('valant facture', W/2, y, {align:'center'});
   y += 4;
-  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); sc(...MID);
-  doc.text("Le present titre est executoire en application de l'article L 252A du livre des procedures fiscales", W/2, y, {align:'center'});
+  doc.setFont('helvetica','bolditalic'); doc.setFontSize(8); sc(...DARK);
+  doc.text('valant facture', W/2, y, {align:'center'});
   y += 3.5;
+  doc.setFont('helvetica','normal'); doc.setFontSize(6); sc(...MID);
+  doc.text("Le present titre est executoire en application de l'article L 252A du livre des procedures fiscales", W/2, y, {align:'center'});
+  y += 3;
   doc.text("pris, emis et rendu executoire conformement aux dispositions de l'article R421-68 du code de l'Education.", W/2, y, {align:'center'});
-  y += 7;
+  y += 5;
 
   // ── 4. TABLEAU 4 COLONNES ──
   const c4 = [TW*0.20, TW*0.28, TW*0.27, TW*0.25];
   const h4 = ["exercice d'origine", "emis ou rendu executoire le", "imputation budgetaire", "references\n(a rappeler lors du reglement)"];
   // En-têtes
-  sf(...GREY_BG); sd(...DARK); lw(0.3); bx(X, y, TW, 7, 'FD');
-  doc.setFont('helvetica','normal'); doc.setFontSize(5.8); sc(...DARK);
+  sf(...GREY_BG); sd(...DARK); lw(0.3); bx(X, y, TW, 6, 'FD');
+  doc.setFont('helvetica','normal'); doc.setFontSize(5.5); sc(...DARK);
   let cx = X;
   c4.forEach((cw, i) => {
-    if (i > 0) doc.line(cx, y, cx, y+7);
+    if (i > 0) doc.line(cx, y, cx, y+6);
     const wrapped = doc.splitTextToSize(h4[i].replace('\n',' '), cw-3);
-    wrapped.forEach((l,li) => doc.text(l, cx+cw/2, y+2.5+li*2.8, {align:'center'}));
+    wrapped.forEach((l,li) => doc.text(l, cx+cw/2, y+2+li*2.5, {align:'center'}));
     cx += cw;
   });
-  y += 7;
+  y += 6;
   // Valeurs (référence laissée vide pour remplissage manuel)
-  sf(...WHITE); bx(X, y, TW, 7, 'FD');
-  doc.setFont('helvetica','bold'); doc.setFontSize(8.5); sc(...DARK);
+  sf(...WHITE); bx(X, y, TW, 6, 'FD');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); sc(...DARK);
   cx = X;
   const v4 = [String(annee), dateAff, '', ''];
   c4.forEach((cw, i) => {
-    if (i > 0) { sd(...DARK); doc.line(cx, y, cx, y+7); }
-    doc.text(v4[i], cx+cw/2, y+4.8, {align:'center'});
+    if (i > 0) { sd(...DARK); doc.line(cx, y, cx, y+6); }
+    doc.text(v4[i], cx+cw/2, y+4.2, {align:'center'});
     cx += cw;
   });
-  y += 7;
+  y += 6;
 
   // ── 5. TEXTE DEMANDE ──
-  y += 4;
-  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); sc(...DARK);
+  y += 3;
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); sc(...DARK);
   doc.text('Je vous prie de bien vouloir verser a reception du present titre executoire, la somme dont le montant figure dans la colonne', W/2, y, {align:'center'});
-  y += 4;
+  y += 3.5;
   doc.text('"somme due" selon les indications donnees en dessous du present titre.', W/2, y, {align:'center'});
-  y += 7;
+  y += 5;
 
   // ── 6. OBJET ET DÉCOMPTE ──
-  sf(...GREY_BG); sd(...DARK); lw(0.3); bx(X, y, TW, 6, 'FD');
-  doc.setFont('helvetica','bold'); doc.setFontSize(8); sc(...DARK);
-  doc.text('OBJET ET DECOMPTE DE LA RECETTE', W/2, y+4, {align:'center'});
-  y += 6;
+  sf(...GREY_BG); sd(...DARK); lw(0.3); bx(X, y, TW, 5, 'FD');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7); sc(...DARK);
+  doc.text('OBJET ET DECOMPTE DE LA RECETTE', W/2, y+3.5, {align:'center'});
+  y += 5;
 
   // Ligne objet
-  sf(...WHITE); bx(X, y, TW, 6, 'FD');
-  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); sc(...DARK);
+  sf(...WHITE); bx(X, y, TW, 5, 'FD');
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); sc(...DARK);
   const objetText = (prenom + ' ' + nom).trim().toUpperCase() + ' - reparation du ' + dateAff;
-  doc.text(objetText, W/2, y+4, {align:'center'});
-  y += 6;
+  doc.text(objetText, W/2, y+3.5, {align:'center'});
+  y += 5;
 
   // Sous-titre CALCUL
-  sf(...GREY_BG); bx(X, y, TW, 5, 'FD');
-  doc.setFont('helvetica','bold'); doc.setFontSize(6.5); sc(...DARK);
-  doc.text('CALCUL', W/2, y+3.5, {align:'center'});
-  y += 5;
+  sf(...GREY_BG); bx(X, y, TW, 4, 'FD');
+  doc.setFont('helvetica','bold'); doc.setFontSize(6); sc(...DARK);
+  doc.text('CALCUL', W/2, y+3, {align:'center'});
+  y += 4;
 
   // En-têtes colonnes tableau
   const cN = TW*0.50, cP = TW*0.18, cNb = TW*0.12, cS = TW*0.20;
-  sf(...GREY_BG); bx(X, y, TW, 5, 'FD');
-  doc.setFont('helvetica','bold'); doc.setFontSize(6.5); sc(...DARK);
-  doc.text('NATURE', X+cN/2, y+3.5, {align:'center'});
-  doc.line(X+cN, y, X+cN, y+5);
-  doc.text('PRIX UNITAIRE TTC', X+cN+cP/2, y+3.5, {align:'center'});
-  doc.line(X+cN+cP, y, X+cN+cP, y+5);
-  doc.text('NOMBRE', X+cN+cP+cNb/2, y+3.5, {align:'center'});
-  doc.line(X+cN+cP+cNb, y, X+cN+cP+cNb, y+5);
-  doc.text('SOMME DUE', X+cN+cP+cNb+cS/2, y+3.5, {align:'center'});
-  y += 5;
+  sf(...GREY_BG); bx(X, y, TW, 4, 'FD');
+  doc.setFont('helvetica','bold'); doc.setFontSize(6); sc(...DARK);
+  doc.text('NATURE', X+cN/2, y+3, {align:'center'});
+  doc.line(X+cN, y, X+cN, y+4);
+  doc.text('PRIX UNITAIRE TTC', X+cN+cP/2, y+3, {align:'center'});
+  doc.line(X+cN+cP, y, X+cN+cP, y+4);
+  doc.text('NOMBRE', X+cN+cP+cNb/2, y+3, {align:'center'});
+  doc.line(X+cN+cP+cNb, y, X+cN+cP+cNb, y+4);
+  doc.text('SOMME DUE', X+cN+cP+cNb+cS/2, y+3, {align:'center'});
+  y += 4;
 
   // Lignes articles — fond blanc uni (pas de jaune)
-  const rH = 6;
+  const rH = 5;
   lignes.forEach(lg => {
     sf(...WHITE); sd(...DARK); lw(0.2); bx(X, y, TW, rH, 'FD');
-    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); sc(...DARK);
-    doc.text(lg.desc, X+2, y+4);
+    doc.setFont('helvetica','normal'); doc.setFontSize(6.5); sc(...DARK);
+    doc.text(lg.desc, X+2, y+3.5);
     doc.line(X+cN, y, X+cN, y+rH);
-    doc.text(lg.prix.toFixed(2)+' EUR', X+cN+cP/2, y+4, {align:'center'});
+    doc.text(lg.prix.toFixed(2)+' EUR', X+cN+cP/2, y+3.5, {align:'center'});
     doc.line(X+cN+cP, y, X+cN+cP, y+rH);
-    doc.text(String(lg.qte), X+cN+cP+cNb/2, y+4, {align:'center'});
+    doc.text(String(lg.qte), X+cN+cP+cNb/2, y+3.5, {align:'center'});
     doc.line(X+cN+cP+cNb, y, X+cN+cP+cNb, y+rH);
     doc.setFont('helvetica','bold');
-    doc.text(lg.total.toFixed(2)+' EUR', X+cN+cP+cNb+cS/2, y+4, {align:'center'});
+    doc.text(lg.total.toFixed(2)+' EUR', X+cN+cP+cNb+cS/2, y+3.5, {align:'center'});
     y += rH;
   });
-  // 1 ligne vide
-  sf(...WHITE); bx(X, y, TW, rH, 'FD');
-  [cN, cN+cP, cN+cP+cNb].forEach(ox => doc.line(X+ox, y, X+ox, y+rH));
-  y += rH;
-
   // Total
-  sf(...GREY_BG); sd(...DARK); lw(0.3); bx(X, y, TW, 6, 'FD');
-  [cN, cN+cP, cN+cP+cNb].forEach(ox => doc.line(X+ox, y, X+ox, y+6));
-  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); sc(...DARK);
-  doc.text('TOTAL DES SOMMES DUES', X+(cN+cP+cNb)/2, y+4, {align:'center'});
-  doc.text(grandTotal.toFixed(2)+' EUR', X+cN+cP+cNb+cS/2, y+4, {align:'center'});
-  y += 6;
+  sf(...GREY_BG); sd(...DARK); lw(0.3); bx(X, y, TW, 5, 'FD');
+  [cN, cN+cP, cN+cP+cNb].forEach(ox => doc.line(X+ox, y, X+ox, y+5));
+  doc.setFont('helvetica','bold'); doc.setFontSize(6.5); sc(...DARK);
+  doc.text('TOTAL DES SOMMES DUES', X+(cN+cP+cNb)/2, y+3.5, {align:'center'});
+  doc.text(grandTotal.toFixed(2)+' EUR', X+cN+cP+cNb+cS/2, y+3.5, {align:'center'});
+  y += 5;
 
   // ── 7. ARRÊTÉ EN LETTRES ──
-  y += 5;
-  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); sc(...DARK);
+  y += 3;
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); sc(...DARK);
   doc.text('Arrete le present titre a la somme de :', X, y+3);
-  doc.setFont('helvetica','bold'); doc.setFontSize(10); sc(...RED_TEXT);
-  doc.text(totalLettres, X+68, y+3);
-  y += 11;
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); sc(...RED_TEXT);
+  doc.text(totalLettres, X+62, y+3);
+  y += 8;
 
   // ── 8. DATE + SIGNATURES ──
   const today    = new Date();
@@ -1051,17 +1046,17 @@ function genererFacturePDF() {
   y += 5;
 
   const sigW = TW/2;
-  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); sc(...DARK);
+  doc.setFont('helvetica','bold'); doc.setFontSize(7); sc(...DARK);
   doc.text("L'ordonnateur : le Proviseur", X+sigW/2, y, {align:'center'});
   doc.text('le Gestionnaire', X+sigW+sigW/2, y, {align:'center'});
-  y += 4;
+  y += 3;
   sd(...LIGHT); lw(0.3);
-  bx(X+8, y, sigW-16, 24, 'D');
-  bx(X+sigW+8, y, sigW-16, 24, 'D');
-  doc.setFont('helvetica','italic'); doc.setFontSize(6.5); sc(...MID);
-  doc.text('Signature', X+sigW/2, y+14, {align:'center'});
-  doc.text('Signature', X+sigW+sigW/2, y+14, {align:'center'});
-  y += 29;
+  bx(X+8, y, sigW-16, 20, 'D');
+  bx(X+sigW+8, y, sigW-16, 20, 'D');
+  doc.setFont('helvetica','italic'); doc.setFontSize(6); sc(...MID);
+  doc.text('Signature', X+sigW/2, y+12, {align:'center'});
+  doc.text('Signature', X+sigW+sigW/2, y+12, {align:'center'});
+  y += 24;
 
   // ── 9. SÉPARATEUR ──
   sd(...DARK); lw(0.5);
@@ -1078,7 +1073,7 @@ function genererFacturePDF() {
   y += 5.5;
 
   const yBase = y;
-  doc.setFont('helvetica','normal'); doc.setFontSize(6.8); sc(...DARK);
+  doc.setFont('helvetica','normal'); doc.setFontSize(6); sc(...DARK);
   const cmpLines = [
     "Monsieur l'agent comptable", 'LPO BROCELIANDE',
     '4 avenue de Broceliande', '56380 GUER',
@@ -1087,37 +1082,35 @@ function genererFacturePDF() {
     'IBAN : FR76 1007 1560 00 00 0010 0204 182',
     'BIC : TRPUFRP1'
   ];
-  cmpLines.forEach((l,i) => { if(l) doc.text(l, X+2, yBase+4+i*3.8); });
+  cmpLines.forEach((l,i) => { if(l) doc.text(l, X+2, yBase+3.5+i*3.3); });
 
-  doc.setFont('helvetica','bold'); doc.setFontSize(6.8); sc(...DARK);
-  let ym = yBase+4;
+  doc.setFont('helvetica','bold'); doc.setFontSize(6); sc(...DARK);
+  let ym = yBase+3.5;
   const mxW = mW-5;
   doc.text("La somme due est a verser des reception a l'agent comptable,", X+cmpW+2, ym, {maxWidth:mxW});
-  ym += 4; doc.text("au choix :", X+cmpW+2, ym);
-  ym += 4; doc.setFont('helvetica','normal');
+  ym += 3.5; doc.text("au choix :", X+cmpW+2, ym);
+  ym += 3.5; doc.setFont('helvetica','normal');
   doc.text("- par cheque bancaire ou postal a l'ordre de l'A.C. du lycee Broceliande", X+cmpW+2, ym, {maxWidth:mxW});
-  ym += 4; doc.text("- en especes a la caisse du lycee Broceliande", X+cmpW+2, ym, {maxWidth:mxW});
-  ym += 5; doc.setFontSize(6.2);
+  ym += 3.5; doc.text("- en especes a la caisse du lycee Broceliande", X+cmpW+2, ym, {maxWidth:mxW});
+  ym += 4; doc.setFontSize(5.8);
   doc.text("Pour tout renseignement ou reclamation amiable :", X+cmpW+2, ym);
-  ym += 3.5; doc.text("secretariat de gestion du lycee — 02.97.70.70.16", X+cmpW+2, ym, {maxWidth:mxW});
-  ym += 3.5; doc.text("La contestation amiable ne suspend pas le delai de saisine du juge.", X+cmpW+2, ym, {maxWidth:mxW});
-  y += 38;
+  ym += 3; doc.text("secretariat de gestion du lycee — 02.97.70.70.16", X+cmpW+2, ym, {maxWidth:mxW});
+  ym += 3; doc.text("La contestation amiable ne suspend pas le delai de saisine du juge.", X+cmpW+2, ym, {maxWidth:mxW});
+  y += 32;
 
   // ── 11. DÉLAIS ET VOIES DE RECOURS ──
-  if (y + 28 < H - 5) {
-    sf(...WHITE); sd(...DARK); lw(0.3); bx(X, y, TW, 28, 'FD');
-    doc.setFont('helvetica','bold'); doc.setFontSize(7); sc(...DARK);
-    doc.text('Delais et voies de recours', X+3, y+5);
-    doc.setFont('helvetica','normal'); doc.setFontSize(6.2); sc(...MID);
-    const recours = [
-      "Le recouvrement des titres executoires est poursuivi jusqu'a opposition devant la juridiction competente (article R 421-68 du code de l'Education).",
-      "Toute contestation sur le bien fonde d'une creance de nature administrative doit etre portee, dans le delai de deux mois suivant",
-      "sa notification, devant la juridiction administrative competente (decret n 85-29 du 11/01/1985).",
-      "Tout recours contentieux relatif a la regularite du present titre doit etre porte, dans un delai de deux mois a compter de sa",
-      "notification, devant le tribunal administratif competent."
-    ];
-    recours.forEach((l,i) => doc.text(l, X+3, y+10+i*3.8, {maxWidth:TW-6}));
-  }
+  sf(...WHITE); sd(...DARK); lw(0.3); bx(X, y, TW, 22, 'FD');
+  doc.setFont('helvetica','bold'); doc.setFontSize(6.5); sc(...DARK);
+  doc.text('Delais et voies de recours', X+3, y+4.5);
+  doc.setFont('helvetica','normal'); doc.setFontSize(5.8); sc(...MID);
+  const recours = [
+    "Le recouvrement des titres executoires est poursuivi jusqu'a opposition devant la juridiction competente (article R 421-68 du code de l'Education).",
+    "Toute contestation sur le bien fonde d'une creance de nature administrative doit etre portee, dans le delai de deux mois suivant",
+    "sa notification, devant la juridiction administrative competente (decret n 85-29 du 11/01/1985).",
+    "Tout recours contentieux relatif a la regularite du present titre doit etre porte, dans un delai de deux mois a compter de sa",
+    "notification, devant le tribunal administratif competent."
+  ];
+  recours.forEach((l,i) => doc.text(l, X+3, y+8+i*3.2, {maxWidth:TW-6}));
 
   // ── 12. PIED DE PAGE ──
   doc.setFont('helvetica','italic'); doc.setFontSize(6); sc(150,150,170);
