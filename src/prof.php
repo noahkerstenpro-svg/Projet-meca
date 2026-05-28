@@ -172,7 +172,7 @@ $name = $_SESSION['name'] ?? $_SESSION['username'];
 
                 <a class="action-card" href="rdv_client.php">
                     <div class="icon">📅</div>
-                    <h3>Agenda des RDV</h3>
+                    <h3>Agenda des RDV clients</h3>
                     <p>Consulter tous les rendez-vous clients planifiés.</p>
                 </a>
 
