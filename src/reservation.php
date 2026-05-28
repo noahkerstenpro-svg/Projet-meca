@@ -60,16 +60,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $vehicule_id = $pdo->lastInsertId();
             }
 
+            // 2) Récupérer automatiquement l'id_prestation selon la désignation choisie
+            $prestation_id = null;
+            if ($probleme_select !== 'Autre' && $probleme_select !== '') {
+                $stmtPrest = $pdo->prepare("
+                    SELECT id_prestation FROM Prestation
+                    WHERE designation = :designation
+                    LIMIT 1
+                ");
+                $stmtPrest->execute([':designation' => $probleme_select]);
+                $rowPrest = $stmtPrest->fetch(PDO::FETCH_ASSOC);
+                if ($rowPrest) {
+                    $prestation_id = $rowPrest['id_prestation'];
+                }
+            }
+
+            // 3) Insérer l'intervention
+            //    - Si prestation connue : Probleme = désignation, prestation_id = id trouvé
+            //    - Si Autre            : Probleme = texte libre du client, prestation_id = NULL
             $stmtInt = $pdo->prepare("
                 INSERT INTO intervention (vehicule_id, prestation_id, date_intervention, `heure_de_préstation`, Probleme, commentaire)
-                VALUES (:vehicule_id, NULL, :date, :heure, :probleme, :commentaire)
+                VALUES (:vehicule_id, :prestation_id, :date, :heure, :probleme, :commentaire)
             ");
             $stmtInt->execute([
-                ':vehicule_id'  => $vehicule_id,
-                ':date'         => $date,
-                ':heure'        => $heure,
-                ':probleme'     => $probleme,
-                ':commentaire'  => '',
+                ':vehicule_id'   => $vehicule_id,
+                ':prestation_id' => $prestation_id,
+                ':date'          => $date,
+                ':heure'         => $heure,
+                ':probleme'      => $probleme,
+                ':commentaire'   => '',
             ]);
 
             $message = "Réservation confirmée pour votre $vehicule le $date à $heure.";
