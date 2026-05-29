@@ -1,5 +1,5 @@
 <?php
-// save_or.php — Sauvegarde / mise à jour d'un ordre de réparation
+// save_or.php — Sauvegarde complète de l'ordre de réparation
 session_start();
 
 if (!isset($_SESSION['username']) || !in_array($_SESSION['role'], ['prof', 'eleve'])) {
@@ -16,7 +16,7 @@ try {
     $pdo = new PDO("mysql:host=$host;port=3306;dbname=$dbname;charset=utf8mb4", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // ── Récupération des champs POST ──
+    // ── Champs de base ──
     $intervention_id = (int)($_POST['intervention_id'] ?? 0);
     $vehicule_id     = (int)($_POST['vehicule_id']     ?? 0);
     $client_id       = (int)($_POST['client_id']       ?? 0);
@@ -29,22 +29,61 @@ try {
     $client_email   = trim($_POST['client_email']   ?? '');
 
     // Champs véhicule
-    $vin             = strtoupper(trim($_POST['vin']             ?? ''));
-    $marque          = trim($_POST['marque']          ?? '');
-    $modele          = trim($_POST['modele']          ?? '');
-    $marque_modele   = trim("$marque $modele");
-    $immat           = strtoupper(trim($_POST['immat'] ?? ''));
-    $km              = $_POST['km']   !== '' ? (int)$_POST['km']   : null;
-    $type_veh        = trim($_POST['type_veh']        ?? '');
-    $mise_circ       = trim($_POST['mise_circulation'] ?? '') ?: null;
+    $vin           = strtoupper(trim($_POST['vin']              ?? ''));
+    $marque        = trim($_POST['marque']           ?? '');
+    $modele        = trim($_POST['modele']           ?? '');
+    $marque_modele = trim("$marque $modele");
+    $immat         = strtoupper(trim($_POST['immat'] ?? ''));
+    $km            = $_POST['km'] !== '' ? (int)$_POST['km'] : null;
+    $type_veh      = trim($_POST['type_veh']         ?? '');
+    $mise_circ     = trim($_POST['mise_circulation'] ?? '') ?: null;
 
-    // Champs intervention
-    $date_reception  = trim($_POST['date_reception'] ?? '') ?: date('Y-m-d');
-    $info_client     = trim($_POST['info_client']    ?? '');
-    $travaux         = trim($_POST['travaux']        ?? '');
+    // Champs intervention principaux
+    $date_reception = trim($_POST['date_reception'] ?? '') ?: date('Y-m-d');
+    $info_client    = trim($_POST['info_client']    ?? '');
+    $travaux        = trim($_POST['travaux']        ?? '');
+
+    // ── Collecte des lignes de facturation dynamiques ──
+    $fact_lines = [];
+    $i = 0;
+    while (isset($_POST["fact_desc_$i"]) || isset($_POST["fact_qte_$i"])) {
+        $desc = trim($_POST["fact_desc_$i"] ?? '');
+        $qte  = trim($_POST["fact_qte_$i"]  ?? '');
+        $ref  = trim($_POST["fact_ref_$i"]  ?? '');
+        $prix = trim($_POST["fact_prix_$i"] ?? '');
+        if ($desc || $qte || $ref || $prix) {
+            $fact_lines[] = [
+                'desc' => $desc,
+                'qte'  => $qte,
+                'ref'  => $ref,
+                'prix' => $prix,
+            ];
+        }
+        $i++;
+    }
+
+    // ── Tous les autres champs → JSON ──
+    $donnees = [
+        'ordre_num'      => trim($_POST['ordre_num']      ?? ''),
+        'prof'           => trim($_POST['prof']           ?? ''),
+        'date_restit'    => trim($_POST['date_restitution'] ?? ''),
+        'reservoir'      => trim($_POST['reservoir']      ?? ''),
+        'damages'        => trim($_POST['damages']        ?? ''),
+        'type_griffe'    => isset($_POST['type_griffe'])  ? 1 : 0,
+        'type_coup'      => isset($_POST['type_coup'])    ? 1 : 0,
+        'roue_secours'   => isset($_POST['roue_secours']) ? 1 : 0,
+        'ecrou_antivol'  => isset($_POST['ecrou_antivol'])? 1 : 0,
+        'alarme'         => isset($_POST['alarme'])       ? 1 : 0,
+        'code_alarme'    => trim($_POST['code_alarme']    ?? ''),
+        'cg_accepted'    => isset($_POST['cg_accepted'])  ? 1 : 0,
+        'mo_heures'      => trim($_POST['mo_heures']      ?? ''),
+        'taux_horaire'   => trim($_POST['taux_horaire']   ?? ''),
+        'fact_lines'     => $fact_lines,
+        'modele'         => $modele,
+    ];
 
     // ════════════════════════════════════════
-    // 1) CLIENT — mise à jour si client_id connu
+    // 1) CLIENT
     // ════════════════════════════════════════
     if ($client_id > 0) {
         $pdo->prepare("
@@ -61,28 +100,57 @@ try {
             ':id'      => $client_id,
         ]);
     } elseif ($client_prenom || $client_nom) {
-        // Nouveau client créé depuis un OR — mot de passe placeholder (non utilisable pour connexion)
-        $mdp_placeholder = password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT);
-        $stmt = $pdo->prepare("
-            INSERT INTO Clients (prenom, nom, adresse_postal, `numéro`, adresse_mail, mots_de_passe)
-            VALUES (:prenom, :nom, :adresse, :tel, :email, :mdp)
-        ");
-        $stmt->execute([
-            ':prenom'  => $client_prenom,
-            ':nom'     => $client_nom,
-            ':adresse' => $client_adresse,
-            ':tel'     => $client_tel,
-            ':email'   => $client_email,
-            ':mdp'     => $mdp_placeholder,
-        ]);
-        $client_id = $pdo->lastInsertId();
+        // Vérifier si ce client existe déjà (par email, ou par prénom+nom)
+        $clientExist = null;
+        if ($client_email) {
+            $chk = $pdo->prepare("SELECT id_clients FROM Clients WHERE adresse_mail = :email LIMIT 1");
+            $chk->execute([':email' => $client_email]);
+            $clientExist = $chk->fetch(PDO::FETCH_ASSOC);
+        }
+        if (!$clientExist && $client_prenom && $client_nom) {
+            $chk = $pdo->prepare("SELECT id_clients FROM Clients WHERE prenom = :prenom AND nom = :nom LIMIT 1");
+            $chk->execute([':prenom' => $client_prenom, ':nom' => $client_nom]);
+            $clientExist = $chk->fetch(PDO::FETCH_ASSOC);
+        }
+
+        if ($clientExist) {
+            // Client trouvé — on met à jour sans créer de doublon
+            $client_id = $clientExist['id_clients'];
+            $pdo->prepare("
+                UPDATE Clients
+                SET prenom = :prenom, nom = :nom,
+                    adresse_postal = :adresse, `numéro` = :tel, adresse_mail = :email
+                WHERE id_clients = :id
+            ")->execute([
+                ':prenom'  => $client_prenom,
+                ':nom'     => $client_nom,
+                ':adresse' => $client_adresse,
+                ':tel'     => $client_tel,
+                ':email'   => $client_email,
+                ':id'      => $client_id,
+            ]);
+        } else {
+            // Nouveau client réel — on crée avec mot de passe placeholder
+            $mdp = password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT);
+            $pdo->prepare("
+                INSERT INTO Clients (prenom, nom, adresse_postal, `numéro`, adresse_mail, mots_de_passe)
+                VALUES (:prenom, :nom, :adresse, :tel, :email, :mdp)
+            ")->execute([
+                ':prenom'  => $client_prenom,
+                ':nom'     => $client_nom,
+                ':adresse' => $client_adresse,
+                ':tel'     => $client_tel,
+                ':email'   => $client_email,
+                ':mdp'     => $mdp,
+            ]);
+            $client_id = $pdo->lastInsertId();
+        }
     }
 
     // ════════════════════════════════════════
-    // 2) VÉHICULE — mise à jour ou création
+    // 2) VÉHICULE
     // ════════════════════════════════════════
     if ($vehicule_id > 0) {
-        // Véhicule existant → on met à jour
         $pdo->prepare("
             UPDATE Vehicules
             SET vin = :vin, `marque/modèle` = :marque, immatriculation = :immat,
@@ -100,15 +168,12 @@ try {
             ':id'        => $vehicule_id,
         ]);
     } else {
-        // Nouveau véhicule (ou VIN inconnu)
-        // Vérifier si le VIN existe déjà pour éviter les doublons
         if ($vin) {
             $check = $pdo->prepare("SELECT id_vehicules FROM Vehicules WHERE vin = :vin LIMIT 1");
             $check->execute([':vin' => $vin]);
             $existing = $check->fetch(PDO::FETCH_ASSOC);
             if ($existing) {
                 $vehicule_id = $existing['id_vehicules'];
-                // Mettre à jour avec les nouvelles infos
                 $pdo->prepare("
                     UPDATE Vehicules
                     SET `marque/modèle` = :marque, immatriculation = :immat,
@@ -126,14 +191,12 @@ try {
                 ]);
             }
         }
-
         if (!$vehicule_id && ($vin || $marque_modele)) {
             $vinFinal = $vin ?: strtoupper(substr(md5(uniqid()), 0, 10));
-            $stmt = $pdo->prepare("
+            $pdo->prepare("
                 INSERT INTO Vehicules (vin, `marque/modèle`, immatriculation, km, type_veh, mise_circulation, client_id)
                 VALUES (:vin, :marque, :immat, :km, :type_veh, :mise_circ, :client_id)
-            ");
-            $stmt->execute([
+            ")->execute([
                 ':vin'       => $vinFinal,
                 ':marque'    => $marque_modele ?: null,
                 ':immat'     => $immat ?: null,
@@ -147,45 +210,47 @@ try {
     }
 
     // ════════════════════════════════════════
-    // 3) INTERVENTION — mise à jour ou création
+    // 3) INTERVENTION — avec donnees_or JSON
     // ════════════════════════════════════════
+    $donnees_json = json_encode($donnees, JSON_UNESCAPED_UNICODE);
+
     if ($intervention_id > 0) {
-        // Mise à jour d'une intervention existante
         $pdo->prepare("
             UPDATE intervention
-            SET vehicule_id      = :vehicule_id,
+            SET vehicule_id       = :vehicule_id,
                 date_intervention = :date,
                 Probleme          = :probleme,
-                commentaire       = :commentaire
+                commentaire       = :commentaire,
+                donnees_or        = :donnees
             WHERE id_intervention = :id
         ")->execute([
             ':vehicule_id'  => $vehicule_id,
             ':date'         => $date_reception,
             ':probleme'     => $info_client,
             ':commentaire'  => $travaux,
+            ':donnees'      => $donnees_json,
             ':id'           => $intervention_id,
         ]);
     } else {
-        // Nouvelle intervention
-        $stmt = $pdo->prepare("
-            INSERT INTO intervention (vehicule_id, prestation_id, date_intervention, `heure_de_préstation`, Probleme, commentaire)
-            VALUES (:vehicule_id, NULL, :date, '08:00', :probleme, :commentaire)
-        ");
-        $stmt->execute([
+        $pdo->prepare("
+            INSERT INTO intervention
+                (vehicule_id, prestation_id, date_intervention, `heure_de_préstation`, Probleme, commentaire, donnees_or)
+            VALUES
+                (:vehicule_id, NULL, :date, '08:00', :probleme, :commentaire, :donnees)
+        ")->execute([
             ':vehicule_id'  => $vehicule_id ?: null,
             ':date'         => $date_reception,
             ':probleme'     => $info_client,
             ':commentaire'  => $travaux,
+            ':donnees'      => $donnees_json,
         ]);
         $intervention_id = $pdo->lastInsertId();
     }
 
-    // ── Succès : redirection vers l'ordre avec l'id pour permettre futures modifs ──
     header("Location: ordre_reparation.php?intervention_id={$intervention_id}&saved=1");
     exit;
 
 } catch (PDOException $e) {
-    // Affichage d'une erreur simple
     http_response_code(500);
     echo '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Erreur</title></head><body>';
     echo '<div style="font-family:Arial;max-width:600px;margin:60px auto;background:#fdecea;border:1px solid #f5c2c7;border-radius:12px;padding:30px;color:#b00020;">';
