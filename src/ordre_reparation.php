@@ -18,8 +18,10 @@ $pdo = new PDO("mysql:host=$host;port=3306;dbname=$dbname;charset=utf8mb4", $use
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 // --- Pré-remplissage si ?intervention_id=X ---
-$prefill = [];
+$prefill  = [];
+$donnees  = [];   // champs extras depuis le JSON
 $intervention_id = (int)($_GET['intervention_id'] ?? 0);
+
 if ($intervention_id > 0) {
     $stmt = $pdo->prepare("
         SELECT i.*, v.vin, v.`marque/modèle` AS marque_modele, v.immatriculation,
@@ -28,17 +30,36 @@ if ($intervention_id > 0) {
                c.adresse_postal AS client_adresse, c.`numéro` AS client_tel,
                c.adresse_mail AS client_email, c.id_clients
         FROM intervention i
-        JOIN Vehicules v ON v.id_vehicules = i.vehicule_id
-        JOIN Clients   c ON c.id_clients   = v.client_id
+        LEFT JOIN Vehicules v ON v.id_vehicules = i.vehicule_id
+        LEFT JOIN Clients   c ON c.id_clients   = v.client_id
         WHERE i.id_intervention = :id
     ");
     $stmt->execute([':id' => $intervention_id]);
     $prefill = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
+    // Décoder le JSON des champs extras
+    if (!empty($prefill['donnees_or'])) {
+        $donnees = json_decode($prefill['donnees_or'], true) ?? [];
+    }
 }
 
-// Helper pour pré-remplir un champ
+// Charger les prestations pour le menu déroulant facturation
+$prestations = $pdo->query("SELECT id_prestation, designation, reference, prix FROM Prestation ORDER BY id_prestation")
+                   ->fetchAll(PDO::FETCH_ASSOC);
+
+// Helper pour pré-remplir un champ (cherche dans prefill puis donnees)
 function val($key, $prefill, $default = '') {
-    return htmlspecialchars($prefill[$key] ?? $default);
+    $v = $prefill[$key] ?? $donnees[$key] ?? $default;
+    return htmlspecialchars($v ?? $default);
+}
+
+// Helper spécifique pour donnees extras
+function don($key, $donnees, $default = '') {
+    return htmlspecialchars($donnees[$key] ?? $default);
+}
+
+function donBool($key, $donnees) {
+    return !empty($donnees[$key]) ? 'checked' : '';
 }
 ?>
 
@@ -468,14 +489,14 @@ function val($key, $prefill, $default = '') {
       </div>
       <div class="date-cell">
         <span class="cell-label">Date de réception</span>
-        <input type="date" name="date_reception" id="date_reception">
+        <input type="date" name="date_reception" id="date_reception" value="<?= val('date_intervention', $prefill) ?>">
       </div>
       <div class="order-cell">
         <span class="cell-label">Ordre de réparation</span>
-        <div class="order-num" id="orderNumDisplay">N 99/°25-26</div>
-        <input type="text" name="ordre_num" id="ordre_num" placeholder="ex: N 99/°25-26" style="font-size:11px;">
+        <div class="order-num" id="orderNumDisplay"><?= don('ordre_num', $donnees) ?: 'N 99/°25-26' ?></div>
+        <input type="text" name="ordre_num" id="ordre_num" placeholder="ex: N 99/°25-26" style="font-size:11px;" value="<?= don('ordre_num', $donnees) ?>">
         <span class="cell-label" style="margin-top:6px; display:block;">Professeur référent</span>
-        <input type="text" name="prof" id="prof" placeholder="Nom du professeur référent" style="font-weight:600;">
+        <input type="text" name="prof" id="prof" placeholder="Nom du professeur référent" style="font-weight:600;" value="<?= don('prof', $donnees) ?>">
       </div>
     </div>
 
@@ -622,12 +643,12 @@ function val($key, $prefill, $default = '') {
         </div>
 
         <div class="checklist">
-          <label><input type="checkbox" name="roue_secours"> Roue de secours</label>
-          <label><input type="checkbox" name="ecrou_antivol"> Écrou antivol</label>
-          <label><input type="checkbox" name="alarme"> Alarme</label>
+          <label><input type="checkbox" name="roue_secours"  <?= donBool('roue_secours',  $donnees) ?>> Roue de secours</label>
+          <label><input type="checkbox" name="ecrou_antivol" <?= donBool('ecrou_antivol', $donnees) ?>> Écrou antivol</label>
+          <label><input type="checkbox" name="alarme"        <?= donBool('alarme',        $donnees) ?>> Alarme</label>
           <label style="align-items:flex-start; flex-direction:column; gap:1px;">
             <span>Code alarme :</span>
-            <input type="text" name="code_alarme" placeholder="code alarme">
+            <input type="text" name="code_alarme" placeholder="code alarme" value="<?= don('code_alarme', $donnees) ?>">
           </label>
         </div>
         <div class="fuel-row">
@@ -644,7 +665,7 @@ function val($key, $prefill, $default = '') {
 
       <div class="info-cell">
         <div class="section-header" style="border:none; background:none; padding:0 0 4px 0;">Informations client (symptômes ou travaux demandés)</div>
-        <textarea name="info_client" rows="7" placeholder="Décrire les symptômes ou travaux demandés par le client..."></textarea>
+        <textarea name="info_client" rows="7" placeholder="Décrire les symptômes ou travaux demandés par le client..."><?= val('Probleme', $prefill) ?></textarea>
         <div style="font-size:10px; color:var(--light); margin-top:8px;">
           <label><input type="checkbox" name="cg_accepted"> J'accepte les Conditions Générales (Voir Verso)</label>
         </div>
@@ -674,7 +695,7 @@ function val($key, $prefill, $default = '') {
     <!-- ═══ TRAVAUX EFFECTUÉS ═══ -->
     <div class="section-header">Travaux effectués</div>
     <div class="travaux-area">
-      <textarea name="travaux" rows="4" placeholder="Décrire les travaux effectués..."></textarea>
+      <textarea name="travaux" rows="4" placeholder="Décrire les travaux effectués..."><?= val('commentaire', $prefill) ?></textarea>
     </div>
 
     <!-- ═══ FACTURATION ═══ -->
@@ -718,13 +739,13 @@ function val($key, $prefill, $default = '') {
           <td colspan="2">
             <div style="display:flex; align-items:center; gap:6px;">
               <span style="font-size:11px; color:var(--mid);">Main d'œuvre (nb d'heures)</span>
-              <input type="number" name="mo_heures" id="moHeures" placeholder="0" min="0" step="0.5" style="width:60px;" oninput="calcTotal()">
+              <input type="number" name="mo_heures" id="moHeures" placeholder="0" min="0" step="0.5" style="width:60px;" oninput="calcTotal()" value="<?= don('mo_heures', $donnees) ?>">
             </div>
           </td>
           <td>
             <div style="display:flex; align-items:center; gap:4px;">
               <span style="font-size:10px; color:var(--light);">Taux horaire :</span>
-              <input type="number" name="taux_horaire" id="tauxH" placeholder="0" min="0" style="width:60px;" oninput="calcTotal()">
+              <input type="number" name="taux_horaire" id="tauxH" placeholder="0" min="0" style="width:60px;" oninput="calcTotal()" value="<?= don('taux_horaire', $donnees) ?>">
               <span style="font-size:10px;">€</span>
             </div>
           </td>
@@ -741,7 +762,7 @@ function val($key, $prefill, $default = '') {
     <div class="restitution-row">
       <div class="rest-cell">
         <span class="cell-label">Date de restitution</span>
-        <input type="date" name="date_restitution">
+        <input type="date" name="date_restitution" value="<?= don('date_restit', $donnees) ?>">
       </div>
       <div class="rest-cell">
         <span class="cell-label">Signature référent</span>
@@ -776,20 +797,76 @@ function val($key, $prefill, $default = '') {
 let lineCount = 0;
 const tbody = document.getElementById('factRows');
 
-function addFactLine() {
+// ── Prestations chargées depuis la BDD ──
+const PRESTATIONS = <?= json_encode(array_values($prestations), JSON_UNESCAPED_UNICODE) ?>;
+
+function addFactLine(savedDesc, savedQte, savedRef, savedPrix) {
   const i = lineCount++;
   const tr = document.createElement('tr');
   tr.id = 'factRow-' + i;
+
+  // Construire les options du select
+  let options = '<option value="">— Choisir une prestation —</option>';
+  PRESTATIONS.forEach(p => {
+    const sel = (savedDesc && savedDesc === p.designation) ? 'selected' : '';
+    options += `<option value="${p.designation}" data-ref="${p.reference}" data-prix="${p.prix}" ${sel}>${p.designation}</option>`;
+  });
+  options += `<option value="Autre" ${savedDesc === 'Autre' ? 'selected' : ''}>✏️ Autre (saisie libre)</option>`;
+
   tr.innerHTML = `
-    <td><input type="text" name="fact_desc_${i}" placeholder="Désignation" style="width:100%;"></td>
-    <td><input type="number" name="fact_qte_${i}" min="0" step="1" placeholder="0" style="text-align:center; width:100%;" oninput="calcTotal()"></td>
-    <td><input type="text" name="fact_ref_${i}" placeholder="REF" style="width:100%;"></td>
-    <td><input type="number" name="fact_prix_${i}" min="0" step="0.01" placeholder="0.00" style="text-align:right; width:100%;" oninput="calcTotal()"></td>
+    <td style="position:relative;">
+      <select name="fact_desc_${i}" onchange="selectionnerPrestation(${i}, this)" style="width:100%; padding:3px 6px; border:1px solid var(--border); border-radius:3px; font-size:12px; font-family:'Source Sans 3',sans-serif; background:var(--input-bg);">
+        ${options}
+      </select>
+      <input type="text" name="fact_desc_libre_${i}" id="fact_desc_libre_${i}"
+        placeholder="Désignation libre..."
+        style="display:none; width:100%; margin-top:4px;"
+        value="${savedDesc && savedDesc !== 'Autre' && !PRESTATIONS.find(p=>p.designation===savedDesc) ? (savedDesc||'') : ''}">
+    </td>
+    <td><input type="number" name="fact_qte_${i}" min="0" step="1" placeholder="0"
+      style="text-align:center; width:100%;" oninput="calcTotal()"
+      value="${savedQte||''}"></td>
+    <td><input type="text" name="fact_ref_${i}" id="fact_ref_${i}" placeholder="REF"
+      style="width:100%;"
+      value="${savedRef||''}"></td>
+    <td><input type="number" name="fact_prix_${i}" id="fact_prix_${i}" min="0" step="0.01"
+      placeholder="0.00" style="text-align:right; width:100%;" oninput="calcTotal()"
+      value="${savedPrix||''}"></td>
     <td style="text-align:center; width:28px;">
-      <button type="button" onclick="removeFactLine(${i})" style="background:none; border:none; color:var(--red); cursor:pointer; font-size:14px; padding:0 4px;" title="Supprimer la ligne">×</button>
+      <button type="button" onclick="removeFactLine(${i})"
+        style="background:none; border:none; color:var(--red); cursor:pointer; font-size:14px; padding:0 4px;" title="Supprimer">×</button>
     </td>
   `;
   tbody.appendChild(tr);
+
+  // Si c'est "Autre" à la restauration, afficher le champ libre
+  if (savedDesc && !PRESTATIONS.find(p => p.designation === savedDesc) && savedDesc !== '') {
+    const sel   = tr.querySelector(`[name=fact_desc_${i}]`);
+    const libre = document.getElementById('fact_desc_libre_' + i);
+    sel.value = 'Autre';
+    libre.style.display = 'block';
+    libre.value = savedDesc;
+  }
+}
+
+function selectionnerPrestation(i, sel) {
+  const opt   = sel.options[sel.selectedIndex];
+  const ref   = opt.dataset.ref  || '';
+  const prix  = opt.dataset.prix || '';
+  const libre = document.getElementById('fact_desc_libre_' + i);
+
+  if (sel.value === 'Autre') {
+    libre.style.display = 'block';
+    libre.focus();
+    document.getElementById('fact_ref_'  + i).value = '';
+    document.getElementById('fact_prix_' + i).value = '';
+  } else {
+    libre.style.display = 'none';
+    libre.value = '';
+    document.getElementById('fact_ref_'  + i).value = ref;
+    document.getElementById('fact_prix_' + i).value = prix;
+  }
+  calcTotal();
 }
 
 function removeFactLine(i) {
@@ -797,8 +874,43 @@ function removeFactLine(i) {
   if (row) { row.remove(); calcTotal(); }
 }
 
-// 1 ligne par défaut au chargement
+// 1 ligne par défaut au chargement — ou restauration depuis BDD
+<?php if (!empty($donnees['fact_lines'])): ?>
+(function() {
+  const lines = <?= json_encode($donnees['fact_lines'], JSON_UNESCAPED_UNICODE) ?>;
+  lines.forEach(l => {
+    addFactLine(l.desc || '', l.qte || '', l.ref || '', l.prix || '');
+  });
+  calcTotal();
+})();
+<?php else: ?>
 addFactLine();
+<?php endif; ?>
+
+// Restauration réservoir
+<?php if (!empty($donnees['reservoir'])): ?>
+(function() {
+  const radios = document.querySelectorAll('input[name="reservoir"]');
+  radios.forEach(r => { if (r.value === '<?= $donnees['reservoir'] ?>') r.checked = true; });
+})();
+<?php endif; ?>
+
+// Restauration zones endommagées
+<?php if (!empty($donnees['damages'])): ?>
+(function() {
+  const zones = '<?= addslashes($donnees['damages']) ?>'.split(',').filter(Boolean);
+  zones.forEach(z => toggleDmg(z));
+  document.getElementById('damagesInput').value = '<?= addslashes($donnees['damages']) ?>';
+})();
+<?php endif; ?>
+
+// Restauration checkboxes type dommage
+<?php if (!empty($donnees['type_griffe'])): ?>
+document.querySelector('input[name="type_griffe"]').checked = true;
+<?php endif; ?>
+<?php if (!empty($donnees['cg_accepted'])): ?>
+document.querySelector('input[name="cg_accepted"]').checked = true;
+<?php endif; ?>
 
 // ── Calcul du total ──
 function calcTotal() {
