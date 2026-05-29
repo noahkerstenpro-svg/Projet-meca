@@ -19,7 +19,7 @@ try {
             i.`heure_de_préstation`,
             i.Probleme,
             i.commentaire,
-            v.`marque/modèle`   AS vehicule,
+            CONCAT(v.marque, ' ', COALESCE(v.modele,'')) AS vehicule,
             c.nom               AS client_nom,
             c.prenom            AS client_prenom,
             c.`numéro`          AS client_tel,
