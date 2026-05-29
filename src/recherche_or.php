@@ -513,8 +513,6 @@ foreach ($ordres as $or) {
        class="filter-btn <?= $filtre === 'complet'   ? 'active' : '' ?>">✅ Complets</a>
     <a href="recherche_or.php?filtre=incomplet&q=<?= urlencode($search) ?>"
        class="filter-btn <?= $filtre === 'incomplet' ? 'active' : '' ?>">⚠️ Incomplets</a>
-
-    <a href="ordre_reparation.php" class="btn-nouveau">+ Nouvel OR</a>
 </div>
 
 <!-- Liste des OR -->
@@ -528,8 +526,6 @@ foreach ($ordres as $or) {
         <?php else: ?>
             Aucun ordre de réparation enregistré
         <?php endif; ?>
-        <br><br>
-        <a href="ordre_reparation.php" class="btn-nouveau">+ Créer le premier OR</a>
     </div>
 
 <?php else: ?>
