@@ -61,10 +61,11 @@ try {
             ':id'      => $client_id,
         ]);
     } elseif ($client_prenom || $client_nom) {
-        // Nouveau client
+        // Nouveau client créé depuis un OR — mot de passe placeholder (non utilisable pour connexion)
+        $mdp_placeholder = password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT);
         $stmt = $pdo->prepare("
-            INSERT INTO Clients (prenom, nom, adresse_postal, `numéro`, adresse_mail)
-            VALUES (:prenom, :nom, :adresse, :tel, :email)
+            INSERT INTO Clients (prenom, nom, adresse_postal, `numéro`, adresse_mail, mots_de_passe)
+            VALUES (:prenom, :nom, :adresse, :tel, :email, :mdp)
         ");
         $stmt->execute([
             ':prenom'  => $client_prenom,
@@ -72,6 +73,7 @@ try {
             ':adresse' => $client_adresse,
             ':tel'     => $client_tel,
             ':email'   => $client_email,
+            ':mdp'     => $mdp_placeholder,
         ]);
         $client_id = $pdo->lastInsertId();
     }
