@@ -23,7 +23,9 @@ try {
         SELECT
             v.id_vehicules,
             v.vin,
-            v.`marque/modèle`   AS marque_modele,
+            v.marque,
+            v.modele,
+            CONCAT(v.marque, ' ', COALESCE(v.modele,'')) AS marque_modele,
             v.immatriculation,
             v.km,
             v.mise_circulation,
