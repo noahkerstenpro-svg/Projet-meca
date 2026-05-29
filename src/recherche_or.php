@@ -81,13 +81,20 @@ if ($search) {
 }
 
 if ($filtre === 'complet') {
-    $where[] = "(i.Probleme IS NOT NULL AND i.Probleme != ''
+    // Tous les champs renseignés : client + véhicule + problème + immat + km
+    $where[] = "(c.prenom IS NOT NULL AND c.prenom != ''
+                 AND c.nom IS NOT NULL AND c.nom != ''
+                 AND v.`marque/modèle` IS NOT NULL AND v.`marque/modèle` != ''
                  AND v.vin IS NOT NULL AND v.vin != ''
-                 AND c.id_clients IS NOT NULL)";
+                 AND i.Probleme IS NOT NULL AND i.Probleme != ''
+                 AND v.immatriculation IS NOT NULL AND v.immatriculation != ''
+                 AND v.km IS NOT NULL)";
 } elseif ($filtre === 'incomplet') {
-    $where[] = "(i.Probleme IS NULL OR i.Probleme = ''
-                 OR v.vin IS NULL OR v.vin = ''
-                 OR c.id_clients IS NULL)";
+    // Client ou véhicule manquant
+    $where[] = "(c.prenom IS NULL OR c.prenom = ''
+                 OR c.nom IS NULL OR c.nom = ''
+                 OR v.`marque/modèle` IS NULL OR v.`marque/modèle` = ''
+                 OR v.vin IS NULL OR v.vin = '')";
 }
 
 if ($where) $sql .= ' WHERE ' . implode(' AND ', $where);
@@ -99,14 +106,21 @@ $ordres = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Calcul statut complet / incomplet
 function statutOR($or) {
-    $requis = ['client_prenom', 'client_nom', 'marque_modele', 'vin', 'Probleme'];
-    $manquants = 0;
-    foreach ($requis as $k) {
-        if (empty(trim($or[$k] ?? ''))) $manquants++;
-    }
-    if ($manquants === 0) return 'complet';
-    if ($manquants >= count($requis)) return 'vide';
-    return 'partiel';
+    // Champs client
+    $clientOk = !empty(trim($or['client_prenom'] ?? '')) && !empty(trim($or['client_nom'] ?? ''));
+
+    // Champs véhicule essentiels
+    $vehiculeOk = !empty(trim($or['marque_modele'] ?? '')) && !empty(trim($or['vin'] ?? ''));
+
+    // Tous les champs (client + véhicule + problème + immat + km)
+    $toutOk = $clientOk && $vehiculeOk
+           && !empty(trim($or['Probleme']        ?? ''))
+           && !empty(trim($or['immatriculation'] ?? ''))
+           && !empty(trim($or['km']              ?? ''));
+
+    if ($toutOk)    return 'complet';   // ✅ tout est renseigné
+    if ($clientOk && $vehiculeOk) return 'partiel';  // 🟡 client + véhicule ok
+    return 'incomplet';                 // 🔴 client ou véhicule manquant
 }
 
 function dateFR($date) {
@@ -288,9 +302,9 @@ function dateFR($date) {
             width: 10px;
         }
 
-        .or-card.complet  .or-statut-bande { background: #27ae60; }
-        .or-card.partiel  .or-statut-bande { background: #f39c12; }
-        .or-card.vide     .or-statut-bande { background: #e74c3c; }
+        .or-card.complet   .or-statut-bande { background: #27ae60; }
+        .or-card.partiel   .or-statut-bande { background: #f39c12; }
+        .or-card.incomplet .or-statut-bande { background: #e74c3c; }
 
         /* Corps */
         .or-body {
@@ -373,9 +387,9 @@ function dateFR($date) {
             border-radius: 20px;
         }
 
-        .badge-complet  { background: #e6f9f0; color: #27ae60; }
-        .badge-partiel  { background: #fff8e6; color: #f39c12; }
-        .badge-vide     { background: #fdecea; color: #e74c3c; }
+        .badge-complet   { background: #e6f9f0; color: #27ae60; }
+        .badge-partiel   { background: #fff8e6; color: #f39c12; }
+        .badge-incomplet { background: #fdecea; color: #e74c3c; }
 
         /* Actions droite */
         .or-actions {
