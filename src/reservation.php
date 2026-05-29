@@ -21,7 +21,9 @@ $message = '';
 $erreur  = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $vehicule = trim($_POST['vehicule'] ?? '');
+    $marque   = trim($_POST['marque']   ?? '');
+    $modele   = trim($_POST['modele']   ?? '');
+    $vehicule = trim("$marque $modele");
     $date     = trim($_POST['date']     ?? '');
     $heure    = trim($_POST['heure']    ?? '');
     $client_id = $_SESSION['client_id'];
@@ -30,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $probleme_autre  = trim($_POST['probleme_autre'] ?? '');
     $probleme = ($probleme_select === 'Autre') ? $probleme_autre : $probleme_select;
 
-    if ($vehicule && $date && $heure && $probleme) {
+    if ($marque && $modele && $date && $heure && $probleme) {
 
         try {
             // $pdo est déjà connecté en haut du fichier
@@ -38,11 +40,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // 1) Vérifier si le véhicule existe déjà pour ce client
             $stmtCheck = $pdo->prepare("
                 SELECT id_vehicules FROM Vehicules
-                WHERE `marque/modèle` = :marque AND client_id = :client_id
+                WHERE marque = :marque AND modele = :modele AND client_id = :client_id
                 LIMIT 1
             ");
             $stmtCheck->execute([
-                ':marque'    => $vehicule,
+                ':marque'    => $marque,
+                ':modele'    => $modele,
                 ':client_id' => $client_id,
             ]);
             $existingVeh = $stmtCheck->fetch(PDO::FETCH_ASSOC);
@@ -53,13 +56,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 // Nouveau véhicule : on l'insère
                 $stmtVeh = $pdo->prepare("
-                    INSERT INTO Vehicules (vin, `marque/modèle`, client_id)
-                    VALUES (:vin, :marque, :client_id)
+                    INSERT INTO Vehicules (vin, marque, modele, client_id)
+                    VALUES (:vin, :marque, :modele, :client_id)
                 ");
-                $vin = strtoupper(substr(md5(uniqid()), 0, 10)); // VIN provisoire
+                $vin = strtoupper(substr(md5(uniqid()), 0, 10));
                 $stmtVeh->execute([
                     ':vin'       => $vin,
-                    ':marque'    => $vehicule,
+                    ':marque'    => $marque,
+                    ':modele'    => $modele,
                     ':client_id' => $client_id,
                 ]);
                 $vehicule_id = $pdo->lastInsertId();
@@ -253,8 +257,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <form method="POST" action="reservation.php">
         <div class="form">
-            <label>Véhicule</label>
-            <input name="vehicule" placeholder="Ex : Renault Clio" required>
+            <label>Marque</label>
+            <input name="marque" id="marque" placeholder="Ex : Renault" required>
+        </div>
+
+        <div class="form">
+            <label>Modèle</label>
+            <input name="modele" id="modele" placeholder="Ex : Clio" required>
         </div>
 
         <div class="form">
