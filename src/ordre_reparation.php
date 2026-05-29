@@ -24,7 +24,7 @@ $intervention_id = (int)($_GET['intervention_id'] ?? 0);
 
 if ($intervention_id > 0) {
     $stmt = $pdo->prepare("
-        SELECT i.*, v.vin, v.`marque/modèle` AS marque_modele, v.immatriculation,
+        SELECT i.*, v.vin, v.marque, v.modele, v.immatriculation,
                v.km, v.mise_circulation, v.type_veh, v.id_vehicules,
                c.prenom AS client_prenom, c.nom AS client_nom,
                c.adresse_postal AS client_adresse, c.`numéro` AS client_tel,
@@ -562,8 +562,8 @@ function donBool($key, $donnees) {
       </thead>
       <tbody>
         <tr>
-          <td><input type="text" name="marque" id="marqueInput" placeholder="ex: Renault" value="<?= val('marque_modele', $prefill) ?>"></td>
-          <td><input type="text" name="modele" id="modeleInput" placeholder="ex: Clio IV" value=""></td>
+          <td><input type="text" name="marque" id="marqueInput" placeholder="ex: Renault" value="<?= val('marque', $prefill) ?>"></td>
+          <td><input type="text" name="modele" id="modeleInput" placeholder="ex: Clio IV" value="<?= val('modele', $prefill) ?>"></td>
           <td><input type="text" name="type_veh" id="typeVehInput" placeholder="ex: Berline" value="<?= val('type_veh', $prefill) ?>"></td>
           <td><input type="date" name="mise_circulation" id="miseCircInput" value="<?= val('mise_circulation', $prefill) ?>"></td>
         </tr>
@@ -1346,12 +1346,10 @@ function selectionnerVin(v) {
   document.getElementById('vinInput').value = v.vin;
 
   // Remplir les champs véhicule
-  const marque = v.marque_modele || '';
-  const parts  = marque.split(' ');
   if (document.getElementById('marqueInput'))
-    document.getElementById('marqueInput').value = parts[0] || marque;
+    document.getElementById('marqueInput').value = v.marque || '';
   if (document.getElementById('modeleInput'))
-    document.getElementById('modeleInput').value = parts.slice(1).join(' ') || '';
+    document.getElementById('modeleInput').value = v.modele || '';
   if (document.getElementById('immatInput'))
     document.getElementById('immatInput').value = v.immatriculation || '';
   if (document.getElementById('kmInput'))
