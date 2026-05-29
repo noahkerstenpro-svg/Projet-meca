@@ -55,7 +55,7 @@ $sql = "
         i.Probleme,
         i.commentaire,
         v.vin,
-        v.`marque/modèle`   AS marque_modele,
+        CONCAT(v.marque, ' ', COALESCE(v.modele,'')) AS marque_modele,
         v.immatriculation,
         v.km,
         v.type_veh,
@@ -75,7 +75,7 @@ $where  = [];
 
 if ($search) {
     $where[] = "(c.prenom LIKE :q OR c.nom LIKE :q OR v.vin LIKE :q
-                 OR v.`marque/modèle` LIKE :q OR v.immatriculation LIKE :q
+                 OR v.marque LIKE :q OR v.modele LIKE :q OR v.immatriculation LIKE :q
                  OR i.Probleme LIKE :q)";
     $params[':q'] = '%' . $search . '%';
 }
@@ -84,7 +84,7 @@ if ($filtre === 'complet') {
     // Tous les champs renseignés : client + véhicule + problème + immat + km
     $where[] = "(c.prenom IS NOT NULL AND c.prenom != ''
                  AND c.nom IS NOT NULL AND c.nom != ''
-                 AND v.`marque/modèle` IS NOT NULL AND v.`marque/modèle` != ''
+                 AND v.marque IS NOT NULL AND v.marque != ''
                  AND v.vin IS NOT NULL AND v.vin != ''
                  AND i.Probleme IS NOT NULL AND i.Probleme != ''
                  AND v.immatriculation IS NOT NULL AND v.immatriculation != ''
@@ -93,7 +93,7 @@ if ($filtre === 'complet') {
     // Client ou véhicule manquant
     $where[] = "(c.prenom IS NULL OR c.prenom = ''
                  OR c.nom IS NULL OR c.nom = ''
-                 OR v.`marque/modèle` IS NULL OR v.`marque/modèle` = ''
+                 OR v.marque IS NULL OR v.marque = ''
                  OR v.vin IS NULL OR v.vin = '')";
 }
 
