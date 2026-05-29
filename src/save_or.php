@@ -156,13 +156,14 @@ try {
     if ($vehicule_id > 0) {
         $pdo->prepare("
             UPDATE Vehicules
-            SET vin = :vin, `marque/modèle` = :marque, immatriculation = :immat,
+            SET vin = :vin, marque = :marque, modele = :modele, immatriculation = :immat,
                 km = :km, type_veh = :type_veh, mise_circulation = :mise_circ,
                 client_id = :client_id
             WHERE id_vehicules = :id
         ")->execute([
             ':vin'       => $vin ?: null,
-            ':marque'    => $marque_modele ?: null,
+            ':marque'    => $marque ?: null,
+                ':modele'    => $modele ?: null,
             ':immat'     => $immat ?: null,
             ':km'        => $km,
             ':type_veh'  => $type_veh ?: null,
@@ -179,12 +180,13 @@ try {
                 $vehicule_id = $existing['id_vehicules'];
                 $pdo->prepare("
                     UPDATE Vehicules
-                    SET `marque/modèle` = :marque, immatriculation = :immat,
+                    SET marque = :marque, modele = :modele, immatriculation = :immat,
                         km = :km, type_veh = :type_veh, mise_circulation = :mise_circ,
                         client_id = COALESCE(:client_id, client_id)
                     WHERE id_vehicules = :id
                 ")->execute([
-                    ':marque'    => $marque_modele ?: null,
+                    ':marque'    => $marque ?: null,
+                ':modele'    => $modele ?: null,
                     ':immat'     => $immat ?: null,
                     ':km'        => $km,
                     ':type_veh'  => $type_veh ?: null,
@@ -197,11 +199,12 @@ try {
         if (!$vehicule_id && ($vin || $marque_modele)) {
             $vinFinal = $vin ?: strtoupper(substr(md5(uniqid()), 0, 10));
             $pdo->prepare("
-                INSERT INTO Vehicules (vin, `marque/modèle`, immatriculation, km, type_veh, mise_circulation, client_id)
-                VALUES (:vin, :marque, :immat, :km, :type_veh, :mise_circ, :client_id)
+                INSERT INTO Vehicules (vin, marque, modele, immatriculation, km, type_veh, mise_circulation, client_id)
+                VALUES (:vin, :marque, :modele, :immat, :km, :type_veh, :mise_circ, :client_id)
             ")->execute([
                 ':vin'       => $vinFinal,
-                ':marque'    => $marque_modele ?: null,
+                ':marque'    => $marque ?: null,
+                ':modele'    => $modele ?: null,
                 ':immat'     => $immat ?: null,
                 ':km'        => $km,
                 ':type_veh'  => $type_veh ?: null,
