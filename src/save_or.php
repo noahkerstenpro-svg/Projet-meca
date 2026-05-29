@@ -47,7 +47,10 @@ try {
     $fact_lines = [];
     $i = 0;
     while (isset($_POST["fact_desc_$i"]) || isset($_POST["fact_qte_$i"])) {
-        $desc = trim($_POST["fact_desc_$i"] ?? '');
+        $desc_select = trim($_POST["fact_desc_$i"]       ?? '');
+        $desc_libre  = trim($_POST["fact_desc_libre_$i"] ?? '');
+        // Si "Autre" sélectionné → prendre la saisie libre
+        $desc = ($desc_select === 'Autre') ? $desc_libre : $desc_select;
         $qte  = trim($_POST["fact_qte_$i"]  ?? '');
         $ref  = trim($_POST["fact_ref_$i"]  ?? '');
         $prix = trim($_POST["fact_prix_$i"] ?? '');
