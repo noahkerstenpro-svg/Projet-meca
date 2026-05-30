@@ -29,6 +29,7 @@ $sql = "
         i.`heure_de_préstation`,
         i.Probleme,
         i.commentaire,
+        i.statut,
         v.vin,
         CONCAT(v.marque, ' ', COALESCE(v.modele,'')) AS marque_modele,
         v.immatriculation,
@@ -53,7 +54,16 @@ $sql = "
       AND v.km IS NOT NULL
 ";
 
+// Onglet actif : 'a_valider' ou 'valides'
+$onglet = $_GET['onglet'] ?? 'a_valider';
+
 $params = [];
+
+if ($onglet === 'valides') {
+    $sql .= " AND i.statut = 'valide'";
+} else {
+    $sql .= " AND i.statut = 'en_cours'";
+}
 
 if ($search) {
     $sql .= " AND (c.prenom LIKE :q OR c.nom LIKE :q OR v.vin LIKE :q
@@ -69,6 +79,27 @@ $stmt->execute($params);
 $ordres = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $total = count($ordres);
+
+// Compteurs pour les badges des onglets
+$stmtCount = $pdo->query("
+    SELECT
+        SUM(CASE WHEN i.statut = 'en_cours' THEN 1 ELSE 0 END) AS nb_en_cours,
+        SUM(CASE WHEN i.statut = 'valide'   THEN 1 ELSE 0 END) AS nb_valides
+    FROM intervention i
+    LEFT JOIN Vehicules v ON v.id_vehicules = i.vehicule_id
+    LEFT JOIN Clients   c ON c.id_clients   = v.client_id
+    WHERE i.source = 'ordre'
+      AND c.prenom IS NOT NULL AND c.prenom != ''
+      AND c.nom    IS NOT NULL AND c.nom    != ''
+      AND v.marque IS NOT NULL AND v.marque != ''
+      AND v.vin    IS NOT NULL AND v.vin    != ''
+      AND i.Probleme IS NOT NULL AND i.Probleme != ''
+      AND v.immatriculation IS NOT NULL AND v.immatriculation != ''
+      AND v.km IS NOT NULL
+");
+$counts = $stmtCount->fetch(PDO::FETCH_ASSOC);
+$nb_en_cours = (int)($counts['nb_en_cours'] ?? 0);
+$nb_valides  = (int)($counts['nb_valides']  ?? 0);
 
 function dateFR($date) {
     if (!$date) return '—';
@@ -456,12 +487,18 @@ function dateFR($date) {
 
 <!-- Onglets -->
 <div class="tabs">
-    <a class="tab" href="validation.php">
-        ✅ Ordres complets à valider
-        <span style="background:#e6f9f0;color:#27ae60;border-radius:20px;padding:1px 8px;font-size:11px;"><?= $total ?></span>
+    <a class="tab <?= $onglet === 'a_valider' ? 'active' : '' ?>"
+       href="validation.php?onglet=a_valider&q=<?= urlencode($search) ?>">
+        ⏳ À valider
+        <span class="tab-badge-en-cours" style="background:#fff3cd;color:#b45309;border-radius:20px;padding:1px 8px;font-size:11px;font-weight:700;"><?= $nb_en_cours ?></span>
+    </a>
+    <a class="tab <?= $onglet === 'valides' ? 'active' : '' ?>"
+       href="validation.php?onglet=valides&q=<?= urlencode($search) ?>">
+        ✅ Validés
+        <span class="tab-badge-valides" style="background:#e6f9f0;color:#27ae60;border-radius:20px;padding:1px 8px;font-size:11px;font-weight:700;"><?= $nb_valides ?></span>
     </a>
     <a class="tab" href="recherche_or.php">
-        🔍 Tous les ordres
+        🔍 Tous les ordres en cours
     </a>
 </div>
 
@@ -476,19 +513,25 @@ function dateFR($date) {
 <!-- Recherche -->
 <div class="search-bar">
     <form class="search-form" method="GET" action="validation.php">
+        <input type="hidden" name="onglet" value="<?= htmlspecialchars($onglet) ?>">
         <input class="search-input" type="text" name="q"
                value="<?= htmlspecialchars($search) ?>"
                placeholder="Rechercher client, VIN, véhicule, problème…">
         <button class="btn-search" type="submit">🔍 Rechercher</button>
         <?php if ($search): ?>
-            <a href="validation.php" style="font-size:13px;color:#888;text-decoration:none;">✕ Effacer</a>
+            <a href="validation.php?onglet=<?= htmlspecialchars($onglet) ?>"
+               style="font-size:13px;color:#888;text-decoration:none;">✕ Effacer</a>
         <?php endif; ?>
     </form>
 </div>
 
 <!-- Info -->
 <div style="text-align:center;font-size:13px;color:#6b7280;margin-bottom:8px;">
-    Seuls les ordres de réparation <strong style="color:#27ae60;">complets</strong> (client + véhicule + VIN + immatriculation + kilométrage + problème renseignés) sont affichés ici.
+    <?php if ($onglet === 'valides'): ?>
+        Ordres de réparation <strong style="color:#27ae60;">validés</strong> par le professeur.
+    <?php else: ?>
+        Ordres de réparation <strong style="color:#b45309;">complets</strong> en attente de validation (client + véhicule + VIN + immat + km + problème renseignés).
+    <?php endif; ?>
 </div>
 
 <!-- Liste des OR complets -->
@@ -496,9 +539,11 @@ function dateFR($date) {
 
 <?php if (empty($ordres)): ?>
     <div class="vide">
-        <div class="vide-icon">✅</div>
+        <div class="vide-icon"><?= $onglet === 'valides' ? '📁' : '✅' ?></div>
         <?php if ($search): ?>
-            Aucun OR complet trouvé pour "<strong><?= htmlspecialchars($search) ?></strong>"
+            Aucun OR trouvé pour "<strong><?= htmlspecialchars($search) ?></strong>"
+        <?php elseif ($onglet === 'valides'): ?>
+            Aucun ordre de réparation validé pour le moment.
         <?php else: ?>
             Aucun ordre de réparation complet à valider pour le moment.
         <?php endif; ?>
@@ -566,10 +611,14 @@ function dateFR($date) {
         <div class="or-actions">
             <a href="ordre_reparation.php?intervention_id=<?= $or['id_intervention'] ?>"
                class="btn-ouvrir">✏️ Ouvrir / Modifier</a>
+            <?php if ($onglet !== 'valides'): ?>
             <button class="btn-valider"
                     onclick="validerOR(<?= $or['id_intervention'] ?>, this)">
                 ✅ Valider
             </button>
+            <?php else: ?>
+            <span style="font-size:12px;color:#27ae60;font-weight:600;">✅ Validé</span>
+            <?php endif; ?>
         </div>
     </div>
     <?php endforeach; ?>
@@ -613,12 +662,11 @@ function validerOR(id, btn) {
             setTimeout(() => card.remove(), 400);
             showToast('✅ OR #' + id + ' validé avec succès !');
 
-            // Mise à jour compteur dans l'onglet
-            const badge = document.querySelector('.tab .badge-count');
-            if (badge) {
-                const n = parseInt(badge.textContent) - 1;
-                badge.textContent = n >= 0 ? n : 0;
-            }
+            // Mise à jour des badges onglets
+            const badgeEnCours = document.querySelector('.tab-badge-en-cours');
+            const badgeValides = document.querySelector('.tab-badge-valides');
+            if (badgeEnCours) badgeEnCours.textContent = Math.max(0, parseInt(badgeEnCours.textContent) - 1);
+            if (badgeValides) badgeValides.textContent = parseInt(badgeValides.textContent) + 1;
         } else {
             btn.disabled = false;
             btn.textContent = '✅ Valider';
