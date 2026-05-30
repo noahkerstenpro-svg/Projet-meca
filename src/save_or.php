@@ -240,9 +240,9 @@ try {
     } else {
         $pdo->prepare("
             INSERT INTO intervention
-                (vehicule_id, prestation_id, date_intervention, `heure_de_préstation`, Probleme, commentaire, donnees_or)
+                (vehicule_id, prestation_id, date_intervention, `heure_de_préstation`, Probleme, commentaire, donnees_or, source)
             VALUES
-                (:vehicule_id, NULL, :date, '08:00', :probleme, :commentaire, :donnees)
+                (:vehicule_id, NULL, :date, '08:00', :probleme, :commentaire, :donnees, 'ordre')
         ")->execute([
             ':vehicule_id'  => $vehicule_id ?: null,
             ':date'         => $date_reception,
