@@ -71,7 +71,7 @@ $sql = "
 ";
 
 $params = [];
-$where  = [];
+$where  = ["i.source = 'ordre'"];
 
 if ($search) {
     $where[] = "(c.prenom LIKE :q OR c.nom LIKE :q OR v.vin LIKE :q
