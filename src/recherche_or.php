@@ -45,7 +45,6 @@ if (isset($_GET['ajax'])) {
 // CHARGEMENT DES OR depuis la BDD
 // ════════════════════════════════════════════
 $search = trim($_GET['q'] ?? '');
-$filtre = $_GET['filtre'] ?? 'tous';
 
 $sql = "
     SELECT
@@ -79,23 +78,6 @@ if ($search) {
                  OR v.marque LIKE :q OR v.modele LIKE :q OR v.immatriculation LIKE :q
                  OR i.Probleme LIKE :q)";
     $params[':q'] = '%' . $search . '%';
-}
-
-if ($filtre === 'complet') {
-    // Tous les champs renseignés : client + véhicule + problème + immat + km
-    $where[] = "(c.prenom IS NOT NULL AND c.prenom != ''
-                 AND c.nom IS NOT NULL AND c.nom != ''
-                 AND v.marque IS NOT NULL AND v.marque != ''
-                 AND v.vin IS NOT NULL AND v.vin != ''
-                 AND i.Probleme IS NOT NULL AND i.Probleme != ''
-                 AND v.immatriculation IS NOT NULL AND v.immatriculation != ''
-                 AND v.km IS NOT NULL)";
-} elseif ($filtre === 'incomplet') {
-    // Client ou véhicule manquant
-    $where[] = "(c.prenom IS NULL OR c.prenom = ''
-                 OR c.nom IS NULL OR c.nom = ''
-                 OR v.marque IS NULL OR v.marque = ''
-                 OR v.vin IS NULL OR v.vin = '')";
 }
 
 if ($where) $sql .= ' WHERE ' . implode(' AND ', $where);
@@ -468,52 +450,28 @@ function dateFR($date) {
 </header>
 
 <?php
-$total    = count($ordres);
-$complets = 0; $partiels = 0; $vides = 0;
-foreach ($ordres as $or) {
-    $s = statutOR($or);
-    if ($s === 'complet') $complets++;
-    elseif ($s === 'partiel') $partiels++;
-    else $vides++;
-}
+$total = count($ordres);
 ?>
 
 <!-- Stats -->
 <div class="stats-bar">
     <div class="stat-card">
         <div class="stat-value"><?= $total ?></div>
-        <div class="stat-label">Ordres au total</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-value vert"><?= $complets ?></div>
-        <div class="stat-label">Complets</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-value" style="color:#f39c12;"><?= $partiels ?></div>
-        <div class="stat-label">Partiels</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-value rouge"><?= $vides ?></div>
-        <div class="stat-label">Incomplets</div>
+        <div class="stat-label">Ordres en cours</div>
     </div>
 </div>
 
-<!-- Recherche + Filtres -->
+<!-- Recherche -->
 <div class="search-bar">
     <form class="search-form" method="GET" action="recherche_or.php">
         <input class="search-input" type="text" name="q"
                value="<?= htmlspecialchars($search) ?>"
                placeholder="Rechercher client, VIN, véhicule, problème…">
-        <input type="hidden" name="filtre" value="<?= htmlspecialchars($filtre) ?>">
         <button class="btn-search" type="submit">🔍 Rechercher</button>
+        <?php if ($search): ?>
+            <a href="recherche_or.php" style="font-size:13px;color:#888;text-decoration:none;">✕ Effacer</a>
+        <?php endif; ?>
     </form>
-
-    <a href="recherche_or.php?filtre=tous&q=<?= urlencode($search) ?>"
-       class="filter-btn <?= $filtre === 'tous'      ? 'active' : '' ?>">Tous</a>
-    <a href="recherche_or.php?filtre=complet&q=<?= urlencode($search) ?>"
-       class="filter-btn <?= $filtre === 'complet'   ? 'active' : '' ?>">✅ Complets</a>
-    <a href="recherche_or.php?filtre=incomplet&q=<?= urlencode($search) ?>"
-       class="filter-btn <?= $filtre === 'incomplet' ? 'active' : '' ?>">⚠️ Incomplets</a>
 </div>
 
 <!-- Liste des OR -->
@@ -549,9 +507,6 @@ foreach ($ordres as $or) {
                 <span class="or-id">#<?= $or['id_intervention'] ?></span>
                 <span class="or-client">
                     <?= $client ? htmlspecialchars($client) : '<span style="color:#ccc;">Client inconnu</span>' ?>
-                </span>
-                <span class="badge-statut badge-<?= $statut ?>">
-                    <?= $statut === 'complet' ? '✅ Complet' : ($statut === 'partiel' ? '⚠️ Partiel' : '❌ Incomplet') ?>
                 </span>
                 <span class="or-date">📅 <?= dateFR($or['date_intervention']) ?></span>
             </div>
