@@ -30,6 +30,7 @@ try {
         JOIN Vehicules v  ON v.id_vehicules  = i.vehicule_id
         JOIN Clients   c  ON c.id_clients    = v.client_id
         LEFT JOIN Prestation p ON p.id_prestation = i.prestation_id
+        WHERE i.source = 'reservation'
         ORDER BY i.date_intervention ASC, i.`heure_de_préstation` ASC
     ");
     $rdvs = $stmt->fetchAll(PDO::FETCH_ASSOC);
