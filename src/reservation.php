@@ -88,8 +88,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             //    - Si prestation connue : Probleme = désignation, prestation_id = id trouvé
             //    - Si Autre            : Probleme = texte libre du client, prestation_id = NULL
             $stmtInt = $pdo->prepare("
-                INSERT INTO intervention (vehicule_id, prestation_id, date_intervention, `heure_de_préstation`, Probleme, commentaire)
-                VALUES (:vehicule_id, :prestation_id, :date, :heure, :probleme, :commentaire)
+                INSERT INTO intervention (vehicule_id, prestation_id, date_intervention, `heure_de_préstation`, Probleme, commentaire, source)
+                VALUES (:vehicule_id, :prestation_id, :date, :heure, :probleme, :commentaire, 'reservation')
             ");
             $stmtInt->execute([
                 ':vehicule_id'   => $vehicule_id,
