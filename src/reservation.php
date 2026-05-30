@@ -57,11 +57,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Nouveau véhicule : on l'insère
                 $stmtVeh = $pdo->prepare("
                     INSERT INTO Vehicules (vin, marque, modele, client_id)
-                    VALUES (:vin, :marque, :modele, :client_id)
+                    VALUES (NULL, :marque, :modele, :client_id)
                 ");
-                $vin = strtoupper(substr(md5(uniqid()), 0, 10));
                 $stmtVeh->execute([
-                    ':vin'       => $vin,
                     ':marque'    => $marque,
                     ':modele'    => $modele,
                     ':client_id' => $client_id,
