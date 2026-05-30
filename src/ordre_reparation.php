@@ -95,8 +95,8 @@ function donBool($key, $donnees) {
     font-family: 'Source Sans 3', sans-serif;
     background: var(--bg);
     color: var(--ink);
-    font-size: 13px;
-    line-height: 1.4;
+    font-size: 11px;
+    line-height: 1.3;
   }
 
   /* ── TOOLBAR ── */
@@ -128,7 +128,7 @@ function donBool($key, $donnees) {
   /* ── FORM WRAPPER ── */
   .page-wrapper {
     max-width: 820px;
-    margin: 24px auto 60px;
+    margin: 16px auto 40px;
     background: var(--white);
     box-shadow: 0 4px 40px rgba(44,44,110,0.12);
     border: 1px solid var(--border);
@@ -139,53 +139,53 @@ function donBool($key, $donnees) {
     background: var(--header-bg);
     color: var(--header-text);
     text-align: center;
-    padding: 10px;
-    font-size: 15px;
+    padding: 6px;
+    font-size: 13px;
     font-weight: 700;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.10em;
     text-transform: uppercase;
-    border-bottom: 3px solid #1a1a5e;
+    border-bottom: 2px solid #1a1a5e;
   }
 
   /* ── IDENTITY ROW ── */
   .identity-row {
     display: grid;
-    grid-template-columns: 200px 1fr 1fr;
+    grid-template-columns: 160px 1fr 1fr;
     border-bottom: 1.5px solid var(--border-strong);
   }
   .logo-cell {
-    padding: 10px 12px;
+    padding: 6px 8px;
     border-right: 1.5px solid var(--border-strong);
     display: flex;
     flex-direction: column;
     justify-content: center;
     background: #f0f0fa;
   }
-  .logo-cell .school-name {
-    font-family: 'Source Serif 4', serif;
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--accent);
-    letter-spacing: 0.04em;
+  .school-logo {
+    max-width: 80px;
+    max-height: 55px;
+    object-fit: contain;
+    display: block;
+    margin-bottom: 3px;
   }
   .logo-cell .school-addr {
-    font-size: 10px;
+    font-size: 9px;
     color: var(--mid);
     margin-top: 2px;
-    line-height: 1.5;
+    line-height: 1.4;
   }
   .date-cell {
-    padding: 8px 12px;
+    padding: 5px 8px;
     border-right: 1.5px solid var(--border-strong);
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
   }
   .order-cell {
-    padding: 8px 12px;
+    padding: 5px 8px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
   }
   .cell-label {
     font-size: 10px;
@@ -208,7 +208,7 @@ function donBool($key, $donnees) {
     border-bottom: 1.5px solid var(--border-strong);
   }
   .client-cell {
-    padding: 8px 12px;
+    padding: 5px 8px;
   }
 
   /* ── VEHICLE TABLE ── */
@@ -219,33 +219,33 @@ function donBool($key, $donnees) {
   }
   .vehicle-table th {
     background: var(--section-bg);
-    padding: 5px 10px;
+    padding: 3px 6px;
     text-align: center;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     color: var(--mid);
     border: 1px solid var(--border);
   }
   .vehicle-table td {
     border: 1px solid var(--border);
-    padding: 2px 4px;
+    padding: 1px 3px;
     vertical-align: middle;
   }
 
   /* ── RECEPTION / INFO SPLIT ── */
   .reception-row {
     display: grid;
-    grid-template-columns: 220px 1fr;
+    grid-template-columns: 200px 1fr;
     border-bottom: 1.5px solid var(--border-strong);
-    min-height: 180px;
+    min-height: 140px;
   }
   .reception-cell {
     border-right: 1.5px solid var(--border-strong);
-    padding: 8px 10px;
+    padding: 5px 8px;
   }
-  .info-cell { padding: 8px 12px; }
+  .info-cell { padding: 5px 8px; }
 
   /* ── CAR SCHEMA ── */
   .car-schema {
@@ -295,17 +295,17 @@ function donBool($key, $donnees) {
   /* ── TRAVAUX ── */
   .section-header {
     background: var(--section-bg);
-    padding: 5px 12px;
-    font-size: 10px;
+    padding: 3px 8px;
+    font-size: 9px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     color: var(--mid);
     border-top: 1.5px solid var(--border-strong);
     border-bottom: 1px solid var(--border);
   }
   .travaux-area {
-    padding: 8px 12px;
+    padding: 4px 8px;
     border-bottom: 1.5px solid var(--border-strong);
   }
 
@@ -352,7 +352,7 @@ function donBool($key, $donnees) {
     border-top: 1.5px solid var(--border-strong);
   }
   .rest-cell {
-    padding: 6px 10px;
+    padding: 4px 6px;
     border-right: 1px solid var(--border);
     text-align: center;
   }
@@ -411,7 +411,7 @@ function donBool($key, $donnees) {
       border: none !important;
       border-bottom: 1px solid #ccc !important;
       background: transparent !important;
-      font-size: 11px !important;
+      font-size: 9px !important;
       color: #000 !important;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
@@ -421,7 +421,7 @@ function donBool($key, $donnees) {
       border: none !important;
       border-bottom: 1px dashed #ccc !important;
       background: transparent !important;
-      font-size: 11px !important;
+      font-size: 9px !important;
       color: #000 !important;
     }
 
@@ -479,7 +479,7 @@ function donBool($key, $donnees) {
     <!-- ═══ IDENTITÉ ═══ -->
     <div class="identity-row">
       <div class="logo-cell">
-        <div class="school-name">Brocéliande</div>
+        <img src="logo-broceliande.png" alt="Brocéliande" class="school-logo">
         <div class="school-addr">
           Cité scolaire de Brocéliande<br>
           4 avenue de Brocéliande<br>
@@ -612,7 +612,7 @@ function donBool($key, $donnees) {
         <div class="section-header" style="border:none; background:none; padding:0 0 4px 0;">Réception du véhicule</div>
 
         <!-- Schéma voiture SVG simplifié -->
-        <svg class="car-schema" width="180" height="90" viewBox="0 0 180 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg class="car-schema" width="160" height="75" viewBox="0 0 180 90" fill="none" xmlns="http://www.w3.org/2000/svg">
           <!-- Body -->
           <rect x="15" y="42" width="150" height="32" rx="6" fill="#dde" stroke="#6060a0" stroke-width="1.5"/>
           <!-- Roof -->
@@ -665,7 +665,7 @@ function donBool($key, $donnees) {
 
       <div class="info-cell">
         <div class="section-header" style="border:none; background:none; padding:0 0 4px 0;">Informations client (symptômes ou travaux demandés)</div>
-        <textarea name="info_client" rows="7" placeholder="Décrire les symptômes ou travaux demandés par le client..."><?= val('Probleme', $prefill) ?></textarea>
+        <textarea name="info_client" rows="5" placeholder="Décrire les symptômes ou travaux demandés par le client..."><?= val('Probleme', $prefill) ?></textarea>
         <div style="font-size:10px; color:var(--light); margin-top:8px;">
           <label><input type="checkbox" name="cg_accepted"> J'accepte les Conditions Générales (Voir Verso)</label>
         </div>
@@ -695,7 +695,7 @@ function donBool($key, $donnees) {
     <!-- ═══ TRAVAUX EFFECTUÉS ═══ -->
     <div class="section-header">Travaux effectués</div>
     <div class="travaux-area">
-      <textarea name="travaux" rows="4" placeholder="Décrire les travaux effectués..."><?= val('commentaire', $prefill) ?></textarea>
+      <textarea name="travaux" rows="3" placeholder="Décrire les travaux effectués..."><?= val('commentaire', $prefill) ?></textarea>
     </div>
 
     <!-- ═══ FACTURATION ═══ -->
