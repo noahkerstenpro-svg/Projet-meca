@@ -178,14 +178,14 @@ $name = $_SESSION['name'] ?? $_SESSION['username'];
 
                 <a class="action-card" href="recherche_or.php">
                     <div class="icon">🔍</div>
-                    <h3>Suivre les réparations</h3>
-                    <p>Rechercher et consulter les ordres de réparation.</p>
+                    <h3>Réparations en cours</h3>
+                    <p>Consulter et modifier les ordres de réparation en cours.</p>
                 </a>
 
                 <a class="action-card" href="validation.php">
                     <div class="icon">✅</div>
-                    <h3>Valider</h3>
-                    <p>Valider les interventions terminées.</p>
+                    <h3>OR complets / Validés</h3>
+                    <p>Valider les ordres terminés et consulter les OR validés.</p>
                 </a>
 
                 <a class="action-card" href="http://192.168.11.11:3000/" target="_blank">
