@@ -217,17 +217,23 @@ try {
 
     // ════════════════════════════════════════
     // 3) INTERVENTION — avec donnees_or JSON
+    //    Règle : une seule ligne par véhicule.
+    //    Si une intervention existe déjà pour ce
+    //    vehicule_id (ex: réservation), on la met
+    //    à jour au lieu d'en créer une nouvelle.
     // ════════════════════════════════════════
     $donnees_json = json_encode($donnees, JSON_UNESCAPED_UNICODE);
 
     if ($intervention_id > 0) {
+        // Modification d'un OR existant connu
         $pdo->prepare("
             UPDATE intervention
-            SET vehicule_id       = :vehicule_id,
-                date_intervention = :date,
-                Probleme          = :probleme,
-                commentaire       = :commentaire,
-                donnees_or        = :donnees
+            SET vehicule_id           = :vehicule_id,
+                date_intervention     = :date,
+                Probleme              = :probleme,
+                commentaire           = :commentaire,
+                donnees_or            = :donnees,
+                source                = 'ordre'
             WHERE id_intervention = :id
         ")->execute([
             ':vehicule_id'  => $vehicule_id,
@@ -237,20 +243,67 @@ try {
             ':donnees'      => $donnees_json,
             ':id'           => $intervention_id,
         ]);
+
+    } elseif ($vehicule_id > 0) {
+        // Chercher si une intervention existe déjà pour ce véhicule
+        $chk = $pdo->prepare("
+            SELECT id_intervention FROM intervention
+            WHERE vehicule_id = :vid
+            ORDER BY id_intervention DESC
+            LIMIT 1
+        ");
+        $chk->execute([':vid' => $vehicule_id]);
+        $existing_intervention = $chk->fetchColumn();
+
+        if ($existing_intervention) {
+            // Mettre à jour la ligne existante (réservation → OR)
+            $intervention_id = (int)$existing_intervention;
+            $pdo->prepare("
+                UPDATE intervention
+                SET date_intervention     = :date,
+                    Probleme              = :probleme,
+                    commentaire           = :commentaire,
+                    donnees_or            = :donnees,
+                    source                = 'ordre'
+                WHERE id_intervention = :id
+            ")->execute([
+                ':date'        => $date_reception,
+                ':probleme'    => $info_client,
+                ':commentaire' => $travaux,
+                ':donnees'     => $donnees_json,
+                ':id'          => $intervention_id,
+            ]);
+        } else {
+            // Aucune intervention pour ce véhicule → nouvelle ligne
+            $pdo->prepare("
+                INSERT INTO intervention
+                    (vehicule_id, prestation_id, date_intervention, `heure_de_préstation`, Probleme, commentaire, donnees_or, source)
+                VALUES
+                    (:vehicule_id, NULL, :date, '08:00', :probleme, :commentaire, :donnees, 'ordre')
+            ")->execute([
+                ':vehicule_id' => $vehicule_id,
+                ':date'        => $date_reception,
+                ':probleme'    => $info_client,
+                ':commentaire' => $travaux,
+                ':donnees'     => $donnees_json,
+            ]);
+            $intervention_id = (int)$pdo->lastInsertId();
+        }
+
     } else {
+        // Aucun véhicule identifié → INSERT minimal
         $pdo->prepare("
             INSERT INTO intervention
                 (vehicule_id, prestation_id, date_intervention, `heure_de_préstation`, Probleme, commentaire, donnees_or, source)
             VALUES
-                (:vehicule_id, NULL, :date, '08:00', :probleme, :commentaire, :donnees, 'ordre')
+                (NULL, NULL, :date, '08:00', :probleme, :commentaire, :donnees, 'ordre')
         ")->execute([
-            ':vehicule_id'  => $vehicule_id ?: null,
-            ':date'         => $date_reception,
-            ':probleme'     => $info_client,
-            ':commentaire'  => $travaux,
-            ':donnees'      => $donnees_json,
+            ':date'        => $date_reception,
+            ':probleme'    => $info_client,
+            ':commentaire' => $travaux,
+            ':donnees'     => $donnees_json,
         ]);
-        $intervention_id = $pdo->lastInsertId();
+        $intervention_id = (int)$pdo->lastInsertId();
     }
 
     header("Location: ordre_reparation.php?intervention_id={$intervention_id}&saved=1");
