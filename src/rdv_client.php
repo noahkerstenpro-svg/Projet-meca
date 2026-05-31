@@ -19,6 +19,7 @@ try {
             i.`heure_de_préstation`,
             i.Probleme,
             i.commentaire,
+            i.statut,
             CONCAT(v.marque, ' ', COALESCE(v.modele,'')) AS vehicule,
             c.nom               AS client_nom,
             c.prenom            AS client_prenom,
@@ -336,6 +337,37 @@ function couleurHeure($heure) {
             font-weight: normal;
         }
 
+        /* ── BADGES STATUT OR ── */
+        .badge-statut {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 2px 10px;
+            border-radius: 20px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .badge-en-cours {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .badge-termine {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .badge-valide {
+            background: #e6f9f0;
+            color: #27ae60;
+        }
+
+        /* Carte grisée si validée */
+        .rdv-card.or-valide {
+            opacity: 0.6;
+        }
+
         /* ── VIDE ── */
         .vide {
             text-align: center;
@@ -395,8 +427,16 @@ function couleurHeure($heure) {
         $totalJours = count($rdvParDate);
         $today      = date('Y-m-d');
         $rdvFuturs  = 0;
+        $nbEnCours  = 0;
+        $nbTermine  = 0;
+        $nbValide   = 0;
         foreach ($rdvParDate as $date => $list) {
             if ($date >= $today) $rdvFuturs += count($list);
+            foreach ($list as $rdv) {
+                if ($rdv['statut'] === 'en_cours')  $nbEnCours++;
+                elseif ($rdv['statut'] === 'termine') $nbTermine++;
+                elseif ($rdv['statut'] === 'valide')  $nbValide++;
+            }
         }
     ?>
     <div class="stat-card">
@@ -408,8 +448,20 @@ function couleurHeure($heure) {
         <div class="stat-label">Jours planifiés</div>
     </div>
     <div class="stat-card">
-        <div class="stat-value"><?= $rdvFuturs ?></div>
+        <div class="stat-value" style="color:#eb5e00;"><?= $rdvFuturs ?></div>
         <div class="stat-label">À venir</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" style="color:#2563eb;"><?= $nbEnCours ?></div>
+        <div class="stat-label">En cours</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" style="color:#f59e0b;"><?= $nbTermine ?></div>
+        <div class="stat-label">Terminés</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" style="color:#27ae60;"><?= $nbValide ?></div>
+        <div class="stat-label">Validés</div>
     </div>
 </div>
 
@@ -419,6 +471,9 @@ function couleurHeure($heure) {
     <button class="filter-btn active" onclick="setFiltre('tous', this)">Tous</button>
     <button class="filter-btn" onclick="setFiltre('matin', this)">Matin</button>
     <button class="filter-btn" onclick="setFiltre('aprem', this)">Après-midi</button>
+    <button class="filter-btn" onclick="setFiltreStatut('en_cours', this)">🔧 En cours</button>
+    <button class="filter-btn" onclick="setFiltreStatut('termine', this)">🏁 Terminés</button>
+    <button class="filter-btn" onclick="setFiltreStatut('valide', this)">✅ Validés</button>
 </div>
 
 <!-- Agenda -->
@@ -447,11 +502,12 @@ function couleurHeure($heure) {
         <div class="timeline">
         <?php foreach ($rdvs as $r): ?>
             <?php $moment = couleurHeure($r['heure_de_préstation']); ?>
-            <div class="rdv-card <?= $moment ?>"
+            <div class="rdv-card <?= $moment ?> <?= ($r['statut'] ?? '') === 'valide' ? 'or-valide' : '' ?>"
                  data-client="<?= htmlspecialchars(strtolower($r['client_prenom'].' '.$r['client_nom'])) ?>"
                  data-vehicule="<?= htmlspecialchars(strtolower($r['vehicule'])) ?>"
                  data-prestation="<?= htmlspecialchars(strtolower($r['prestation_nom'] ?? $r['Probleme'] ?? '')) ?>"
-                 data-moment="<?= $moment ?>">
+                 data-moment="<?= $moment ?>"
+                 data-statut="<?= htmlspecialchars($r['statut'] ?? 'en_cours') ?>">
 
                 <!-- Heure -->
                 <div class="rdv-heure">
@@ -463,6 +519,16 @@ function couleurHeure($heure) {
                 <div class="rdv-body">
                     <div class="rdv-client">
                         <?= htmlspecialchars($r['client_prenom'] . ' ' . $r['client_nom']) ?>
+                        <?php
+                            $statut = $r['statut'] ?? 'en_cours';
+                            if ($statut === 'valide'):
+                        ?>
+                            <span class="badge-statut badge-valide">✅ Validé</span>
+                        <?php elseif ($statut === 'termine'): ?>
+                            <span class="badge-statut badge-termine">🏁 Terminé</span>
+                        <?php else: ?>
+                            <span class="badge-statut badge-en-cours">🔧 En cours</span>
+                        <?php endif; ?>
                     </div>
                     <div class="rdv-vehicule">
                         <?= htmlspecialchars($r['vehicule']) ?>
@@ -510,12 +576,30 @@ function couleurHeure($heure) {
 </footer>
 
 <script>
-let filtreActif = 'tous';
+let filtreActif  = 'tous';
+let filtreStatut = 'tous';
 
 function setFiltre(f, btn) {
     filtreActif = f;
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    // Désactiver seulement les boutons matin/aprem/tous
+    document.querySelectorAll('.filter-btn').forEach(b => {
+        if (['tous','matin','aprem'].some(v => b.getAttribute('onclick')?.includes("'"+v+"'"))) {
+            b.classList.remove('active');
+        }
+    });
     btn.classList.add('active');
+    filtrer();
+}
+
+function setFiltreStatut(s, btn) {
+    filtreStatut = filtreStatut === s ? 'tous' : s;
+    // Toggle le bouton
+    document.querySelectorAll('.filter-btn').forEach(b => {
+        if (['en_cours','termine','valide'].some(v => b.getAttribute('onclick')?.includes("'"+v+"'"))) {
+            b.classList.remove('active');
+        }
+    });
+    if (filtreStatut !== 'tous') btn.classList.add('active');
     filtrer();
 }
 
@@ -526,13 +610,14 @@ function filtrer() {
         let visibles = 0;
 
         jour.querySelectorAll('.rdv-card').forEach(card => {
-            const matchFiltre = filtreActif === 'tous' || card.dataset.moment === filtreActif;
+            const matchMoment = filtreActif === 'tous' || card.dataset.moment === filtreActif;
+            const matchStatut = filtreStatut === 'tous' || card.dataset.statut === filtreStatut;
             const matchSearch = !q ||
                 card.dataset.client.includes(q) ||
                 card.dataset.vehicule.includes(q) ||
                 card.dataset.prestation.includes(q);
 
-            if (matchFiltre && matchSearch) {
+            if (matchMoment && matchStatut && matchSearch) {
                 card.style.display = '';
                 visibles++;
             } else {
