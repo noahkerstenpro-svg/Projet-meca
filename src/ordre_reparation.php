@@ -954,20 +954,6 @@ document.getElementById('ordre_num').addEventListener('input', function() {
   document.getElementById('orderNumDisplay').textContent = this.value || 'N 99/°25-26';
 });
 
-// ── Simulation lecture VIN OBD ──
-function readVinOBD() {
-  const btn = event.target;
-  btn.textContent = '⏳...';
-  btn.disabled = true;
-  // Simuler une réponse OBD — à remplacer par votre appel API réel
-  setTimeout(() => {
-    // Ici vous brancherez votre appel fetch('/api/obd/vin')
-    const simulatedVIN = 'VF1RFD00' + Math.random().toString(36).substring(2,11).toUpperCase();
-    document.getElementById('vinInput').value = simulatedVIN.substring(0,17);
-    btn.textContent = '✅ OK';
-    btn.disabled = false;
-    setTimeout(() => { btn.textContent = '🔌 OBD'; }, 2000);
-  }, 1500);
 }
 
 // ── Réinitialisation ──
