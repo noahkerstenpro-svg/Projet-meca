@@ -70,9 +70,9 @@ $sql = "
 ";
 
 $params = [];
-// Un OR existe si donnees_or est renseigné (source peut être 'reservation' ou 'ordre')
-// Les OR validés n'apparaissent que dans validation.php
-$where  = ["i.donnees_or IS NOT NULL", "i.statut != 'valide'"];
+// Seuls les OR en_cours apparaissent ici
+// termine et valide → validation.php uniquement
+$where  = ["i.donnees_or IS NOT NULL", "i.statut = 'en_cours'"];
 
 if ($search) {
     $where[] = "(c.prenom LIKE :q OR c.nom LIKE :q OR v.vin LIKE :q
