@@ -218,22 +218,22 @@ try {
     // ════════════════════════════════════════
     // 3) INTERVENTION — avec donnees_or JSON
     //    Règle : une seule ligne par véhicule.
-    //    Si une intervention existe déjà pour ce
-    //    vehicule_id (ex: réservation), on la met
-    //    à jour au lieu d'en créer une nouvelle.
+    //    IMPORTANT : on ne touche JAMAIS à `source`.
+    //    `source` garde sa valeur d'origine ('reservation' ou 'ordre')
+    //    pour que rdv_client.php continue d'afficher les réservations.
+    //    C'est `donnees_or` non NULL qui indique qu'un OR a été créé.
     // ════════════════════════════════════════
     $donnees_json = json_encode($donnees, JSON_UNESCAPED_UNICODE);
 
     if ($intervention_id > 0) {
-        // Modification d'un OR existant connu
+        // Modification d'un OR existant connu — on ne touche pas à source
         $pdo->prepare("
             UPDATE intervention
             SET vehicule_id           = :vehicule_id,
                 date_intervention     = :date,
                 Probleme              = :probleme,
                 commentaire           = :commentaire,
-                donnees_or            = :donnees,
-                source                = 'ordre'
+                donnees_or            = :donnees
             WHERE id_intervention = :id
         ")->execute([
             ':vehicule_id'  => $vehicule_id,
@@ -256,15 +256,14 @@ try {
         $existing_intervention = $chk->fetchColumn();
 
         if ($existing_intervention) {
-            // Mettre à jour la ligne existante (réservation → OR)
+            // Mettre à jour la ligne existante (réservation ou OR) — on ne touche pas à source
             $intervention_id = (int)$existing_intervention;
             $pdo->prepare("
                 UPDATE intervention
                 SET date_intervention     = :date,
                     Probleme              = :probleme,
                     commentaire           = :commentaire,
-                    donnees_or            = :donnees,
-                    source                = 'ordre'
+                    donnees_or            = :donnees
                 WHERE id_intervention = :id
             ")->execute([
                 ':date'        => $date_reception,
@@ -274,7 +273,7 @@ try {
                 ':id'          => $intervention_id,
             ]);
         } else {
-            // Aucune intervention pour ce véhicule → nouvelle ligne
+            // Aucune intervention pour ce véhicule → nouvelle ligne OR
             $pdo->prepare("
                 INSERT INTO intervention
                     (vehicule_id, prestation_id, date_intervention, `heure_de_préstation`, Probleme, commentaire, donnees_or, source)
@@ -291,7 +290,7 @@ try {
         }
 
     } else {
-        // Aucun véhicule identifié → INSERT minimal
+        // Aucun véhicule identifié → INSERT minimal OR
         $pdo->prepare("
             INSERT INTO intervention
                 (vehicule_id, prestation_id, date_intervention, `heure_de_préstation`, Probleme, commentaire, donnees_or, source)
