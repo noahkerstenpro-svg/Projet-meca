@@ -1,11 +1,7 @@
 <?php
 session_start();
 
-header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-header("Pragma: no-cache");
-header("Expires: 0");
-
-if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'prof') {
+if (!isset($_SESSION['username']) || !in_array($_SESSION['role'], ['prof', 'eleve'])) {
     header('Location: login.php');
     exit;
 }
@@ -19,7 +15,35 @@ $pass   = 'root';
 $pdo = new PDO("mysql:host=$host;port=3306;dbname=$dbname;charset=utf8mb4", $user, $pass);
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-// ── Recherche ──
+// ════════════════════════════════════════════
+// ENDPOINT AJAX — recherche client (utilisé par ordre_reparation.php)
+// ════════════════════════════════════════════
+if (isset($_GET['ajax'])) {
+    header('Content-Type: application/json; charset=utf-8');
+    $prenom = trim($_GET['prenom'] ?? '');
+    $nom    = trim($_GET['nom']    ?? '');
+
+    $stmt = $pdo->prepare("
+        SELECT id_clients, prenom, nom, adresse_postal, `numéro` AS numero, adresse_mail
+        FROM Clients
+        WHERE (:prenom = '' OR prenom LIKE :prenom2)
+          AND (:nom    = '' OR nom    LIKE :nom2)
+        ORDER BY nom, prenom
+        LIMIT 10
+    ");
+    $stmt->execute([
+        ':prenom'  => $prenom,
+        ':prenom2' => $prenom . '%',
+        ':nom'     => $nom,
+        ':nom2'    => $nom . '%',
+    ]);
+    echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+    exit;
+}
+
+// ════════════════════════════════════════════
+// CHARGEMENT DES OR depuis la BDD
+// ════════════════════════════════════════════
 $search = trim($_GET['q'] ?? '');
 
 $sql = "
@@ -29,7 +53,6 @@ $sql = "
         i.`heure_de_préstation`,
         i.Probleme,
         i.commentaire,
-        i.statut,
         v.vin,
         CONCAT(v.marque, ' ', COALESCE(v.modele,'')) AS marque_modele,
         v.immatriculation,
@@ -44,62 +67,45 @@ $sql = "
     LEFT JOIN Vehicules   v ON v.id_vehicules   = i.vehicule_id
     LEFT JOIN Clients     c ON c.id_clients     = v.client_id
     LEFT JOIN Prestation  p ON p.id_prestation  = i.prestation_id
-    WHERE i.donnees_or IS NOT NULL
-      AND c.prenom IS NOT NULL AND c.prenom != ''
-      AND c.nom    IS NOT NULL AND c.nom    != ''
-      AND v.marque IS NOT NULL AND v.marque != ''
-      AND v.vin    IS NOT NULL AND v.vin    != ''
-      AND i.Probleme IS NOT NULL AND i.Probleme != ''
-      AND v.immatriculation IS NOT NULL AND v.immatriculation != ''
-      AND v.km IS NOT NULL
 ";
 
-// Onglet actif : 'a_valider' ou 'valides'
-$onglet = $_GET['onglet'] ?? 'a_valider';
-
 $params = [];
-
-if ($onglet === 'valides') {
-    $sql .= " AND i.statut = 'valide'";
-} else {
-    $sql .= " AND i.statut = 'en_cours'";
-}
+// Un OR existe si donnees_or est renseigné (source peut être 'reservation' ou 'ordre')
+// Les OR validés n'apparaissent que dans validation.php
+$where  = ["i.donnees_or IS NOT NULL", "i.statut != 'valide'"];
 
 if ($search) {
-    $sql .= " AND (c.prenom LIKE :q OR c.nom LIKE :q OR v.vin LIKE :q
-               OR v.marque LIKE :q OR v.modele LIKE :q OR v.immatriculation LIKE :q
-               OR i.Probleme LIKE :q)";
+    $where[] = "(c.prenom LIKE :q OR c.nom LIKE :q OR v.vin LIKE :q
+                 OR v.marque LIKE :q OR v.modele LIKE :q OR v.immatriculation LIKE :q
+                 OR i.Probleme LIKE :q)";
     $params[':q'] = '%' . $search . '%';
 }
 
+if ($where) $sql .= ' WHERE ' . implode(' AND ', $where);
 $sql .= ' ORDER BY i.date_intervention DESC, i.id_intervention DESC';
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $ordres = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$total = count($ordres);
+// Calcul statut complet / incomplet
+function statutOR($or) {
+    // Champs client
+    $clientOk = !empty(trim($or['client_prenom'] ?? '')) && !empty(trim($or['client_nom'] ?? ''));
 
-// Compteurs pour les badges des onglets
-$stmtCount = $pdo->query("
-    SELECT
-        SUM(CASE WHEN i.statut = 'en_cours' THEN 1 ELSE 0 END) AS nb_en_cours,
-        SUM(CASE WHEN i.statut = 'valide'   THEN 1 ELSE 0 END) AS nb_valides
-    FROM intervention i
-    LEFT JOIN Vehicules v ON v.id_vehicules = i.vehicule_id
-    LEFT JOIN Clients   c ON c.id_clients   = v.client_id
-    WHERE i.donnees_or IS NOT NULL
-      AND c.prenom IS NOT NULL AND c.prenom != ''
-      AND c.nom    IS NOT NULL AND c.nom    != ''
-      AND v.marque IS NOT NULL AND v.marque != ''
-      AND v.vin    IS NOT NULL AND v.vin    != ''
-      AND i.Probleme IS NOT NULL AND i.Probleme != ''
-      AND v.immatriculation IS NOT NULL AND v.immatriculation != ''
-      AND v.km IS NOT NULL
-");
-$counts = $stmtCount->fetch(PDO::FETCH_ASSOC);
-$nb_en_cours = (int)($counts['nb_en_cours'] ?? 0);
-$nb_valides  = (int)($counts['nb_valides']  ?? 0);
+    // Champs véhicule essentiels
+    $vehiculeOk = !empty(trim($or['marque_modele'] ?? '')) && !empty(trim($or['vin'] ?? ''));
+
+    // Tous les champs (client + véhicule + problème + immat + km)
+    $toutOk = $clientOk && $vehiculeOk
+           && !empty(trim($or['Probleme']        ?? ''))
+           && !empty(trim($or['immatriculation'] ?? ''))
+           && !empty(trim($or['km']              ?? ''));
+
+    if ($toutOk)    return 'complet';   // ✅ tout est renseigné
+    if ($clientOk && $vehiculeOk) return 'partiel';  // 🟡 client + véhicule ok
+    return 'incomplet';                 // 🔴 client ou véhicule manquant
+}
 
 function dateFR($date) {
     if (!$date) return '—';
@@ -113,7 +119,7 @@ function dateFR($date) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Validation des OR — Méca Brocéliande</title>
+    <title>Suivi des réparations — Méca Brocéliande</title>
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -126,74 +132,13 @@ function dateFR($date) {
 
         /* ── HEADER ── */
         header {
-            background: linear-gradient(135deg, #1e3a8a, #111827);
+            background-color: #525151;
             color: white;
-            padding: 20px 40px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            flex-wrap: wrap;
+            padding: 20px;
+            text-align: center;
         }
 
-        header h1 { font-size: 22px; margin: 0; }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .badge-prof {
-            background: rgba(255,255,255,0.15);
-            padding: 8px 16px;
-            border-radius: 999px;
-            font-weight: bold;
-            font-size: 13px;
-        }
-
-        .btn-retour {
-            padding: 8px 18px;
-            background: rgba(255,255,255,0.15);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 50px;
-            font-size: 13px;
-            text-decoration: none;
-            transition: background 0.2s;
-        }
-
-        .btn-retour:hover { background: rgba(255,255,255,0.25); }
-
-        /* ── ONGLETS ── */
-        .tabs {
-            background: white;
-            border-bottom: 2px solid #e5e7eb;
-            display: flex;
-            gap: 0;
-            padding: 0 40px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-        }
-
-        .tab {
-            padding: 16px 24px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #6b7280;
-            text-decoration: none;
-            border-bottom: 3px solid transparent;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .tab:hover { color: #2563eb; }
-
-        .tab.active {
-            color: #27ae60;
-            border-bottom-color: #27ae60;
-        }
+        header h1 { font-size: 24px; margin: 0; }
 
         /* ── STATS ── */
         .stats-bar {
@@ -210,14 +155,17 @@ function dateFR($date) {
             padding: 18px 36px;
             text-align: center;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            min-width: 160px;
+            min-width: 140px;
         }
 
         .stat-value {
             font-size: 32px;
             font-weight: bold;
-            color: #27ae60;
+            color: #eb5e00;
         }
+
+        .stat-value.vert  { color: #27ae60; }
+        .stat-value.rouge { color: #e74c3c; }
 
         .stat-label {
             font-size: 12px;
@@ -249,16 +197,16 @@ function dateFR($date) {
             border-radius: 50px;
             font-size: 14px;
             font-family: Arial, sans-serif;
-            width: 320px;
+            width: 300px;
             outline: none;
             transition: border-color 0.2s;
         }
 
-        .search-input:focus { border-color: #27ae60; }
+        .search-input:focus { border-color: #eb5e00; }
 
         .btn-search {
             padding: 10px 24px;
-            background-color: #27ae60;
+            background-color: #eb5e00;
             color: white;
             border: none;
             border-radius: 50px;
@@ -268,7 +216,44 @@ function dateFR($date) {
             transition: background-color 0.2s;
         }
 
-        .btn-search:hover { background-color: #219150; }
+        .btn-search:hover { background-color: #d65300; }
+
+        .filter-btn {
+            padding: 9px 20px;
+            border-radius: 50px;
+            border: 1px solid #ccc;
+            background: white;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            cursor: pointer;
+            color: #525151;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background-color: #eb5e00;
+            border-color: #eb5e00;
+            color: white;
+        }
+
+        .btn-nouveau {
+            padding: 10px 24px;
+            background-color: #525151;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.2s;
+        }
+
+        .btn-nouveau:hover { background-color: #333; }
 
         /* ── LISTE ── */
         .liste {
@@ -296,11 +281,14 @@ function dateFR($date) {
             box-shadow: 0 6px 20px rgba(0,0,0,0.13);
         }
 
-        /* Bande statut verte */
+        /* Bande statut */
         .or-statut-bande {
             width: 10px;
-            background: #27ae60;
         }
+
+        .or-card.complet   .or-statut-bande { background: #27ae60; }
+        .or-card.partiel   .or-statut-bande { background: #f39c12; }
+        .or-card.incomplet .or-statut-bande { background: #e74c3c; }
 
         /* Corps */
         .or-body {
@@ -363,22 +351,29 @@ function dateFR($date) {
             margin-top: 2px;
         }
 
+        .or-probleme.vide-text {
+            background: #f5f5f5;
+            color: #bbb;
+        }
+
         .or-commentaire {
             font-size: 12px;
             color: #999;
             font-style: italic;
         }
 
-        /* Badge complet */
-        .badge-complet {
+        /* Badges statut */
+        .badge-statut {
             display: inline-block;
             font-size: 11px;
             font-weight: bold;
             padding: 3px 10px;
             border-radius: 20px;
-            background: #e6f9f0;
-            color: #27ae60;
         }
+
+        .badge-complet   { background: #e6f9f0; color: #27ae60; }
+        .badge-partiel   { background: #fff8e6; color: #f39c12; }
+        .badge-incomplet { background: #fdecea; color: #e74c3c; }
 
         /* Actions droite */
         .or-actions {
@@ -392,7 +387,7 @@ function dateFR($date) {
 
         .btn-ouvrir {
             padding: 8px 18px;
-            background-color: #2563eb;
+            background-color: #eb5e00;
             color: white;
             border: none;
             border-radius: 50px;
@@ -404,45 +399,22 @@ function dateFR($date) {
             white-space: nowrap;
         }
 
-        .btn-ouvrir:hover { background-color: #1d4ed8; }
+        .btn-ouvrir:hover { background-color: #d65300; }
 
-        .btn-valider {
-            padding: 8px 18px;
-            background-color: #27ae60;
-            color: white;
-            border: none;
+        .btn-supprimer {
+            padding: 6px 14px;
+            background: none;
+            color: #e74c3c;
+            border: 1px solid #fecaca;
             border-radius: 50px;
             font-family: Arial, sans-serif;
-            font-size: 13px;
+            font-size: 12px;
             cursor: pointer;
-            text-decoration: none;
-            transition: background-color 0.2s;
-            white-space: nowrap;
+            transition: all 0.2s;
         }
 
-        .btn-valider:hover { background-color: #219150; }
-
-        /* Notification de validation */
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: #27ae60;
-            color: white;
-            padding: 14px 24px;
-            border-radius: 50px;
-            font-size: 14px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.3s, transform 0.3s;
-            z-index: 1000;
-            pointer-events: none;
-        }
-
-        .toast.show {
-            opacity: 1;
-            transform: translateY(0);
+        .btn-supprimer:hover {
+            background: #fdecea;
         }
 
         /* ── VIDE ── */
@@ -469,120 +441,81 @@ function dateFR($date) {
         @media (max-width: 600px) {
             .or-card { grid-template-columns: 8px 1fr; }
             .or-actions { display: none; }
-            .tabs { padding: 0 16px; }
-            header { padding: 16px 20px; }
         }
     </style>
 </head>
 <body>
 
-<!-- Header -->
 <header>
-    <h1>✅ Validation des interventions — Méca Brocéliande</h1>
-    <div class="header-right">
-        <span class="badge-prof">Espace Professeur</span>
-        <a class="btn-retour" href="prof.php">← Retour</a>
-    </div>
+    <h1>Atelier Mécanique - Bac Professionnel de Brocéliande</h1>
 </header>
 
-<!-- Onglets -->
-<div class="tabs">
-    <a class="tab <?= $onglet === 'a_valider' ? 'active' : '' ?>"
-       href="validation.php?onglet=a_valider&q=<?= urlencode($search) ?>">
-        ⏳ À valider
-        <span class="tab-badge-en-cours" style="background:#fff3cd;color:#b45309;border-radius:20px;padding:1px 8px;font-size:11px;font-weight:700;"><?= $nb_en_cours ?></span>
-    </a>
-    <a class="tab <?= $onglet === 'valides' ? 'active' : '' ?>"
-       href="validation.php?onglet=valides&q=<?= urlencode($search) ?>">
-        ✅ Validés
-        <span class="tab-badge-valides" style="background:#e6f9f0;color:#27ae60;border-radius:20px;padding:1px 8px;font-size:11px;font-weight:700;"><?= $nb_valides ?></span>
-    </a>
-    <a class="tab" href="recherche_or.php">
-        🔍 Tous les ordres en cours
-    </a>
-</div>
+<?php
+$total = count($ordres);
+?>
 
 <!-- Stats -->
 <div class="stats-bar">
     <div class="stat-card">
         <div class="stat-value"><?= $total ?></div>
-        <div class="stat-label">OR complets à valider</div>
+        <div class="stat-label">Ordres en cours</div>
     </div>
 </div>
 
 <!-- Recherche -->
 <div class="search-bar">
-    <form class="search-form" method="GET" action="validation.php">
-        <input type="hidden" name="onglet" value="<?= htmlspecialchars($onglet) ?>">
+    <form class="search-form" method="GET" action="recherche_or.php">
         <input class="search-input" type="text" name="q"
                value="<?= htmlspecialchars($search) ?>"
                placeholder="Rechercher client, VIN, véhicule, problème…">
         <button class="btn-search" type="submit">🔍 Rechercher</button>
         <?php if ($search): ?>
-            <a href="validation.php?onglet=<?= htmlspecialchars($onglet) ?>"
-               style="font-size:13px;color:#888;text-decoration:none;">✕ Effacer</a>
+            <a href="recherche_or.php" style="font-size:13px;color:#888;text-decoration:none;">✕ Effacer</a>
         <?php endif; ?>
     </form>
 </div>
 
-<!-- Info -->
-<div style="text-align:center;font-size:13px;color:#6b7280;margin-bottom:8px;">
-    <?php if ($onglet === 'valides'): ?>
-        Ordres de réparation <strong style="color:#27ae60;">validés</strong> par le professeur.
-    <?php else: ?>
-        Ordres de réparation <strong style="color:#b45309;">complets</strong> en attente de validation (client + véhicule + VIN + immat + km + problème renseignés).
-    <?php endif; ?>
-</div>
-
-<!-- Liste des OR complets -->
+<!-- Liste des OR -->
 <div class="liste">
 
 <?php if (empty($ordres)): ?>
     <div class="vide">
-        <div class="vide-icon"><?= $onglet === 'valides' ? '📁' : '✅' ?></div>
+        <div class="vide-icon">🔧</div>
         <?php if ($search): ?>
-            Aucun OR trouvé pour "<strong><?= htmlspecialchars($search) ?></strong>"
-        <?php elseif ($onglet === 'valides'): ?>
-            Aucun ordre de réparation validé pour le moment.
+            Aucun ordre trouvé pour "<strong><?= htmlspecialchars($search) ?></strong>"
         <?php else: ?>
-            Aucun ordre de réparation complet à valider pour le moment.
+            Aucun ordre de réparation enregistré
         <?php endif; ?>
     </div>
 
 <?php else: ?>
     <?php foreach ($ordres as $or):
-        $client = trim(($or['client_prenom'] ?? '') . ' ' . ($or['client_nom'] ?? ''));
-        $vehic  = trim($or['marque_modele'] ?? '');
-        $immat  = trim($or['immatriculation'] ?? '');
-        $vin    = trim($or['vin'] ?? '');
-        $pb     = trim($or['Probleme'] ?? '');
-        $comm   = trim($or['commentaire'] ?? '');
-        $km     = $or['km'] ?? '';
-        $tel    = $or['client_tel'] ?? '';
-        $heure  = $or['heure_de_préstation'] ?? '';
-        $prix   = $or['prestation_prix'] ?? '';
+        $statut = statutOR($or);
+        $client  = trim(($or['client_prenom'] ?? '') . ' ' . ($or['client_nom'] ?? ''));
+        $vehic   = trim($or['marque_modele'] ?? '');
+        $immat   = trim($or['immatriculation'] ?? '');
+        $vin     = trim($or['vin'] ?? '');
+        $pb      = trim($or['Probleme'] ?? '');
+        $comm    = trim($or['commentaire'] ?? '');
     ?>
-    <div class="or-card" id="card-<?= $or['id_intervention'] ?>">
-        <!-- Bande verte -->
+    <div class="or-card <?= $statut ?>">
+        <!-- Bande statut -->
         <div class="or-statut-bande"></div>
 
         <!-- Corps -->
         <div class="or-body">
             <div class="or-top">
                 <span class="or-id">#<?= $or['id_intervention'] ?></span>
-                <span class="or-client"><?= htmlspecialchars($client) ?></span>
-                <span class="badge-complet">✅ Complet</span>
-                <span class="or-date">
-                    📅 <?= dateFR($or['date_intervention']) ?>
-                    <?= $heure ? ' · ' . htmlspecialchars(substr($heure, 0, 5)) : '' ?>
+                <span class="or-client">
+                    <?= $client ? htmlspecialchars($client) : '<span style="color:#ccc;">Client inconnu</span>' ?>
                 </span>
+                <span class="or-date">📅 <?= dateFR($or['date_intervention']) ?></span>
             </div>
 
             <?php if ($vehic || $immat): ?>
             <div class="or-vehicule">
                 <?= htmlspecialchars($vehic ?: '—') ?>
                 <?= $immat ? ' — <strong>' . htmlspecialchars($immat) . '</strong>' : '' ?>
-                <?= $km    ? ' · <span style="color:#aaa;font-size:11px;">' . number_format((int)$km, 0, ',', ' ') . ' km</span>' : '' ?>
             </div>
             <?php endif; ?>
 
@@ -591,19 +524,15 @@ function dateFR($date) {
             <?php endif; ?>
 
             <?php if ($pb): ?>
-            <div class="or-probleme">🔧 <?= htmlspecialchars($pb) ?></div>
+                <div class="or-probleme">🔧 <?= htmlspecialchars($pb) ?></div>
             <?php elseif ($or['prestation_nom']): ?>
-            <div class="or-probleme">🔧 <?= htmlspecialchars($or['prestation_nom']) ?>
-                <?= $prix ? ' — ' . number_format((float)$prix, 2, ',', ' ') . ' €' : '' ?>
-            </div>
+                <div class="or-probleme">🔧 <?= htmlspecialchars($or['prestation_nom']) ?></div>
+            <?php else: ?>
+                <div class="or-probleme vide-text">Problème non renseigné</div>
             <?php endif; ?>
 
             <?php if ($comm): ?>
-            <div class="or-commentaire">Travaux : <?= htmlspecialchars(mb_substr($comm, 0, 150)) ?><?= mb_strlen($comm) > 150 ? '…' : '' ?></div>
-            <?php endif; ?>
-
-            <?php if ($tel): ?>
-            <div style="font-size:12px;color:#aaa;">📞 <?= htmlspecialchars($tel) ?></div>
+            <div class="or-commentaire">Travaux : <?= htmlspecialchars(mb_substr($comm, 0, 120)) ?><?= mb_strlen($comm) > 120 ? '…' : '' ?></div>
             <?php endif; ?>
         </div>
 
@@ -611,14 +540,10 @@ function dateFR($date) {
         <div class="or-actions">
             <a href="ordre_reparation.php?intervention_id=<?= $or['id_intervention'] ?>"
                class="btn-ouvrir">✏️ Ouvrir / Modifier</a>
-            <?php if ($onglet !== 'valides'): ?>
-            <button class="btn-valider"
-                    onclick="validerOR(<?= $or['id_intervention'] ?>, this)">
-                ✅ Valider
+            <button class="btn-supprimer"
+                    onclick="supprimerOR(<?= $or['id_intervention'] ?>, this)">
+                🗑 Supprimer
             </button>
-            <?php else: ?>
-            <span style="font-size:12px;color:#27ae60;font-weight:600;">✅ Validé</span>
-            <?php endif; ?>
         </div>
     </div>
     <?php endforeach; ?>
@@ -627,27 +552,14 @@ function dateFR($date) {
 </div>
 
 <footer>
-    <p>© 2026 Méca Brocéliande — Espace Professeur</p>
+    <p>© 2026 Méca Brocéliande</p>
 </footer>
 
-<!-- Toast notification -->
-<div class="toast" id="toast"></div>
-
 <script>
-function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 3000);
-}
+function supprimerOR(id, btn) {
+    if (!confirm('Supprimer cet ordre de réparation ? Cette action est irréversible.')) return;
 
-function validerOR(id, btn) {
-    if (!confirm('Valider cet ordre de réparation #' + id + ' ?')) return;
-
-    btn.disabled = true;
-    btn.textContent = '⏳ En cours…';
-
-    fetch('valider_or.php', {
+    fetch('supprimer_or.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: 'intervention_id=' + id
@@ -655,29 +567,16 @@ function validerOR(id, btn) {
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            const card = document.getElementById('card-' + id);
-            card.style.transition = 'opacity 0.4s, transform 0.4s';
-            card.style.opacity    = '0';
-            card.style.transform  = 'translateX(30px)';
-            setTimeout(() => card.remove(), 400);
-            showToast('✅ OR #' + id + ' validé avec succès !');
-
-            // Mise à jour des badges onglets
-            const badgeEnCours = document.querySelector('.tab-badge-en-cours');
-            const badgeValides = document.querySelector('.tab-badge-valides');
-            if (badgeEnCours) badgeEnCours.textContent = Math.max(0, parseInt(badgeEnCours.textContent) - 1);
-            if (badgeValides) badgeValides.textContent = parseInt(badgeValides.textContent) + 1;
+            const card = btn.closest('.or-card');
+            card.style.transition = 'opacity 0.3s, transform 0.3s';
+            card.style.opacity = '0';
+            card.style.transform = 'translateX(20px)';
+            setTimeout(() => card.remove(), 300);
         } else {
-            btn.disabled = false;
-            btn.textContent = '✅ Valider';
-            alert('Erreur : ' + (data.error || 'inconnue'));
+            alert('Erreur lors de la suppression : ' + (data.error || 'inconnue'));
         }
     })
-    .catch(() => {
-        btn.disabled = false;
-        btn.textContent = '✅ Valider';
-        alert('Erreur réseau.');
-    });
+    .catch(() => alert('Erreur réseau.'));
 }
 </script>
 
