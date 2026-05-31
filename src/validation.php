@@ -44,7 +44,7 @@ $sql = "
     LEFT JOIN Vehicules   v ON v.id_vehicules   = i.vehicule_id
     LEFT JOIN Clients     c ON c.id_clients     = v.client_id
     LEFT JOIN Prestation  p ON p.id_prestation  = i.prestation_id
-    WHERE i.source = 'ordre'
+    WHERE i.donnees_or IS NOT NULL
       AND c.prenom IS NOT NULL AND c.prenom != ''
       AND c.nom    IS NOT NULL AND c.nom    != ''
       AND v.marque IS NOT NULL AND v.marque != ''
@@ -88,7 +88,7 @@ $stmtCount = $pdo->query("
     FROM intervention i
     LEFT JOIN Vehicules v ON v.id_vehicules = i.vehicule_id
     LEFT JOIN Clients   c ON c.id_clients   = v.client_id
-    WHERE i.source = 'ordre'
+    WHERE i.donnees_or IS NOT NULL
       AND c.prenom IS NOT NULL AND c.prenom != ''
       AND c.nom    IS NOT NULL AND c.nom    != ''
       AND v.marque IS NOT NULL AND v.marque != ''
