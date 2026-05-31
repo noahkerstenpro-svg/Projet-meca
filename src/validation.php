@@ -62,7 +62,7 @@ $params = [];
 if ($onglet === 'valides') {
     $sql .= " AND i.statut = 'valide'";
 } else {
-    $sql .= " AND i.statut = 'en_cours'";
+    $sql .= " AND i.statut = 'termine'";
 }
 
 if ($search) {
@@ -83,8 +83,8 @@ $total = count($ordres);
 // Compteurs pour les badges des onglets
 $stmtCount = $pdo->query("
     SELECT
-        SUM(CASE WHEN i.statut = 'en_cours' THEN 1 ELSE 0 END) AS nb_en_cours,
-        SUM(CASE WHEN i.statut = 'valide'   THEN 1 ELSE 0 END) AS nb_valides
+        SUM(CASE WHEN i.statut = 'termine' THEN 1 ELSE 0 END) AS nb_en_cours,
+        SUM(CASE WHEN i.statut = 'valide'  THEN 1 ELSE 0 END) AS nb_valides
     FROM intervention i
     LEFT JOIN Vehicules v ON v.id_vehicules = i.vehicule_id
     LEFT JOIN Clients   c ON c.id_clients   = v.client_id
