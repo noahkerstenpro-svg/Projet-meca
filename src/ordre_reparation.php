@@ -455,6 +455,13 @@ function donBool($key, $donnees) {
     <button class="btn btn-primary" type="button" onclick="genererFacturePDF()" title="Télécharger la Facture Titre Exécutoire en PDF">📄 Facture PDF</button>
     <button class="btn btn-primary" type="button" onclick="window.print()">🖨 Imprimer / PDF</button>
     <button class="btn btn-primary" type="submit" form="orForm">💾 Enregistrer</button>
+    <?php if ($intervention_id > 0): ?>
+    <button class="btn" type="button"
+            style="background:#27ae60; color:white;"
+            onclick="terminerOR(<?= $intervention_id ?>)">
+      ✅ Terminer
+    </button>
+    <?php endif; ?>
   </div>
 </div>
 
@@ -1286,6 +1293,40 @@ function genererFacturePDF() {
 
   const nomFichier = 'TitreExecutoire_' + (nom||'client').replace(/[^a-zA-Z0-9]/g,'_') + '_' + annee + '.pdf';
   doc.save(nomFichier);
+}
+
+// ══════════════════════════════════════════════
+// TERMINER L'OR — Passe statut en_cours → termine
+// ══════════════════════════════════════════════
+function terminerOR(id) {
+  if (!confirm('Marquer cet OR comme terminé ?\nIl sera transféré dans la page Validation pour être validé par le professeur.')) return;
+
+  fetch('terminer_or.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'intervention_id=' + id
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      // Remplacer le bouton Terminer par un badge vert
+      const btn = document.querySelector('button[onclick="terminerOR(' + id + ')"]');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '✅ Terminé';
+        btn.style.opacity = '0.6';
+        btn.style.cursor = 'default';
+      }
+      // Bannière de confirmation
+      const bar = document.createElement('div');
+      bar.style.cssText = 'background:#e6f9e6;color:#2a7a2a;border-bottom:2px solid #a3d9a3;padding:10px 24px;font-size:13px;display:flex;align-items:center;gap:8px;';
+      bar.innerHTML = '✅ <strong>OR marqué comme terminé</strong> — Il apparaît maintenant dans la page Validation.';
+      document.querySelector('.toolbar').insertAdjacentElement('afterend', bar);
+    } else {
+      alert('Erreur : ' + (data.error || 'inconnue'));
+    }
+  })
+  .catch(() => alert('Erreur réseau.'));
 }
 
 // ── Date du jour par défaut ──
