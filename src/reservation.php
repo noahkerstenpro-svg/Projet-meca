@@ -464,7 +464,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <button type="submit">Réserver</button>
     </form>
 
-    <button class="logout" onclick="window.location.href='accueil.php'">Retour à l'accueil</button>
+    <button class="logout" onclick="window.location.href='accueil.html'">Retour à l'accueil</button>
 </div>
 
 <?php endif; ?>
