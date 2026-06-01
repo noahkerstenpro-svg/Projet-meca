@@ -230,8 +230,8 @@ function dateFR($date) {
         <button class="btn btn-primary" onclick="window.location.href='reservation.php'">
             📅 Faire une autre réservation
         </button>
-        <button class="btn btn-secondary" onclick="window.location.href='logout.php'">
-            🚪 Se déconnecter
+        <button class="btn btn-secondary" onclick="window.location.href='accueil.php'">
+            🏠 Retour à l'accueil
         </button>
 
     </div>
