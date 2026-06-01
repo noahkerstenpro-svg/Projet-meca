@@ -100,6 +100,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $message = "Réservation confirmée pour votre $vehicule le $date à $heure.";
 
+            // Rediriger vers la page de confirmation
+            $_SESSION['confirm_rdv'] = [
+                'vehicule' => $vehicule,
+                'date'     => $date,
+                'heure'    => $heure,
+                'probleme' => $probleme,
+            ];
+            header('Location: confirmation_reservation.php');
+            exit;
+
         } catch (PDOException $e) {
             $erreur = "Erreur base de données : " . $e->getMessage();
         }
@@ -229,6 +239,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             width: 100%;
             text-align: center;
         }
+
+        /* ── PAGE CONFIRMATION ── */
+        .confirmation-page {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+            padding: 20px;
+        }
+
+        .confirmation-card {
+            background: white;
+            border-radius: 24px;
+            padding: 50px 60px;
+            max-width: 520px;
+            width: 100%;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.10);
+            text-align: center;
+            animation: fadeUp 0.4s ease;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .confirm-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .confirmation-card h2 {
+            color: #27ae60;
+            font-size: 26px;
+            margin-bottom: 8px;
+        }
+
+        .confirm-subtitle {
+            color: #6b7280;
+            font-size: 15px;
+            margin-bottom: 30px;
+        }
+
+        .confirm-details {
+            background: #f9fafb;
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .confirm-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 10px;
+        }
+
+        .confirm-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .confirm-label {
+            color: #6b7280;
+            font-weight: normal;
+        }
+
+        .confirm-value {
+            font-weight: bold;
+            color: #111827;
+            text-align: right;
+        }
+
+        .confirm-note {
+            font-size: 13px;
+            color: #9ca3af;
+            margin-bottom: 28px;
+            font-style: italic;
+        }
+
+        .confirm-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
     </style>
 </head>
 
@@ -246,8 +347,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </p>
 
     <?php if ($message): ?>
-        <div class="message-ok"><?= htmlspecialchars($message) ?></div>
-    <?php endif; ?>
+    </div> <!-- ferme .container -->
+
+    <div class="confirmation-page">
+        <div class="confirmation-card">
+            <div class="confirm-icon">✅</div>
+            <h2>Réservation confirmée !</h2>
+            <p class="confirm-subtitle">Votre rendez-vous a bien été pris en compte.</p>
+
+            <div class="confirm-details">
+                <div class="confirm-row">
+                    <span class="confirm-label">👤 Client</span>
+                    <span class="confirm-value"><?= htmlspecialchars($_SESSION['client_prenom'] . ' ' . $_SESSION['client_nom']) ?></span>
+                </div>
+                <div class="confirm-row">
+                    <span class="confirm-label">🚗 Véhicule</span>
+                    <span class="confirm-value"><?= htmlspecialchars(trim(($_POST['marque'] ?? '') . ' ' . ($_POST['modele'] ?? ''))) ?></span>
+                </div>
+                <div class="confirm-row">
+                    <span class="confirm-label">📅 Date</span>
+                    <span class="confirm-value"><?= htmlspecialchars($_POST['date'] ?? '') ?></span>
+                </div>
+                <div class="confirm-row">
+                    <span class="confirm-label">🕐 Heure</span>
+                    <span class="confirm-value"><?= htmlspecialchars($_POST['heure'] ?? '') ?></span>
+                </div>
+                <div class="confirm-row">
+                    <span class="confirm-label">🔧 Problème</span>
+                    <span class="confirm-value"><?= htmlspecialchars(($_POST['probleme'] ?? '') === 'Autre' ? ($_POST['probleme_autre'] ?? '') : ($_POST['probleme'] ?? '')) ?></span>
+                </div>
+            </div>
+
+            <p class="confirm-note">L'atelier vous accueillera à l'heure indiquée. En cas d'empêchement, contactez-nous.</p>
+
+            <div class="confirm-actions">
+                <button onclick="window.location.href='reservation.php'">📅 Nouvelle réservation</button>
+                <button class="logout" onclick="window.location.href='logout1.php'">🚪 Se déconnecter</button>
+            </div>
+        </div>
+    </div>
+
+    <?php else: ?> <!-- pas de message → on affiche le formulaire normalement -->
+    <div class="container" style="display:block"><!-- réouverture container pour le formulaire -->
 
     <?php if ($erreur): ?>
         <div class="message-err"><?= htmlspecialchars($erreur) ?></div>
@@ -305,6 +446,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <button class="logout" onclick="window.location.href='logout1.php'">Se déconnecter</button>
 </div>
+
+<?php endif; ?>
 
 <footer>
     <p>© 2026 Méca Brocéliande</p>
