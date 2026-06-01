@@ -82,7 +82,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            // 3) Insérer l'intervention
+            // 3) Vérifier qu'il n'existe pas déjà une réservation pour ce client à cette date/heure
+            $stmtDouble = $pdo->prepare("
+                SELECT COUNT(*) FROM intervention i
+                JOIN Vehicules v ON v.id_vehicules = i.vehicule_id
+                WHERE v.client_id = :client_id
+                  AND i.date_intervention = :date
+                  AND i.`heure_de_préstation` = :heure
+                  AND i.source = 'reservation'
+            ");
+            $stmtDouble->execute([
+                ':client_id' => $client_id,
+                ':date'      => $date,
+                ':heure'     => $heure,
+            ]);
+            if ($stmtDouble->fetchColumn() > 0) {
+                $erreur = "Vous avez déjà une réservation le $date à $heure.";
+            } else {
+
+            // 4) Insérer l'intervention
             //    - Si prestation connue : Probleme = désignation, prestation_id = id trouvé
             //    - Si Autre            : Probleme = texte libre du client, prestation_id = NULL
             $stmtInt = $pdo->prepare("
@@ -109,6 +127,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ];
             header('Location: confirmation_reservation.php');
             exit;
+
+            } // fin vérification doublon
 
         } catch (PDOException $e) {
             $erreur = "Erreur base de données : " . $e->getMessage();
@@ -444,7 +464,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <button type="submit">Réserver</button>
     </form>
 
-    <button class="logout" onclick="window.location.href='logout.php'">Se déconnecter</button>
+    <button class="logout" onclick="window.location.href='accueil.php'">Retour à l'accueil</button>
 </div>
 
 <?php endif; ?>
