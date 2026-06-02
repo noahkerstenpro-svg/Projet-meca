@@ -222,7 +222,7 @@ function couleurHeure($heure) {
 
         .rdv-card {
             display: grid;
-            grid-template-columns: 80px 1fr auto;
+            grid-template-columns: 80px 1fr auto auto;
             background: white;
             border-radius: 25px;
             overflow: hidden;
@@ -376,31 +376,36 @@ function couleurHeure($heure) {
             gap: 6px;
             padding: 14px 16px;
             justify-content: center;
+            min-width: 120px;
         }
 
         .btn-confirmer {
-            padding: 7px 16px;
+            padding: 9px 16px;
             background: #27ae60;
             color: white;
             border: none;
             border-radius: 50px;
-            font-size: 12px;
+            font-size: 13px;
+            font-family: Arial, sans-serif;
             cursor: pointer;
             white-space: nowrap;
+            width: 100%;
             transition: background 0.2s;
         }
 
         .btn-confirmer:hover { background: #219150; }
 
         .btn-annuler {
-            padding: 7px 16px;
+            padding: 9px 16px;
             background: #ef4444;
             color: white;
             border: none;
             border-radius: 50px;
-            font-size: 12px;
+            font-size: 13px;
+            font-family: Arial, sans-serif;
             cursor: pointer;
             white-space: nowrap;
+            width: 100%;
             transition: background 0.2s;
         }
 
