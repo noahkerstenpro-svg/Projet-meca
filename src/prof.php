@@ -11,6 +11,23 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'prof') {
 }
 
 $name = $_SESSION['name'] ?? $_SESSION['username'];
+
+// ── Récupérer le nombre de RDV en attente de confirmation ──
+$nbEnAttente = 0;
+try {
+    $host   = 'meca-mysql';
+    $dbname = 'Meca';
+    $user   = 'root';
+    $pass   = 'root';
+    $pdo = new PDO("mysql:host=$host;port=3306;dbname=$dbname;charset=utf8mb4", $user, $pass);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    $stmt = $pdo->query("SELECT COUNT(*) FROM intervention WHERE statut = 'en_attente' AND source = 'reservation'");
+    $nbEnAttente = (int)$stmt->fetchColumn();
+} catch (PDOException $e) {
+    // Si la BDD est inaccessible, on affiche juste 0 sans bloquer la page
+    $nbEnAttente = 0;
+}
 ?>
 
 <!DOCTYPE html>
@@ -106,6 +123,7 @@ $name = $_SESSION['name'] ?? $_SESSION['username'];
             border-radius: 18px;
             padding: 22px;
             transition: 0.2s;
+            position: relative; /* Pour positionner le badge de notif */
         }
 
         .action-card:hover {
@@ -139,6 +157,32 @@ $name = $_SESSION['name'] ?? $_SESSION['username'];
             border-color: #dc2626;
         }
 
+        /* ── BADGE NOTIFICATION ── */
+        .notif-badge {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: #dc2626;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            min-width: 24px;
+            height: 24px;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 6px;
+            animation: pulse 1.5s infinite;
+            box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5);
+        }
+
+        @keyframes pulse {
+            0%   { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5); }
+            70%  { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+        }
+
         .footer {
             margin-top: 25px;
             text-align: center;
@@ -167,13 +211,16 @@ $name = $_SESSION['name'] ?? $_SESSION['username'];
                 <a class="action-card" href="ordre_reparation.php">
                     <div class="icon">📝</div>
                     <h3>Créer un ordre</h3>
-                    <p>Créer un nouvel ordre de réparation pour l’atelier.</p>
+                    <p>Créer un nouvel ordre de réparation pour l'atelier.</p>
                 </a>
 
                 <a class="action-card" href="rdv_client.php">
                     <div class="icon">📅</div>
                     <h3>Agenda des RDV clients</h3>
                     <p>Consulter tous les rendez-vous clients planifiés.</p>
+                    <?php if ($nbEnAttente > 0): ?>
+                        <span class="notif-badge"><?= $nbEnAttente ?></span>
+                    <?php endif; ?>
                 </a>
 
                 <a class="action-card" href="recherche_or.php">
