@@ -12,22 +12,10 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'prof') {
 
 $name = $_SESSION['name'] ?? $_SESSION['username'];
 
-// ── Récupérer le nombre de RDV en attente de confirmation ──
-$nbEnAttente = 0;
-try {
-    $host   = 'meca-mysql';
-    $dbname = 'Meca';
-    $user   = 'root';
-    $pass   = 'root';
-    $pdo = new PDO("mysql:host=$host;port=3306;dbname=$dbname;charset=utf8mb4", $user, $pass);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-    $stmt = $pdo->query("SELECT COUNT(*) FROM intervention WHERE statut = 'en_attente' AND source = 'reservation'");
-    $nbEnAttente = (int)$stmt->fetchColumn();
-} catch (PDOException $e) {
-    // Si la BDD est inaccessible, on affiche juste 0 sans bloquer la page
-    $nbEnAttente = 0;
-}
+// Compteur de RDV en attente de confirmation
+$pdo = new PDO("mysql:host=meca-mysql;port=3306;dbname=Meca;charset=utf8mb4", 'root', 'root');
+$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+$nb_attente = (int)$pdo->query("SELECT COUNT(*) FROM intervention WHERE source = 'reservation' AND statut_rdv = 'en_attente'")->fetchColumn();
 ?>
 
 <!DOCTYPE html>
@@ -37,9 +25,7 @@ try {
     <title>Espace Professeur - Atelier mécanique</title>
 
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
@@ -57,10 +43,7 @@ try {
             align-items: center;
         }
 
-        header h1 {
-            margin: 0;
-            font-size: 26px;
-        }
+        header h1 { margin: 0; font-size: 26px; }
 
         .badge {
             background: rgba(255,255,255,0.15);
@@ -69,14 +52,9 @@ try {
             font-weight: bold;
         }
 
-        main {
-            padding: 40px 20px;
-        }
+        main { padding: 40px 20px; }
 
-        .container {
-            max-width: 1000px;
-            margin: auto;
-        }
+        .container { max-width: 1000px; margin: auto; }
 
         .welcome-card {
             background: white;
@@ -98,10 +76,7 @@ try {
             margin-bottom: 20px;
         }
 
-        h2 {
-            margin: 0;
-            font-size: 28px;
-        }
+        h2 { margin: 0; font-size: 28px; }
 
         .subtitle {
             color: #6b7280;
@@ -123,7 +98,6 @@ try {
             border-radius: 18px;
             padding: 22px;
             transition: 0.2s;
-            position: relative; /* Pour positionner le badge de notif */
         }
 
         .action-card:hover {
@@ -132,55 +106,30 @@ try {
             border-color: #2563eb;
         }
 
-        .icon {
-            font-size: 34px;
-            margin-bottom: 12px;
-        }
+        .icon { font-size: 34px; margin-bottom: 12px; }
 
-        .action-card h3 {
-            margin: 0 0 8px;
-            font-size: 18px;
-        }
+        .action-card h3 { margin: 0 0 8px; font-size: 18px; }
 
-        .action-card p {
-            margin: 0;
-            color: #6b7280;
-            font-size: 14px;
-        }
+        .action-card p { margin: 0; color: #6b7280; font-size: 14px; }
 
-        .logout {
-            background: #fee2e2;
-            border-color: #fecaca;
-        }
+        .logout { background: #fee2e2; border-color: #fecaca; }
+        .logout:hover { border-color: #dc2626; }
 
-        .logout:hover {
-            border-color: #dc2626;
-        }
-
-        /* ── BADGE NOTIFICATION ── */
+        /* Badge notification */
         .notif-badge {
-            position: absolute;
-            top: 14px;
-            right: 14px;
-            background: #dc2626;
-            color: white;
-            font-size: 12px;
-            font-weight: bold;
-            min-width: 24px;
-            height: 24px;
-            border-radius: 999px;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 0 6px;
-            animation: pulse 1.5s infinite;
-            box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5);
-        }
-
-        @keyframes pulse {
-            0%   { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5); }
-            70%  { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+            background: #ef4444;
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            padding: 0 5px;
+            margin-left: 6px;
+            vertical-align: middle;
         }
 
         .footer {
@@ -216,11 +165,12 @@ try {
 
                 <a class="action-card" href="rdv_client.php">
                     <div class="icon">📅</div>
-                    <h3>Agenda des RDV clients</h3>
-                    <p>Consulter tous les rendez-vous clients planifiés.</p>
-                    <?php if ($nbEnAttente > 0): ?>
-                        <span class="notif-badge"><?= $nbEnAttente ?></span>
-                    <?php endif; ?>
+                    <h3>Agenda des RDV clients
+                        <?php if ($nb_attente > 0): ?>
+                            <span class="notif-badge" id="badge-notif"><?= $nb_attente ?></span>
+                        <?php endif; ?>
+                    </h3>
+                    <p>Consulter et confirmer les rendez-vous clients.</p>
                 </a>
 
                 <a class="action-card" href="recherche_or.php">
