@@ -18,16 +18,7 @@ try {
         exit;
     }
 
-<<<<<<< HEAD
-    $stmt = $pdo->prepare("
-        UPDATE intervention
-        SET statut = 'valide'
-        WHERE id_intervention = :id
-          AND statut = 'termine'
-    ");
-=======
     $stmt = $pdo->prepare("UPDATE intervention SET statut = 'valide' WHERE id_intervention = :id AND statut = 'termine'");
->>>>>>> f4bf124 (m)
     $stmt->execute([':id' => $intervention_id]);
 
     if ($stmt->rowCount() === 0) {
