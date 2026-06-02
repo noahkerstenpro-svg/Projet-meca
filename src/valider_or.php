@@ -1,7 +1,5 @@
 <?php
-// valider_or.php — Marque un OR comme validé (appelé en AJAX depuis validation.php)
 session_start();
-
 header('Content-Type: application/json; charset=utf-8');
 
 if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'prof') {
@@ -9,13 +7,8 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'prof') {
     exit;
 }
 
-$host   = 'meca-mysql';
-$dbname = 'Meca';
-$user   = 'root';
-$pass   = 'root';
-
 try {
-    $pdo = new PDO("mysql:host=$host;port=3306;dbname=$dbname;charset=utf8mb4", $user, $pass);
+    $pdo = new PDO("mysql:host=meca-mysql;port=3306;dbname=Meca;charset=utf8mb4", 'root', 'root');
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     $intervention_id = (int)($_POST['intervention_id'] ?? 0);
@@ -25,12 +18,16 @@ try {
         exit;
     }
 
+<<<<<<< HEAD
     $stmt = $pdo->prepare("
         UPDATE intervention
         SET statut = 'valide'
         WHERE id_intervention = :id
           AND statut = 'termine'
     ");
+=======
+    $stmt = $pdo->prepare("UPDATE intervention SET statut = 'valide' WHERE id_intervention = :id AND statut = 'termine'");
+>>>>>>> f4bf124 (m)
     $stmt->execute([':id' => $intervention_id]);
 
     if ($stmt->rowCount() === 0) {
