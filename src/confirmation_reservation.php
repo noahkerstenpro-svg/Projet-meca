@@ -10,10 +10,8 @@ $rdv    = $_SESSION['confirm_rdv'];
 $prenom = $_SESSION['client_prenom'] ?? '';
 $nom    = $_SESSION['client_nom']    ?? '';
 
-// On vide les données de confirmation pour éviter de reafficher si on revient
 unset($_SESSION['confirm_rdv']);
 
-// Formater la date en français
 function dateFR($date) {
     $ts   = strtotime($date);
     $jours = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
@@ -26,7 +24,7 @@ function dateFR($date) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Réservation confirmée — Méca Brocéliande</title>
+    <title>Réservation enregistrée — Méca Brocéliande</title>
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -48,7 +46,6 @@ function dateFR($date) {
 
         header h1 { font-size: 22px; }
 
-        /* ── PAGE CENTRALE ── */
         .page {
             flex: 1;
             display: flex;
@@ -61,7 +58,7 @@ function dateFR($date) {
             background: white;
             border-radius: 24px;
             padding: 50px 60px;
-            max-width: 500px;
+            max-width: 520px;
             width: 100%;
             box-shadow: 0 8px 30px rgba(0,0,0,0.10);
             text-align: center;
@@ -73,21 +70,27 @@ function dateFR($date) {
             to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* ── ICÔNE SUCCÈS ── */
-        .success-circle {
+        /* Icône attente */
+        .pending-circle {
             width: 90px;
             height: 90px;
-            background: #e6f9f0;
+            background: #fff8e1;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 46px;
             margin: 0 auto 24px;
+            animation: spin-slow 4s linear infinite;
+        }
+
+        @keyframes spin-slow {
+            0%   { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         h2 {
-            color: #27ae60;
+            color: #f59e0b;
             font-size: 24px;
             margin-bottom: 8px;
         }
@@ -95,19 +98,35 @@ function dateFR($date) {
         .subtitle {
             color: #6b7280;
             font-size: 14px;
-            margin-bottom: 32px;
+            margin-bottom: 10px;
         }
 
-        /* ── RÉCAP ── */
+        /* Bandeau statut */
+        .status-banner {
+            background: #fff8e1;
+            border: 1px solid #fde68a;
+            border-radius: 14px;
+            padding: 14px 20px;
+            font-size: 14px;
+            color: #92400e;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-align: left;
+        }
+
+        .status-banner .icon { font-size: 24px; flex-shrink: 0; }
+
+        /* Récap */
         .recap {
             background: #f9fafb;
             border-radius: 16px;
             padding: 20px 24px;
-            margin-bottom: 28px;
+            margin-bottom: 24px;
             text-align: left;
             display: flex;
             flex-direction: column;
-            gap: 0;
         }
 
         .recap-row {
@@ -119,9 +138,7 @@ function dateFR($date) {
             border-bottom: 1px solid #e5e7eb;
         }
 
-        .recap-row:last-child {
-            border-bottom: none;
-        }
+        .recap-row:last-child { border-bottom: none; }
 
         .recap-label {
             color: #6b7280;
@@ -137,19 +154,19 @@ function dateFR($date) {
             max-width: 60%;
         }
 
-        /* ── NOTE ── */
+        /* Note */
         .note {
-            background: #fffbeb;
-            border: 1px solid #fde68a;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
             border-radius: 12px;
             padding: 12px 16px;
             font-size: 13px;
-            color: #92400e;
+            color: #166534;
             margin-bottom: 28px;
             text-align: left;
         }
 
-        /* ── BOUTONS ── */
+        /* Boutons */
         .btn {
             width: 100%;
             padding: 12px;
@@ -159,6 +176,7 @@ function dateFR($date) {
             cursor: pointer;
             margin-bottom: 10px;
             transition: background-color 0.2s;
+            font-family: Arial, sans-serif;
         }
 
         .btn-primary {
@@ -174,6 +192,13 @@ function dateFR($date) {
         }
 
         .btn-secondary:hover { background-color: #333; }
+
+        .btn-mes-rdv {
+            background-color: #f59e0b;
+            color: white;
+        }
+
+        .btn-mes-rdv:hover { background-color: #d97706; }
 
         footer {
             text-align: center;
@@ -192,13 +217,22 @@ function dateFR($date) {
 <div class="page">
     <div class="card">
 
-        <div class="success-circle">✅</div>
+        <div class="pending-circle">⏳</div>
 
-        <h2>Réservation confirmée !</h2>
+        <h2>Demande enregistrée !</h2>
         <p class="subtitle">
             Bonjour <strong><?= htmlspecialchars($prenom . ' ' . $nom) ?></strong>,
-            votre créneau a bien été pris en compte.
+            votre demande de rendez-vous a bien été reçue.
         </p>
+
+        <!-- Bandeau statut -->
+        <div class="status-banner">
+            <span class="icon">🔔</span>
+            <span>
+                Votre rendez-vous est <strong>en attente de confirmation</strong> par un professeur.
+                Vous pourrez consulter son statut depuis votre espace personnel.
+            </span>
+        </div>
 
         <!-- Récapitulatif -->
         <div class="recap">
@@ -207,26 +241,32 @@ function dateFR($date) {
                 <span class="recap-value"><?= htmlspecialchars($rdv['vehicule']) ?></span>
             </div>
             <div class="recap-row">
-                <span class="recap-label">📅 Date</span>
+                <span class="recap-label">📅 Date demandée</span>
                 <span class="recap-value"><?= dateFR($rdv['date']) ?></span>
             </div>
             <div class="recap-row">
-                <span class="recap-label">🕐 Heure</span>
+                <span class="recap-label">🕐 Heure demandée</span>
                 <span class="recap-value"><?= htmlspecialchars($rdv['heure']) ?></span>
             </div>
             <div class="recap-row">
                 <span class="recap-label">🔧 Problème</span>
                 <span class="recap-value"><?= htmlspecialchars($rdv['probleme']) ?></span>
             </div>
+            <div class="recap-row">
+                <span class="recap-label">📋 Statut</span>
+                <span class="recap-value" style="color:#f59e0b;">⏳ En attente</span>
+            </div>
         </div>
 
         <!-- Note -->
         <div class="note">
-            ⚠️ En cas d'empêchement, merci de nous prévenir le plus tôt possible.
-            L'atelier vous accueillera à l'heure indiquée.
+            💡 Dès qu'un professeur confirmera votre RDV, vous pourrez le voir dans votre espace "Mes réservations".
         </div>
 
         <!-- Boutons -->
+        <button class="btn btn-mes-rdv" onclick="window.location.href='mes_rdv.php'">
+            📋 Voir mes réservations
+        </button>
         <button class="btn btn-primary" onclick="window.location.href='reservation.php'">
             📅 Faire une autre réservation
         </button>
