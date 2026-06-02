@@ -230,6 +230,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background-color: #333;
         }
 
+        .btn-mes-rdv {
+            background-color: #2563eb;
+            margin-top: 10px;
+        }
+
+        .btn-mes-rdv:hover {
+            background-color: #1d4ed8;
+        }
+
         .message-ok {
             background: #e6f9e6;
             color: #2a7a2a;
@@ -464,6 +473,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <button type="submit">Réserver</button>
     </form>
 
+    <button class="btn-mes-rdv" onclick="window.location.href='mes_rdv.php'">📅 Consulter mes rendez-vous</button>
     <button class="logout" onclick="window.location.href='accueil.html'">Retour à l'accueil</button>
 </div>
 
