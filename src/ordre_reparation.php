@@ -606,6 +606,7 @@ function donBool($key, $donnees) {
                   min-width:340px; font-size:12px; left:0; top:100%;
                 "></div>
               </div>
+              <button type="button" onclick="readVinOBD()" title="Lecture OBD" style="background:var(--accent);color:white;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;font-size:11px;white-space:nowrap;">🔌 OBD</button>
             </div>
           </td>
         </tr>
