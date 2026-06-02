@@ -28,12 +28,13 @@ try {
     $stmt = $pdo->prepare("
         UPDATE intervention
         SET statut = 'valide'
-        WHERE id_intervention = :id AND source = 'ordre'
+        WHERE id_intervention = :id
+          AND statut = 'termine'
     ");
     $stmt->execute([':id' => $intervention_id]);
 
     if ($stmt->rowCount() === 0) {
-        echo json_encode(['success' => false, 'error' => 'OR introuvable ou déjà validé']);
+        echo json_encode(['success' => false, 'error' => 'OR introuvable ou pas encore terminé']);
         exit;
     }
 
