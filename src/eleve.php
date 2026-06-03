@@ -99,6 +99,16 @@ $name = $_SESSION['name'] ?? $_SESSION['username'];
             gap:25px;
         }
 
+        .card-logout-wrapper {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: center;
+        }
+
+        .card-logout-wrapper .card {
+            width: 240px;
+        }
+
         .card{
             background:white;
             color:#111827;
@@ -237,17 +247,19 @@ $name = $_SESSION['name'] ?? $_SESSION['username'];
 
             </a>
 
-            <a class="card logout" href="logout.php">
+            <div class="card-logout-wrapper">
+                <a class="card logout" href="logout.php">
 
-                <div class="icon">🚪</div>
+                    <div class="icon">🚪</div>
 
-                <h3>Déconnexion</h3>
+                    <h3>Déconnexion</h3>
 
-                <p>
-                    Quitter votre session utilisateur.
-                </p>
+                    <p>
+                        Quitter votre session utilisateur.
+                    </p>
 
-            </a>
+                </a>
+            </div>
 
         </div>
 
