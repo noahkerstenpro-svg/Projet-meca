@@ -638,18 +638,20 @@ function couleurHeure($heure) {
 
                 <!-- Boutons confirmer / annuler -->
                 <?php $srdv = $r['statut_rdv'] ?? 'en_attente'; ?>
-                <?php if ($srdv === 'en_attente'): ?>
                 <div class="rdv-actions" id="actions-<?= $r['id_intervention'] ?>">
+                    <?php if ($srdv !== 'confirme'): ?>
                     <button class="btn-confirmer"
                             onclick="actionRdv(<?= $r['id_intervention'] ?>, 'confirme')">
                         ✅ Confirmer
                     </button>
+                    <?php endif; ?>
+                    <?php if ($srdv !== 'annule'): ?>
                     <button class="btn-annuler"
                             onclick="actionRdv(<?= $r['id_intervention'] ?>, 'annule')">
                         ❌ Annuler
                     </button>
+                    <?php endif; ?>
                 </div>
-                <?php endif; ?>
 
             </div>
         <?php endforeach; ?>
