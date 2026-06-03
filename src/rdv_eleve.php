@@ -377,16 +377,10 @@ function couleurHeure($heure) {
 <header>
     <h1>📅 Agenda des RDV clients</h1>
     <div class="header-right">
-        <span class="badge-lecture">👁 Lecture seule</span>
         <span class="badge-eleve">Espace Élève</span>
         <a class="btn-retour" href="eleve.php">← Retour</a>
     </div>
 </header>
-
-<!-- Bandeau info -->
-<div class="info-lecture">
-    👁 Mode consultation uniquement — vous pouvez voir les rendez-vous mais pas les modifier.
-</div>
 
 <?php if (isset($erreur)): ?>
     <div class="erreur-bdd"><?= htmlspecialchars($erreur) ?></div>
@@ -399,14 +393,8 @@ function couleurHeure($heure) {
         $totalJours = count($rdvParDate);
         $today      = date('Y-m-d');
         $rdvFuturs  = 0;
-        $nbEnCours  = 0; $nbTermine = 0; $nbValide = 0;
         foreach ($rdvParDate as $date => $list) {
             if ($date >= $today) $rdvFuturs += count($list);
-            foreach ($list as $rdv) {
-                if ($rdv['statut'] === 'en_cours')   $nbEnCours++;
-                elseif ($rdv['statut'] === 'termine') $nbTermine++;
-                elseif ($rdv['statut'] === 'valide')  $nbValide++;
-            }
         }
     ?>
     <div class="stat-card">
@@ -420,18 +408,6 @@ function couleurHeure($heure) {
     <div class="stat-card">
         <div class="stat-value" style="color:#eb5e00;"><?= $rdvFuturs ?></div>
         <div class="stat-label">À venir</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-value" style="color:#2563eb;"><?= $nbEnCours ?></div>
-        <div class="stat-label">En cours</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-value" style="color:#f59e0b;"><?= $nbTermine ?></div>
-        <div class="stat-label">Terminés</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-value" style="color:#27ae60;"><?= $nbValide ?></div>
-        <div class="stat-label">Validés</div>
     </div>
 </div>
 
