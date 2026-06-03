@@ -1,7 +1,12 @@
 <?php
+// save_or.php — Sauvegarde complète de l'ordre de réparation
 session_start();
 
-// --- Connexion BDD ---
+if (!isset($_SESSION['username']) || !in_array($_SESSION['role'], ['prof', 'eleve'])) {
+    header('Location: login.php');
+    exit;
+}
+
 $host   = 'meca-mysql';
 $dbname = 'Meca';
 $user   = 'root';
@@ -11,770 +16,259 @@ try {
     $pdo = new PDO("mysql:host=$host;port=3306;dbname=$dbname;charset=utf8mb4", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // Récupérer tous les RDV avec infos client, véhicule, prestation
-    $stmt = $pdo->query("
-        SELECT
-            i.id_intervention,
-            i.date_intervention,
-            i.`heure_de_préstation`,
-            i.Probleme,
-            i.commentaire,
-            i.statut,
-            i.statut_rdv,
-            CONCAT(v.marque, ' ', COALESCE(v.modele,'')) AS vehicule,
-            c.nom               AS client_nom,
-            c.prenom            AS client_prenom,
-            c.`numéro`          AS client_tel,
-            p.designation       AS prestation_nom,
-            p.prix              AS prestation_prix,
-            p.reference         AS prestation_ref
-        FROM intervention i
-        JOIN Vehicules v  ON v.id_vehicules  = i.vehicule_id
-        JOIN Clients   c  ON c.id_clients    = v.client_id
-        LEFT JOIN Prestation p ON p.id_prestation = i.prestation_id
-        WHERE i.source = 'reservation'
-        ORDER BY i.date_intervention ASC, i.`heure_de_préstation` ASC
-    ");
-    $rdvs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $intervention_id = (int)($_POST['intervention_id'] ?? 0);
+    $vehicule_id     = (int)($_POST['vehicule_id']     ?? 0);
+    $client_id       = (int)($_POST['client_id']       ?? 0);
 
-    // Grouper par date
-    $rdvParDate = [];
-    foreach ($rdvs as $rdv) {
-        $rdvParDate[$rdv['date_intervention']][] = $rdv;
+    $client_prenom  = trim($_POST['client_prenom']  ?? '');
+    $client_nom     = trim($_POST['client_nom']     ?? '');
+    $client_adresse = trim($_POST['client_adresse'] ?? '');
+    $client_tel     = trim($_POST['client_tel']     ?? '');
+    $client_email   = trim($_POST['client_email']   ?? '');
+
+    $vin           = strtoupper(trim($_POST['vin']   ?? ''));
+    $marque        = trim($_POST['marque']           ?? '');
+    $modele        = trim($_POST['modele']           ?? '');
+    $marque_modele = trim("$marque $modele");
+    $immat         = strtoupper(trim($_POST['immat'] ?? ''));
+    $km            = $_POST['km'] !== '' ? (int)$_POST['km'] : null;
+    $type_veh      = trim($_POST['type_veh']         ?? '');
+    $mise_circ     = trim($_POST['mise_circulation'] ?? '') ?: null;
+
+    $date_reception = trim($_POST['date_reception'] ?? '') ?: date('Y-m-d');
+    $info_client    = trim($_POST['info_client']    ?? '');
+    $travaux        = trim($_POST['travaux']        ?? '');
+
+    // ── Lignes de facturation ──
+    $fact_lines = [];
+    $i = 0;
+    while (isset($_POST["fact_desc_$i"]) || isset($_POST["fact_qte_$i"])) {
+        $desc_select = trim($_POST["fact_desc_$i"]       ?? '');
+        $desc_libre  = trim($_POST["fact_desc_libre_$i"] ?? '');
+        $desc = ($desc_select === 'Autre') ? $desc_libre : $desc_select;
+        $qte  = trim($_POST["fact_qte_$i"]  ?? '');
+        $ref  = trim($_POST["fact_ref_$i"]  ?? '');
+        $prix = trim($_POST["fact_prix_$i"] ?? '');
+        if ($desc || $qte || $ref || $prix) {
+            $fact_lines[] = ['desc' => $desc, 'qte' => $qte, 'ref' => $ref, 'prix' => $prix];
+        }
+        $i++;
     }
 
-} catch (PDOException $e) {
-    $erreur = "Erreur BDD : " . $e->getMessage();
-    $rdvParDate = [];
-}
+    // ── JSON donnees_or ──
+    $donnees = [
+        'ordre_num'      => trim($_POST['ordre_num']        ?? ''),
+        'prof'           => trim($_POST['prof']             ?? ''),
+        'date_restit'    => trim($_POST['date_restitution'] ?? ''),
+        'reservoir'      => trim($_POST['reservoir']        ?? ''),
+        'damages'        => trim($_POST['damages']          ?? ''),
+        'type_griffe'    => isset($_POST['type_griffe'])    ? 1 : 0,
+        'type_coup'      => isset($_POST['type_coup'])      ? 1 : 0,
+        'roue_secours'   => isset($_POST['roue_secours'])   ? 1 : 0,
+        'ecrou_antivol'  => isset($_POST['ecrou_antivol'])  ? 1 : 0,
+        'alarme'         => isset($_POST['alarme'])         ? 1 : 0,
+        'code_alarme'    => trim($_POST['code_alarme']      ?? ''),
+        'cg_accepted'    => isset($_POST['cg_accepted'])    ? 1 : 0,
+        'mo_heures'      => trim($_POST['mo_heures']        ?? ''),
+        'taux_horaire'   => trim($_POST['taux_horaire']     ?? ''),
+        'fact_lines'     => $fact_lines,
+        'modele'         => $modele,
+    ];
 
-// Formater une date FR
-function dateFR($date) {
-    $ts = strtotime($date);
-    $jours = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
-    $mois  = ['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-    return $jours[date('w', $ts)] . ' ' . date('j', $ts) . ' ' . $mois[(int)date('n', $ts)] . ' ' . date('Y', $ts);
-}
-
-// Couleur par heure
-function couleurHeure($heure) {
-    $h = (int)substr($heure, 0, 2);
-    if ($h < 12) return 'matin';
-    return 'aprem';
-}
-?>
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agenda RDV — Méca Brocéliande</title>
-
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+    // ════════════════════════════════════════
+    // 1) CLIENT
+    // ════════════════════════════════════════
+    if ($client_id > 0) {
+        $pdo->prepare("
+            UPDATE Clients
+            SET prenom = :prenom, nom = :nom,
+                adresse_postal = :adresse, `numéro` = :tel, adresse_mail = :email
+            WHERE id_clients = :id
+        ")->execute([
+            ':prenom' => $client_prenom, ':nom'     => $client_nom,
+            ':adresse'=> $client_adresse,':tel'     => $client_tel,
+            ':email'  => $client_email,  ':id'      => $client_id,
+        ]);
+    } elseif ($client_prenom || $client_nom) {
+        $clientExist = null;
+        if ($client_email) {
+            $chk = $pdo->prepare("SELECT id_clients FROM Clients WHERE adresse_mail = :email LIMIT 1");
+            $chk->execute([':email' => $client_email]);
+            $clientExist = $chk->fetch(PDO::FETCH_ASSOC);
         }
-
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f1f2f3;
-            min-height: 100vh;
+        if (!$clientExist && $client_prenom && $client_nom) {
+            $chk = $pdo->prepare("SELECT id_clients FROM Clients WHERE prenom = :prenom AND nom = :nom LIMIT 1");
+            $chk->execute([':prenom' => $client_prenom, ':nom' => $client_nom]);
+            $clientExist = $chk->fetch(PDO::FETCH_ASSOC);
         }
-
-        /* ── HEADER ── */
-        header {
-            background-color: #525151;
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-
-        header h1 {
-            font-size: 24px;
-            margin: 0;
-        }
-
-        /* ── STATS BAR ── */
-        .stats-bar {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            flex-wrap: wrap;
-            padding: 30px 20px 10px;
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: 25px;
-            padding: 20px 40px;
-            text-align: center;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            min-width: 160px;
-        }
-
-        .stat-value {
-            font-size: 36px;
-            font-weight: bold;
-            color: #eb5e00;
-        }
-
-        .stat-label {
-            font-size: 13px;
-            color: #777;
-            margin-top: 4px;
-        }
-
-        /* ── RECHERCHE ── */
-        .search-bar {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            padding: 20px;
-        }
-
-        .search-input {
-            padding: 10px 20px;
-            border: 1px solid #ccc;
-            border-radius: 50px;
-            font-size: 14px;
-            font-family: Arial, sans-serif;
-            width: 320px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .search-input:focus {
-            border-color: #eb5e00;
-        }
-
-        .filter-btn {
-            padding: 10px 22px;
-            border-radius: 50px;
-            border: 1px solid #ccc;
-            background: white;
-            font-family: Arial, sans-serif;
-            font-size: 13px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            color: #525151;
-        }
-
-        .filter-btn:hover,
-        .filter-btn.active {
-            background-color: #eb5e00;
-            border-color: #eb5e00;
-            color: white;
-        }
-
-        /* ── AGENDA ── */
-        .agenda {
-            max-width: 860px;
-            margin: 0 auto;
-            padding: 10px 20px 100px;
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
-        }
-
-        /* ── BLOC JOUR ── */
-        .jour-header {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            margin-bottom: 12px;
-        }
-
-        .jour-date {
-            font-size: 18px;
-            font-weight: bold;
-            color: #525151;
-        }
-
-        .jour-date .jour-nom {
-            color: #eb5e00;
-        }
-
-        .jour-count {
-            background: #525151;
-            color: white;
-            font-size: 11px;
-            font-weight: bold;
-            padding: 3px 10px;
-            border-radius: 20px;
-        }
-
-        .jour-line {
-            flex: 1;
-            height: 1px;
-            background: #ddd;
-        }
-
-        /* ── CARTE RDV ── */
-        .timeline {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .rdv-card {
-            display: grid;
-            grid-template-columns: 80px 1fr auto auto;
-            background: white;
-            border-radius: 25px;
-            overflow: hidden;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .rdv-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.13);
-        }
-
-        /* Bande heure */
-        .rdv-heure {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 18px 10px;
-            font-weight: bold;
-            font-size: 18px;
-            gap: 4px;
-        }
-
-        .rdv-card.matin .rdv-heure {
-            background: #fff3eb;
-            color: #eb5e00;
-            border-right: 3px solid #ffd4b0;
-        }
-
-        .rdv-card.aprem .rdv-heure {
-            background: #f0f6ff;
-            color: #2255bb;
-            border-right: 3px solid #b0ccff;
-        }
-
-        .heure-label {
-            font-size: 10px;
-            font-weight: normal;
-            color: #aaa;
-            text-transform: uppercase;
-        }
-
-        /* Corps */
-        .rdv-body {
-            padding: 16px 18px;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .rdv-client {
-            font-size: 15px;
-            font-weight: bold;
-            color: #111;
-        }
-
-        .rdv-vehicule {
-            font-size: 13px;
-            color: #888;
-        }
-
-        .rdv-vehicule::before {
-            content: '🚗 ';
-        }
-
-        .rdv-prestation {
-            display: inline-block;
-            background: #fff3eb;
-            color: #c44d00;
-            font-size: 12px;
-            padding: 4px 12px;
-            border-radius: 20px;
-            margin-top: 2px;
-            width: fit-content;
-        }
-
-        .rdv-prestation.autre {
-            background: #f0f0f0;
-            color: #555;
-        }
-
-        /* Meta droite */
-        .rdv-meta {
-            padding: 16px 18px;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            justify-content: space-between;
-            gap: 6px;
-            min-width: 120px;
-        }
-
-        .rdv-tel {
-            font-size: 12px;
-            color: #aaa;
-        }
-
-        .rdv-ref {
-            font-size: 11px;
-            color: #bbb;
-        }
-
-        .rdv-prix {
-            font-size: 18px;
-            font-weight: bold;
-            color: #eb5e00;
-        }
-
-        .rdv-prix.gratuit {
-            font-size: 12px;
-            color: #aaa;
-            font-weight: normal;
-        }
-
-        /* ── BADGES STATUT OR ── */
-        .badge-statut {
-            display: inline-block;
-            font-size: 11px;
-            font-weight: bold;
-            padding: 2px 10px;
-            border-radius: 20px;
-            margin-left: 8px;
-            vertical-align: middle;
-        }
-
-        .badge-en-cours {
-            background: #dbeafe;
-            color: #2563eb;
-        }
-
-        .badge-termine {
-            background: #fef3c7;
-            color: #b45309;
-        }
-
-        .badge-valide {
-            background: #e6f9f0;
-            color: #27ae60;
-        }
-
-        /* Carte grisée si validée */
-        .rdv-card.or-valide {
-            opacity: 0.6;
-        }
-
-        /* ── BOUTONS CONFIRMER / ANNULER ── */
-        .rdv-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            padding: 14px 16px;
-            justify-content: center;
-            min-width: 120px;
-        }
-
-        .btn-confirmer {
-            padding: 9px 16px;
-            background: #27ae60;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            font-size: 13px;
-            font-family: Arial, sans-serif;
-            cursor: pointer;
-            white-space: nowrap;
-            width: 100%;
-            transition: background 0.2s;
-        }
-
-        .btn-confirmer:hover { background: #219150; }
-
-        .btn-annuler {
-            padding: 9px 16px;
-            background: #ef4444;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            font-size: 13px;
-            font-family: Arial, sans-serif;
-            cursor: pointer;
-            white-space: nowrap;
-            width: 100%;
-            transition: background 0.2s;
-        }
-
-        .btn-annuler:hover { background: #dc2626; }
-
-        .badge-rdv-attente  { display:inline-block;font-size:11px;font-weight:bold;padding:2px 10px;border-radius:20px;background:#fef3c7;color:#b45309; }
-        .badge-rdv-confirme { display:inline-block;font-size:11px;font-weight:bold;padding:2px 10px;border-radius:20px;background:#e6f9f0;color:#27ae60; }
-        .badge-rdv-annule   { display:inline-block;font-size:11px;font-weight:bold;padding:2px 10px;border-radius:20px;background:#fee2e2;color:#dc2626; }
-
-        /* Toast */
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            padding: 12px 24px;
-            border-radius: 50px;
-            font-size: 14px;
-            color: white;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.3s, transform 0.3s;
-            z-index: 1000;
-            pointer-events: none;
-        }
-
-        .toast.show { opacity: 1; transform: translateY(0); }
-        .toast.vert  { background: #27ae60; }
-        .toast.rouge { background: #ef4444; }
-        .vide {
-            text-align: center;
-            padding: 60px 20px;
-            color: #bbb;
-            font-size: 16px;
-        }
-
-        .vide-icon {
-            font-size: 48px;
-            margin-bottom: 14px;
-        }
-
-        /* ── ERREUR ── */
-        .erreur-bdd {
-            margin: 40px auto;
-            max-width: 600px;
-            background: #fdecea;
-            color: #b00020;
-            border: 1px solid #f5c2c7;
-            border-radius: 25px;
-            padding: 20px;
-            font-size: 14px;
-        }
-
-        /* ── FOOTER ── */
-        footer {
-            position: fixed;
-            bottom: 19px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            font-size: 13px;
-            color: #999;
-        }
-
-        @media (max-width: 600px) {
-            .rdv-card { grid-template-columns: 70px 1fr; }
-            .rdv-meta { display: none; }
-        }
-    </style>
-</head>
-<body>
-
-<header>
-    <h1>Atelier Mécanique - Bac Professionnel de Brocéliande</h1>
-</header>
-
-<?php if (isset($erreur)): ?>
-    <div class="erreur-bdd"><?= htmlspecialchars($erreur) ?></div>
-<?php else: ?>
-
-<!-- Stats -->
-<div class="stats-bar">
-    <?php
-        $totalRdv   = array_sum(array_map('count', $rdvParDate));
-        $totalJours = count($rdvParDate);
-        $today      = date('Y-m-d');
-        $rdvFuturs  = 0;
-        $nbEnCours  = 0;
-        $nbTermine  = 0;
-        $nbValide   = 0;
-        foreach ($rdvParDate as $date => $list) {
-            if ($date >= $today) $rdvFuturs += count($list);
-            foreach ($list as $rdv) {
-                if ($rdv['statut'] === 'en_cours')  $nbEnCours++;
-                elseif ($rdv['statut'] === 'termine') $nbTermine++;
-                elseif ($rdv['statut'] === 'valide')  $nbValide++;
-            }
-        }
-    ?>
-    <div class="stat-card">
-        <div class="stat-value"><?= $totalRdv ?></div>
-        <div class="stat-label">RDV au total</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-value"><?= $totalJours ?></div>
-        <div class="stat-label">Jours planifiés</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-value" style="color:#eb5e00;"><?= $rdvFuturs ?></div>
-        <div class="stat-label">À venir</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-value" style="color:#2563eb;"><?= $nbEnCours ?></div>
-        <div class="stat-label">En cours</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-value" style="color:#f59e0b;"><?= $nbTermine ?></div>
-        <div class="stat-label">Terminés</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-value" style="color:#27ae60;"><?= $nbValide ?></div>
-        <div class="stat-label">Validés</div>
-    </div>
-</div>
-
-<!-- Barre de recherche -->
-<div class="search-bar">
-    <input class="search-input" type="text" id="recherche" placeholder="Rechercher un client, véhicule, prestation…" oninput="filtrer()">
-    <button class="filter-btn active" onclick="setFiltre('tous', this)">Tous</button>
-    <button class="filter-btn" onclick="setFiltre('matin', this)">Matin</button>
-    <button class="filter-btn" onclick="setFiltre('aprem', this)">Après-midi</button>
-    <button class="filter-btn" onclick="setFiltreStatut('en_cours', this)">🔧 En cours</button>
-    <button class="filter-btn" onclick="setFiltreStatut('termine', this)">🏁 Terminés</button>
-    <button class="filter-btn" onclick="setFiltreStatut('valide', this)">✅ Validés</button>
-</div>
-
-<!-- Agenda -->
-<div class="agenda" id="agenda">
-
-<?php if (empty($rdvParDate)): ?>
-    <div class="vide">
-        <div class="vide-icon">📅</div>
-        <div>Aucun rendez-vous enregistré</div>
-    </div>
-<?php else: ?>
-
-<?php foreach ($rdvParDate as $date => $rdvs): ?>
-    <div class="jour-bloc" data-date="<?= $date ?>">
-        <div class="jour-header">
-            <div class="jour-date">
-                <?php
-                    $parts = explode(' ', dateFR($date));
-                    echo '<span class="jour-nom">' . $parts[0] . '</span> ' . implode(' ', array_slice($parts, 1));
-                ?>
-            </div>
-            <span class="jour-count"><?= count($rdvs) ?> RDV</span>
-            <div class="jour-line"></div>
-        </div>
-
-        <div class="timeline">
-        <?php foreach ($rdvs as $r): ?>
-            <?php $moment = couleurHeure($r['heure_de_préstation']); ?>
-            <div class="rdv-card <?= $moment ?> <?= ($r['statut'] ?? '') === 'valide' ? 'or-valide' : '' ?>"
-                 data-client="<?= htmlspecialchars(strtolower($r['client_prenom'].' '.$r['client_nom'])) ?>"
-                 data-vehicule="<?= htmlspecialchars(strtolower($r['vehicule'])) ?>"
-                 data-prestation="<?= htmlspecialchars(strtolower($r['prestation_nom'] ?? $r['Probleme'] ?? '')) ?>"
-                 data-moment="<?= $moment ?>"
-                 data-statut="<?= htmlspecialchars($r['statut'] ?? 'en_cours') ?>">
-
-                <!-- Heure -->
-                <div class="rdv-heure">
-                    <?= htmlspecialchars(substr($r['heure_de_préstation'], 0, 5)) ?>
-                    <span class="heure-label"><?= $moment === 'matin' ? 'matin' : 'aprèm' ?></span>
-                </div>
-
-                <!-- Corps -->
-                <div class="rdv-body">
-                    <div class="rdv-client">
-                        <?= htmlspecialchars($r['client_prenom'] . ' ' . $r['client_nom']) ?>
-                        <?php
-                            $statut = $r['statut'] ?? 'en_cours';
-                            if ($statut === 'valide'):
-                        ?>
-                            <span class="badge-statut badge-valide">✅ Validé</span>
-                        <?php elseif ($statut === 'termine'): ?>
-                            <span class="badge-statut badge-termine">🏁 Terminé</span>
-                        <?php else: ?>
-                            <span class="badge-statut badge-en-cours">🔧 En cours</span>
-                        <?php endif; ?>
-
-                        <?php $srdv = $r['statut_rdv'] ?? 'en_attente'; ?>
-                        <?php if ($srdv === 'en_attente'): ?>
-                            <span class="badge-rdv-attente">⏳ En attente</span>
-                        <?php elseif ($srdv === 'confirme'): ?>
-                            <span class="badge-rdv-confirme">✅ Confirmé</span>
-                        <?php else: ?>
-                            <span class="badge-rdv-annule">❌ Annulé</span>
-                        <?php endif; ?>
-                    </div>
-                    <div class="rdv-vehicule">
-                        <?= htmlspecialchars($r['vehicule']) ?>
-                    </div>
-                    <?php if ($r['prestation_nom']): ?>
-                        <div class="rdv-prestation">
-                            🔧 <?= htmlspecialchars($r['prestation_nom']) ?>
-                        </div>
-                    <?php elseif ($r['Probleme']): ?>
-                        <div class="rdv-prestation autre">
-                            ✏️ <?= htmlspecialchars($r['Probleme']) ?>
-                        </div>
-                    <?php endif; ?>
-                </div>
-
-                <!-- Meta droite -->
-                <div class="rdv-meta">
-                    <?php if ($r['client_tel']): ?>
-                        <div class="rdv-tel">📞 <?= htmlspecialchars($r['client_tel']) ?></div>
-                    <?php endif; ?>
-
-                    <?php if ($r['prestation_ref']): ?>
-                        <div class="rdv-ref"><?= htmlspecialchars($r['prestation_ref']) ?></div>
-                    <?php endif; ?>
-
-                    <?php if ($r['prestation_prix']): ?>
-                        <div class="rdv-prix"><?= number_format($r['prestation_prix'], 0) ?> €</div>
-                    <?php else: ?>
-                        <div class="rdv-prix gratuit">Prix à définir</div>
-                    <?php endif; ?>
-                </div>
-
-                <!-- Boutons confirmer / annuler -->
-                <?php $srdv = $r['statut_rdv'] ?? 'en_attente'; ?>
-                <?php if ($srdv === 'en_attente'): ?>
-                <div class="rdv-actions" id="actions-<?= $r['id_intervention'] ?>">
-                    <button class="btn-confirmer"
-                            onclick="actionRdv(<?= $r['id_intervention'] ?>, 'confirme')">
-                        ✅ Confirmer
-                    </button>
-                    <button class="btn-annuler"
-                            onclick="actionRdv(<?= $r['id_intervention'] ?>, 'annule')">
-                        ❌ Annuler
-                    </button>
-                </div>
-                <?php endif; ?>
-
-            </div>
-        <?php endforeach; ?>
-        </div>
-    </div>
-<?php endforeach; ?>
-
-<?php endif; ?>
-</div>
-
-<?php endif; ?>
-
-<footer>
-    <p>© 2026 Méca Brocéliande</p>
-</footer>
-
-<div class="toast" id="toast"></div>
-
-<script>
-let filtreActif  = 'tous';
-let filtreStatut = 'tous';
-
-function showToast(msg, type) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = 'toast ' + type + ' show';
-    setTimeout(() => t.classList.remove('show'), 3000);
-}
-
-function actionRdv(id, action) {
-    const label = action === 'confirme' ? 'confirmer' : 'annuler';
-    if (!confirm('Voulez-vous ' + label + ' ce rendez-vous ?')) return;
-
-    fetch('confirmer_rdv.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'intervention_id=' + id + '&action=' + action
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            // Remplacer les boutons par un badge
-            const actions = document.getElementById('actions-' + id);
-            if (actions) {
-                const badge = document.createElement('div');
-                badge.style.padding = '14px 16px';
-                badge.style.fontSize = '12px';
-                badge.style.fontWeight = 'bold';
-                if (action === 'confirme') {
-                    badge.style.color = '#27ae60';
-                    badge.textContent = '✅ Confirmé';
-                } else {
-                    badge.style.color = '#ef4444';
-                    badge.textContent = '❌ Annulé';
-                }
-                actions.replaceWith(badge);
-            }
-
-            // Mettre à jour le badge notification dans prof.php si présent
-            const badgeNotif = document.getElementById('badge-notif');
-            if (badgeNotif && data.nb_attente !== undefined) {
-                if (data.nb_attente > 0) {
-                    badgeNotif.textContent = data.nb_attente;
-                    badgeNotif.style.display = 'inline-block';
-                } else {
-                    badgeNotif.style.display = 'none';
-                }
-            }
-
-            showToast(action === 'confirme' ? '✅ RDV confirmé !' : '❌ RDV annulé', action === 'confirme' ? 'vert' : 'rouge');
+        if ($clientExist) {
+            $client_id = $clientExist['id_clients'];
+            $pdo->prepare("
+                UPDATE Clients SET prenom=:prenom, nom=:nom,
+                adresse_postal=:adresse, `numéro`=:tel, adresse_mail=:email
+                WHERE id_clients=:id
+            ")->execute([
+                ':prenom'=>$client_prenom,':nom'=>$client_nom,
+                ':adresse'=>$client_adresse,':tel'=>$client_tel,
+                ':email'=>$client_email,':id'=>$client_id,
+            ]);
         } else {
-            alert('Erreur : ' + (data.error || 'inconnue'));
+            $mdp = password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT);
+            $pdo->prepare("
+                INSERT INTO Clients (prenom, nom, adresse_postal, `numéro`, adresse_mail, mots_de_passe)
+                VALUES (:prenom, :nom, :adresse, :tel, :email, :mdp)
+            ")->execute([
+                ':prenom'=>$client_prenom,':nom'=>$client_nom,
+                ':adresse'=>$client_adresse,':tel'=>$client_tel,
+                ':email'=>$client_email,':mdp'=>$mdp,
+            ]);
+            $client_id = $pdo->lastInsertId();
         }
-    })
-    .catch(() => alert('Erreur réseau.'));
-}
+    }
 
-function setFiltre(f, btn) {
-    filtreActif = f;
-    document.querySelectorAll('.filter-btn').forEach(b => {
-        if (['tous','matin','aprem'].some(v => b.getAttribute('onclick')?.includes("'"+v+"'"))) {
-            b.classList.remove('active');
-        }
-    });
-    btn.classList.add('active');
-    filtrer();
-}
-
-function setFiltreStatut(s, btn) {
-    filtreStatut = filtreStatut === s ? 'tous' : s;
-    document.querySelectorAll('.filter-btn').forEach(b => {
-        if (['en_cours','termine','valide'].some(v => b.getAttribute('onclick')?.includes("'"+v+"'"))) {
-            b.classList.remove('active');
-        }
-    });
-    if (filtreStatut !== 'tous') btn.classList.add('active');
-    filtrer();
-}
-
-function filtrer() {
-    const q = document.getElementById('recherche').value.toLowerCase().trim();
-
-    document.querySelectorAll('.jour-bloc').forEach(jour => {
-        let visibles = 0;
-
-        jour.querySelectorAll('.rdv-card').forEach(card => {
-            const matchMoment = filtreActif === 'tous' || card.dataset.moment === filtreActif;
-            const matchStatut = filtreStatut === 'tous' || card.dataset.statut === filtreStatut;
-            const matchSearch = !q ||
-                card.dataset.client.includes(q) ||
-                card.dataset.vehicule.includes(q) ||
-                card.dataset.prestation.includes(q);
-
-            if (matchMoment && matchStatut && matchSearch) {
-                card.style.display = '';
-                visibles++;
-            } else {
-                card.style.display = 'none';
+    // ════════════════════════════════════════
+    // 2) VÉHICULE
+    // ════════════════════════════════════════
+    if ($vehicule_id > 0) {
+        $pdo->prepare("
+            UPDATE Vehicules
+            SET vin=:vin, marque=:marque, modele=:modele, immatriculation=:immat,
+                km=:km, type_veh=:type_veh, mise_circulation=:mise_circ, client_id=:client_id
+            WHERE id_vehicules=:id
+        ")->execute([
+            ':vin'=>$vin?:null,':marque'=>$marque?:null,':modele'=>$modele?:null,
+            ':immat'=>$immat?:null,':km'=>$km,':type_veh'=>$type_veh?:null,
+            ':mise_circ'=>$mise_circ,':client_id'=>$client_id?:null,':id'=>$vehicule_id,
+        ]);
+    } else {
+        if ($vin) {
+            $check = $pdo->prepare("SELECT id_vehicules FROM Vehicules WHERE vin = :vin LIMIT 1");
+            $check->execute([':vin' => $vin]);
+            $existing = $check->fetch(PDO::FETCH_ASSOC);
+            if ($existing) {
+                $vehicule_id = $existing['id_vehicules'];
+                $pdo->prepare("
+                    UPDATE Vehicules SET marque=:marque, modele=:modele, immatriculation=:immat,
+                    km=:km, type_veh=:type_veh, mise_circulation=:mise_circ,
+                    client_id=COALESCE(:client_id, client_id)
+                    WHERE id_vehicules=:id
+                ")->execute([
+                    ':marque'=>$marque?:null,':modele'=>$modele?:null,':immat'=>$immat?:null,
+                    ':km'=>$km,':type_veh'=>$type_veh?:null,':mise_circ'=>$mise_circ,
+                    ':client_id'=>$client_id?:null,':id'=>$vehicule_id,
+                ]);
             }
-        });
+        }
+        if (!$vehicule_id && ($vin || $marque_modele)) {
+            $vinFinal = $vin ?: strtoupper(substr(md5(uniqid()), 0, 10));
+            $pdo->prepare("
+                INSERT INTO Vehicules (vin, marque, modele, immatriculation, km, type_veh, mise_circulation, client_id)
+                VALUES (:vin, :marque, :modele, :immat, :km, :type_veh, :mise_circ, :client_id)
+            ")->execute([
+                ':vin'=>$vinFinal,':marque'=>$marque?:null,':modele'=>$modele?:null,
+                ':immat'=>$immat?:null,':km'=>$km,':type_veh'=>$type_veh?:null,
+                ':mise_circ'=>$mise_circ,':client_id'=>$client_id?:null,
+            ]);
+            $vehicule_id = $pdo->lastInsertId();
+        }
+    }
 
-        jour.style.display = visibles > 0 ? '' : 'none';
-    });
+    // ════════════════════════════════════════
+    // 3) INTERVENTION
+    //    Règle : on ne touche JAMAIS à `source`.
+    //    Priorité de recherche pour éviter les doublons :
+    //      1) Réservation de ce véhicule SANS OR encore (donnees_or IS NULL)
+    //      2) OR existant connu par intervention_id
+    //      3) Sinon INSERT nouvelle ligne
+    // ════════════════════════════════════════
+    $donnees_json = json_encode($donnees, JSON_UNESCAPED_UNICODE);
+
+    if ($intervention_id > 0) {
+        // Modification directe d'un OR connu
+        $pdo->prepare("
+            UPDATE intervention
+            SET vehicule_id=:vehicule_id, date_intervention=:date,
+                Probleme=:probleme, commentaire=:commentaire, donnees_or=:donnees
+            WHERE id_intervention=:id
+        ")->execute([
+            ':vehicule_id'=>$vehicule_id,':date'=>$date_reception,
+            ':probleme'=>$info_client,':commentaire'=>$travaux,
+            ':donnees'=>$donnees_json,':id'=>$intervention_id,
+        ]);
+
+    } elseif ($vehicule_id > 0) {
+        // Priorité 1 : réservation de ce véhicule sans OR (donnees_or IS NULL)
+        $chk = $pdo->prepare("
+            SELECT id_intervention FROM intervention
+            WHERE vehicule_id = :vid
+              AND source = 'reservation'
+              AND donnees_or IS NULL
+            ORDER BY id_intervention DESC
+            LIMIT 1
+        ");
+        $chk->execute([':vid' => $vehicule_id]);
+        $existing_intervention = $chk->fetchColumn();
+
+        // Priorité 2 : n'importe quelle intervention pour ce véhicule
+        if (!$existing_intervention) {
+            $chk2 = $pdo->prepare("
+                SELECT id_intervention FROM intervention
+                WHERE vehicule_id = :vid
+                ORDER BY id_intervention DESC
+                LIMIT 1
+            ");
+            $chk2->execute([':vid' => $vehicule_id]);
+            $existing_intervention = $chk2->fetchColumn();
+        }
+
+        if ($existing_intervention) {
+            $intervention_id = (int)$existing_intervention;
+            $pdo->prepare("
+                UPDATE intervention
+                SET date_intervention=:date, Probleme=:probleme,
+                    commentaire=:commentaire, donnees_or=:donnees
+                WHERE id_intervention=:id
+            ")->execute([
+                ':date'=>$date_reception,':probleme'=>$info_client,
+                ':commentaire'=>$travaux,':donnees'=>$donnees_json,
+                ':id'=>$intervention_id,
+            ]);
+        } else {
+            $pdo->prepare("
+                INSERT INTO intervention
+                    (vehicule_id, prestation_id, date_intervention, `heure_de_préstation`,
+                     Probleme, commentaire, donnees_or, source)
+                VALUES (:vehicule_id, NULL, :date, '08:00', :probleme, :commentaire, :donnees, 'ordre')
+            ")->execute([
+                ':vehicule_id'=>$vehicule_id,':date'=>$date_reception,
+                ':probleme'=>$info_client,':commentaire'=>$travaux,':donnees'=>$donnees_json,
+            ]);
+            $intervention_id = (int)$pdo->lastInsertId();
+        }
+
+    } else {
+        $pdo->prepare("
+            INSERT INTO intervention
+                (vehicule_id, prestation_id, date_intervention, `heure_de_préstation`,
+                 Probleme, commentaire, donnees_or, source)
+            VALUES (NULL, NULL, :date, '08:00', :probleme, :commentaire, :donnees, 'ordre')
+        ")->execute([
+            ':date'=>$date_reception,':probleme'=>$info_client,
+            ':commentaire'=>$travaux,':donnees'=>$donnees_json,
+        ]);
+        $intervention_id = (int)$pdo->lastInsertId();
+    }
+
+    header("Location: ordre_reparation.php?intervention_id={$intervention_id}&saved=1");
+    exit;
+
+} catch (PDOException $e) {
+    http_response_code(500);
+    echo '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Erreur</title></head><body>';
+    echo '<div style="font-family:Arial;max-width:600px;margin:60px auto;background:#fdecea;border:1px solid #f5c2c7;border-radius:12px;padding:30px;color:#b00020;">';
+    echo '<h2>❌ Erreur lors de l\'enregistrement</h2>';
+    echo '<p>' . htmlspecialchars($e->getMessage()) . '</p>';
+    echo '<a href="javascript:history.back()" style="color:#b00020;">← Retour</a>';
+    echo '</div></body></html>';
+    exit;
 }
-</script>
-
-</body>
-</html>
