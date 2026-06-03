@@ -208,7 +208,7 @@ $name = $_SESSION['name'] ?? $_SESSION['username'];
                 <h3>Créer un OR</h3>
 
                 <p>
-                    Créer un nouvel ordre de réparation atelier.
+                    Créer un nouvel ordre de réparation.
                 </p>
 
           </a>
@@ -220,7 +220,7 @@ $name = $_SESSION['name'] ?? $_SESSION['username'];
                 <h3>Recherche OR</h3>
 
                 <p>
-                    Rechercher rapidement un ordre de réparation.
+                    Rechercher rapidement un ordre de réparation en cours.
                 </p>
 
             </a>
@@ -229,7 +229,7 @@ $name = $_SESSION['name'] ?? $_SESSION['username'];
 
                 <div class="icon">📅</div>
 
-                <h3>Agenda des RDV</h3>
+                <h3>Agenda des RDV clients</h3>
 
                 <p>
                     Consulter les rendez-vous clients planifiés.
