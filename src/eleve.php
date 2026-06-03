@@ -225,6 +225,18 @@ $name = $_SESSION['name'] ?? $_SESSION['username'];
 
             </a>
 
+            <a class="card" href="rdv_eleve.php">
+
+                <div class="icon">📅</div>
+
+                <h3>Agenda des RDV</h3>
+
+                <p>
+                    Consulter les rendez-vous clients planifiés.
+                </p>
+
+            </a>
+
             <a class="card logout" href="logout.php">
 
                 <div class="icon">🚪</div>
