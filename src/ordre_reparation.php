@@ -606,7 +606,6 @@ function donBool($key, $donnees) {
                   min-width:340px; font-size:12px; left:0; top:100%;
                 "></div>
               </div>
-              <button type="button" onclick="readVinOBD()" title="Lecture OBD" style="background:var(--accent);color:white;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;font-size:11px;white-space:nowrap;">🔌 OBD</button>
             </div>
           </td>
         </tr>
@@ -702,7 +701,7 @@ function donBool($key, $donnees) {
     <!-- ═══ TRAVAUX EFFECTUÉS ═══ -->
     <div class="section-header">Travaux effectués</div>
     <div class="travaux-area">
-      <textarea name="travaux" rows="3" placeholder="Décrire les travaux effectués..."><?= val('commentaire', $prefill) ?></textarea>
+      <textarea name="travaux" id="travaux" rows="3" placeholder="Décrire les travaux effectués..."><?= val('commentaire', $prefill) ?></textarea>
     </div>
 
     <!-- ═══ FACTURATION ═══ -->
@@ -769,7 +768,7 @@ function donBool($key, $donnees) {
     <div class="restitution-row">
       <div class="rest-cell">
         <span class="cell-label">Date de restitution</span>
-        <input type="date" name="date_restitution" value="<?= don('date_restit', $donnees) ?>">
+        <input type="date" name="date_restitution" id="date_restitution" value="<?= don('date_restit', $donnees) ?>">
       </div>
       <div class="rest-cell">
         <span class="cell-label">Signature référent</span>
@@ -1300,72 +1299,88 @@ function genererFacturePDF() {
 // ══════════════════════════════════════════════
 function terminerOR(id) {
 
-  // ── Champs obligatoires pour terminer ──
-  const champObligatoires = [
+  const manquants = [];
+
+  // ── Champs texte / date / number obligatoires ──
+  const champs = [
+    { id: 'date_reception',  label: 'Date de réception' },
+    { id: 'ordre_num',       label: "Numéro d'ordre de réparation" },
+    { id: 'prof',            label: 'Professeur référent' },
     { id: 'client_prenom',   label: 'Prénom client' },
     { id: 'client_nom',      label: 'Nom client' },
-    { id: 'client_adresse',  label: 'Adresse client' },
-    { id: 'client_tel',      label: 'Téléphone client' },
-    { id: 'client_email',    label: 'Email client' },
     { id: 'marqueInput',     label: 'Marque du véhicule' },
     { id: 'modeleInput',     label: 'Modèle du véhicule' },
     { id: 'typeVehInput',    label: 'Type du véhicule' },
-    { id: 'miseCircInput',   label: 'Date de mise en circulation' },
+    { id: 'miseCircInput',   label: 'Date 1ère mise en circulation' },
     { id: 'immatInput',      label: 'Immatriculation' },
     { id: 'kmInput',         label: 'Kilométrage' },
     { id: 'vinInput',        label: 'VIN (N° de châssis)' },
-    { id: 'ordre_num',       label: "Numéro d'ordre de réparation" },
-    { id: 'prof',            label: 'Professeur référent' },
     { id: 'info_client',     label: 'Informations client (symptômes)' },
+    { id: 'travaux',         label: 'Travaux effectués' },
+    { id: 'moHeures',        label: "Main d'œuvre (nb d'heures)" },
+    { id: 'date_restitution', label: 'Date de restitution' },
   ];
 
-  const manquants = [];
-
-  // Vérifier chaque champ texte
-  champObligatoires.forEach(champ => {
-    const el = document.getElementById(champ.id);
+  champs.forEach(champ => {
+    const el = document.getElementById(champ.id) || document.querySelector(`[name="${champ.id}"]`);
     if (!el || !el.value.trim()) {
       manquants.push(champ.label);
-      // Surligner en rouge
       if (el) {
         el.style.borderBottomColor = '#c0392b';
         el.style.background = 'rgba(192,57,43,0.06)';
-        setTimeout(() => {
-          el.style.borderBottomColor = '';
-          el.style.background = '';
-        }, 3000);
+        setTimeout(() => { el.style.borderBottomColor = ''; el.style.background = ''; }, 3000);
       }
     }
   });
 
-  // Vérifier le réservoir (radio)
-  const reservoirChecked = document.querySelector('input[name="reservoir"]:checked');
-  if (!reservoirChecked) {
+  // ── Réservoir (radio) ──
+  if (!document.querySelector('input[name="reservoir"]:checked')) {
     manquants.push('Niveau de réservoir');
   }
 
-  // Si des champs manquent → afficher la liste et stopper
-  if (manquants.length > 0) {
-    // Supprimer ancienne alerte si elle existe
-    const ancienne = document.getElementById('alerte-terminer');
-    if (ancienne) ancienne.remove();
+  // ── Au moins une ligne de facturation (Forfait/Fournitures) ──
+  const lignesFact = document.querySelectorAll('#factRows tr');
+  let auMoinsUneLigne = false;
+  lignesFact.forEach(tr => {
+    const desc  = tr.querySelector('select[name^="fact_desc_"]');
+    const libre = tr.querySelector('input[name^="fact_desc_libre_"]');
+    const prix  = tr.querySelector('input[name^="fact_prix_"]');
+    const val   = desc && desc.value === 'Autre' ? (libre && libre.value.trim()) : (desc && desc.value.trim());
+    if (val && prix && prix.value.trim()) auMoinsUneLigne = true;
+  });
+  if (!auMoinsUneLigne) manquants.push('Forfait / Fournitures / Consommables (au moins une ligne)');
 
+  // ── Taux horaire si heures > 0 ──
+  const moH  = document.getElementById('moHeures');
+  const tauxH = document.getElementById('tauxH');
+  if (moH && parseFloat(moH.value) > 0 && tauxH && !tauxH.value.trim()) {
+    manquants.push('Taux horaire (obligatoire si heures > 0)');
+    tauxH.style.borderBottomColor = '#c0392b';
+    tauxH.style.background = 'rgba(192,57,43,0.06)';
+    setTimeout(() => { tauxH.style.borderBottomColor = ''; tauxH.style.background = ''; }, 3000);
+  }
+
+  // ── Afficher les erreurs ──
+  const ancienne = document.getElementById('alerte-terminer');
+  if (ancienne) ancienne.remove();
+
+  if (manquants.length > 0) {
     const alerte = document.createElement('div');
     alerte.id = 'alerte-terminer';
     alerte.style.cssText = 'background:#fdecea;color:#b00020;border-bottom:2px solid #f5c2c7;padding:12px 24px;font-size:13px;display:flex;align-items:flex-start;gap:10px;';
     alerte.innerHTML = `
-      <span style="font-size:18px;">❌</span>
+      <span style="font-size:18px;flex-shrink:0;">❌</span>
       <div>
         <strong>Impossible de terminer l'OR — champs manquants :</strong>
-        <ul style="margin:6px 0 0 16px; columns: 2; gap: 16px;">
+        <ul style="margin:6px 0 0 16px; columns:2; gap:16px;">
           ${manquants.map(c => `<li>${c}</li>`).join('')}
         </ul>
       </div>
-      <button onclick="this.parentElement.remove()" style="margin-left:auto;background:none;border:none;font-size:18px;cursor:pointer;color:#b00020;">✕</button>
+      <button onclick="this.parentElement.remove()" style="margin-left:auto;background:none;border:none;font-size:18px;cursor:pointer;color:#b00020;flex-shrink:0;">✕</button>
     `;
     document.querySelector('.toolbar').insertAdjacentElement('afterend', alerte);
     alerte.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    return; // Stopper ici
+    return;
   }
 
   if (!confirm('Marquer cet OR comme terminé ?\nIl sera transféré dans la page Validation pour être validé par le professeur.')) return;
@@ -1385,6 +1400,8 @@ function terminerOR(id) {
         btn.style.opacity = '0.6';
         btn.style.cursor = 'default';
       }
+      const ancienneAlerte = document.getElementById('alerte-terminer');
+      if (ancienneAlerte) ancienneAlerte.remove();
       const bar = document.createElement('div');
       bar.style.cssText = 'background:#e6f9e6;color:#2a7a2a;border-bottom:2px solid #a3d9a3;padding:10px 24px;font-size:13px;display:flex;align-items:center;gap:8px;';
       bar.innerHTML = '✅ <strong>OR marqué comme terminé</strong> — Il apparaît maintenant dans la page Validation.';
