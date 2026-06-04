@@ -54,6 +54,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($_SESSION['role'] === 'eleve') {
                     header('Location: eleve.php');
                     exit;
+                    
+                if ($_SESSION['role'] === 'admin') {
+                    header('Location: admin.php');
+                    exit;
                 }
 
                 $error = "Compte connecté, mais aucun rôle autorisé.";
