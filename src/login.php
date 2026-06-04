@@ -39,6 +39,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if ($user['memberof'][$i] === GROUP_PROFS) {
                             $_SESSION['role'] = 'prof';
                         }
+
+                        if ($user['memberof'][$i] === GROUP_ADMINSITE) {
+                            $_SESSION['role'] = 'admin';
+                        }
                     }
                 }
 
