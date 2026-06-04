@@ -1296,9 +1296,78 @@ function genererFacturePDF() {
 }
 
 // ══════════════════════════════════════════════
-// TERMINER L'OR — Passe statut en_cours → termine
+// TERMINER L'OR — Validation + envoi AJAX
 // ══════════════════════════════════════════════
 function terminerOR(id) {
+
+  // ── Champs obligatoires pour terminer ──
+  const champObligatoires = [
+    { id: 'client_prenom',   label: 'Prénom client' },
+    { id: 'client_nom',      label: 'Nom client' },
+    { id: 'client_adresse',  label: 'Adresse client' },
+    { id: 'client_tel',      label: 'Téléphone client' },
+    { id: 'client_email',    label: 'Email client' },
+    { id: 'marqueInput',     label: 'Marque du véhicule' },
+    { id: 'modeleInput',     label: 'Modèle du véhicule' },
+    { id: 'typeVehInput',    label: 'Type du véhicule' },
+    { id: 'miseCircInput',   label: 'Date de mise en circulation' },
+    { id: 'immatInput',      label: 'Immatriculation' },
+    { id: 'kmInput',         label: 'Kilométrage' },
+    { id: 'vinInput',        label: 'VIN (N° de châssis)' },
+    { id: 'ordre_num',       label: "Numéro d'ordre de réparation" },
+    { id: 'prof',            label: 'Professeur référent' },
+    { id: 'info_client',     label: 'Informations client (symptômes)' },
+  ];
+
+  const manquants = [];
+
+  // Vérifier chaque champ texte
+  champObligatoires.forEach(champ => {
+    const el = document.getElementById(champ.id);
+    if (!el || !el.value.trim()) {
+      manquants.push(champ.label);
+      // Surligner en rouge
+      if (el) {
+        el.style.borderBottomColor = '#c0392b';
+        el.style.background = 'rgba(192,57,43,0.06)';
+        setTimeout(() => {
+          el.style.borderBottomColor = '';
+          el.style.background = '';
+        }, 3000);
+      }
+    }
+  });
+
+  // Vérifier le réservoir (radio)
+  const reservoirChecked = document.querySelector('input[name="reservoir"]:checked');
+  if (!reservoirChecked) {
+    manquants.push('Niveau de réservoir');
+  }
+
+  // Si des champs manquent → afficher la liste et stopper
+  if (manquants.length > 0) {
+    // Supprimer ancienne alerte si elle existe
+    const ancienne = document.getElementById('alerte-terminer');
+    if (ancienne) ancienne.remove();
+
+    const alerte = document.createElement('div');
+    alerte.id = 'alerte-terminer';
+    alerte.style.cssText = 'background:#fdecea;color:#b00020;border-bottom:2px solid #f5c2c7;padding:12px 24px;font-size:13px;display:flex;align-items:flex-start;gap:10px;';
+    alerte.innerHTML = `
+      <span style="font-size:18px;">❌</span>
+      <div>
+        <strong>Impossible de terminer l'OR — champs manquants :</strong>
+        <ul style="margin:6px 0 0 16px; columns: 2; gap: 16px;">
+          ${manquants.map(c => `<li>${c}</li>`).join('')}
+        </ul>
+      </div>
+      <button onclick="this.parentElement.remove()" style="margin-left:auto;background:none;border:none;font-size:18px;cursor:pointer;color:#b00020;">✕</button>
+    `;
+    document.querySelector('.toolbar').insertAdjacentElement('afterend', alerte);
+    alerte.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return; // Stopper ici
+  }
+
   if (!confirm('Marquer cet OR comme terminé ?\nIl sera transféré dans la page Validation pour être validé par le professeur.')) return;
 
   fetch('terminer_or.php', {
@@ -1309,7 +1378,6 @@ function terminerOR(id) {
   .then(r => r.json())
   .then(data => {
     if (data.success) {
-      // Remplacer le bouton Terminer par un badge vert
       const btn = document.querySelector('button[onclick="terminerOR(' + id + ')"]');
       if (btn) {
         btn.disabled = true;
@@ -1317,7 +1385,6 @@ function terminerOR(id) {
         btn.style.opacity = '0.6';
         btn.style.cursor = 'default';
       }
-      // Bannière de confirmation
       const bar = document.createElement('div');
       bar.style.cssText = 'background:#e6f9e6;color:#2a7a2a;border-bottom:2px solid #a3d9a3;padding:10px 24px;font-size:13px;display:flex;align-items:center;gap:8px;';
       bar.innerHTML = '✅ <strong>OR marqué comme terminé</strong> — Il apparaît maintenant dans la page Validation.';
