@@ -196,7 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="logo">🔧</div>
 
     <h1>Connexion</h1>
-    <p class="subtitle">Atelier mécanique!!! - Lycée Brocéliande</p>
+    <p class="subtitle">Atelier mécanique*** - Lycée Brocéliande</p>
 
     <?php if ($error): ?>
         <div class="error"><?= htmlspecialchars($error) ?></div>
