@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="UTF-8"?><project name="Project_meca" company="" webLink="http://" view-date="2026-04-13" view-index="0" gantt-divider-location="240" resource-divider-location="300" version="3.3.3316" locale="fr_FR">
+    <description/>
+    <view zooming-state="default:6" id="gantt-chart">
+        <field id="tpd3" name="Nom" width="126" order="0"/>
+        <field id="tpd4" name="Date de début" width="49" order="1"/>
+        <field id="tpd5" name="Date de fin" width="49" order="2"/>
+        <field id="tpd15" name="Notes" width="20" order="3"/>
+        <option id="taskLabelUp" value="name"/>
+        <option id="taskLabelDown" value="resources"/>
+        <option id="filter.completedTasks" value="true"/>
+        <option id="filter.dueTodayTasks" value="false"/>
+        <option id="filter.overdueTasks" value="false"/>
+        <option id="filter.inProgressTodayTasks" value="false"/>
+        <option id="color.recent"><![CDATA[#ff00ff #ffff33 #33ff33 #3333ff #ffffff #f4f4f4 #000000 #ff6600 #999999 #ff33cc]]></option>
+    </view>
+    <view id="resource-table">
+        <field id="0" name="Nom" width="210" order="0"/>
+        <field id="1" name="Rôle par défaut" width="86" order="1"/>
+    </view>
+    <!-- -->
+    <calendars base-id="fr.alsace-moselle">
+        <day-types>
+            <day-type id="0"/>
+            <day-type id="1"/>
+            <default-week id="1" name="default" sun="1" mon="1" tue="0" wed="0" thu="0" fri="0" sat="1"/>
+            <only-show-weekends value="false"/>
+            <overriden-day-types/>
+            <days/>
+        </day-types>
+        <date year="" month="1" date="1" type="HOLIDAY"><![CDATA[1er janvier]]></date>
+        <date year="" month="5" date="1" type="HOLIDAY"><![CDATA[1er mai]]></date>
+        <date year="" month="5" date="8" type="HOLIDAY"><![CDATA[8 mai]]></date>
+        <date year="" month="7" date="14" type="HOLIDAY"><![CDATA[14 juillet]]></date>
+        <date year="" month="8" date="15" type="HOLIDAY"><![CDATA[Assomption]]></date>
+        <date year="" month="11" date="1" type="HOLIDAY"><![CDATA[Toussaint]]></date>
+        <date year="" month="11" date="11" type="HOLIDAY"><![CDATA[11 novembre]]></date>
+        <date year="" month="12" date="25" type="HOLIDAY"><![CDATA[Jour de Noël]]></date>
+        <date year="" month="12" date="26" type="HOLIDAY"><![CDATA[2ème jour de Noël]]></date>
+        <date year="" month="2" date="14" type="HOLIDAY"/>
+        <date year="" month="2" date="15" type="HOLIDAY"/>
+        <date year="" month="2" date="16" type="HOLIDAY"/>
+        <date year="" month="2" date="17" type="HOLIDAY"/>
+        <date year="" month="2" date="18" type="HOLIDAY"/>
+        <date year="" month="2" date="19" type="HOLIDAY"/>
+        <date year="" month="2" date="20" type="HOLIDAY"/>
+        <date year="" month="2" date="21" type="HOLIDAY"/>
+        <date year="" month="2" date="22" type="HOLIDAY"/>
+        <date year="" month="2" date="23" type="HOLIDAY"/>
+        <date year="" month="2" date="24" type="HOLIDAY"/>
+        <date year="" month="2" date="25" type="HOLIDAY"/>
+        <date year="" month="2" date="26" type="HOLIDAY"/>
+        <date year="" month="2" date="27" type="HOLIDAY"/>
+        <date year="" month="2" date="28" type="HOLIDAY"/>
+        <date year="2015" month="4" date="3" type="HOLIDAY"><![CDATA[Vendredi saint]]></date>
+        <date year="2015" month="4" date="6" type="HOLIDAY"><![CDATA[Lundi de Pâques]]></date>
+        <date year="2015" month="5" date="14" type="HOLIDAY"><![CDATA[Ascension]]></date>
+        <date year="2015" month="5" date="25" type="HOLIDAY"><![CDATA[Lundi de Pentecôte]]></date>
+        <date year="2016" month="3" date="25" type="HOLIDAY"><![CDATA[Vendredi saint]]></date>
+        <date year="2016" month="3" date="28" type="HOLIDAY"><![CDATA[Lundi de Pâques]]></date>
+        <date year="2016" month="5" date="5" type="HOLIDAY"><![CDATA[Ascension]]></date>
+        <date year="2016" month="5" date="16" type="HOLIDAY"><![CDATA[Lundi de Pentecôte]]></date>
+        <date year="2017" month="4" date="14" type="HOLIDAY"><![CDATA[Vendredi saint]]></date>
+        <date year="2017" month="4" date="17" type="HOLIDAY"><![CDATA[Lundi de Pâques]]></date>
+        <date year="2017" month="5" date="25" type="HOLIDAY"><![CDATA[Ascension]]></date>
+        <date year="2017" month="6" date="5" type="HOLIDAY"><![CDATA[Lundi de Pentecôte]]></date>
+        <date year="2018" month="3" date="30" type="HOLIDAY"><![CDATA[Vendredi saint]]></date>
+        <date year="2018" month="4" date="2" type="HOLIDAY"><![CDATA[Lundi de Pâques]]></date>
+        <date year="2018" month="5" date="10" type="HOLIDAY"><![CDATA[Ascension]]></date>
+        <date year="2018" month="5" date="21" type="HOLIDAY"><![CDATA[Lundi de Pentecôte]]></date>
+        <date year="2019" month="4" date="19" type="HOLIDAY"><![CDATA[Vendredi saint]]></date>
+        <date year="2019" month="4" date="22" type="HOLIDAY"><![CDATA[Lundi de Pâques]]></date>
+        <date year="2019" month="5" date="30" type="HOLIDAY"><![CDATA[Ascension]]></date>
+        <date year="2019" month="6" date="10" type="HOLIDAY"><![CDATA[Lundi de Pentecôte]]></date>
+        <date year="2020" month="4" date="10" type="HOLIDAY"><![CDATA[Vendredi saint]]></date>
+        <date year="2020" month="4" date="13" type="HOLIDAY"><![CDATA[Lundi de Pâques]]></date>
+        <date year="2020" month="5" date="21" type="HOLIDAY"><![CDATA[Ascension]]></date>
+        <date year="2020" month="6" date="1" type="HOLIDAY"><![CDATA[Lundi de Pentecôte]]></date>
+        <date year="2021" month="4" date="2" type="HOLIDAY"><![CDATA[Vendredi saint]]></date>
+        <date year="2021" month="4" date="5" type="HOLIDAY"><![CDATA[Lundi de Pâques]]></date>
+        <date year="2021" month="5" date="13" type="HOLIDAY"><![CDATA[Ascension]]></date>
+        <date year="2021" month="5" date="24" type="HOLIDAY"><![CDATA[Lundi de Pentecôte]]></date>
+        <date year="2022" month="4" date="15" type="HOLIDAY"><![CDATA[Vendredi saint]]></date>
+        <date year="2022" month="4" date="18" type="HOLIDAY"><![CDATA[Lundi de Pâques]]></date>
+        <date year="2022" month="5" date="26" type="HOLIDAY"><![CDATA[Ascension]]></date>
+        <date year="2022" month="6" date="6" type="HOLIDAY"><![CDATA[Lundi de Pentecôte]]></date>
+        <date year="2023" month="4" date="7" type="HOLIDAY"><![CDATA[Vendredi saint]]></date>
+        <date year="2023" month="4" date="10" type="HOLIDAY"><![CDATA[Lundi de Pâques]]></date>
+        <date year="2023" month="5" date="18" type="HOLIDAY"><![CDATA[Ascension]]></date>
+        <date year="2023" month="5" date="29" type="HOLIDAY"><![CDATA[Lundi de Pentecôte]]></date>
+        <date year="2024" month="3" date="29" type="HOLIDAY"><![CDATA[Vendredi saint]]></date>
+        <date year="2024" month="4" date="1" type="HOLIDAY"><![CDATA[Lundi de Pâques]]></date>
+        <date year="2024" month="5" date="9" type="HOLIDAY"><![CDATA[Ascension]]></date>
+        <date year="2024" month="5" date="20" type="HOLIDAY"><![CDATA[Lundi de Pentecôte]]></date>
+        <date year="2025" month="4" date="18" type="HOLIDAY"><![CDATA[Vendredi saint]]></date>
+        <date year="2025" month="4" date="21" type="HOLIDAY"><![CDATA[Lundi de Pâques]]></date>
+        <date year="2025" month="5" date="29" type="HOLIDAY"><![CDATA[Ascension]]></date>
+        <date year="2025" month="6" date="9" type="HOLIDAY"><![CDATA[Lundi de Pentecôte]]></date>
+        <date year="2026" month="4" date="11" type="HOLIDAY"/>
+        <date year="2026" month="4" date="12" type="HOLIDAY"/>
+        <date year="2026" month="4" date="13" type="HOLIDAY"/>
+        <date year="2026" month="4" date="14" type="HOLIDAY"/>
+        <date year="2026" month="4" date="15" type="HOLIDAY"/>
+        <date year="2026" month="4" date="16" type="HOLIDAY"/>
+        <date year="2026" month="4" date="17" type="HOLIDAY"/>
+        <date year="2026" month="4" date="18" type="HOLIDAY"/>
+        <date year="2026" month="4" date="19" type="HOLIDAY"/>
+        <date year="2026" month="4" date="20" type="HOLIDAY"/>
+        <date year="2026" month="4" date="21" type="HOLIDAY"/>
+        <date year="2026" month="4" date="22" type="HOLIDAY"/>
+        <date year="2026" month="4" date="23" type="HOLIDAY"/>
+        <date year="2026" month="4" date="24" type="HOLIDAY"/>
+        <date year="2026" month="4" date="25" type="HOLIDAY"/>
+        <date year="2026" month="4" date="26" type="HOLIDAY"/>
+        <date year="2026" month="3" date="1" type="HOLIDAY"/>
+        <date year="2026" month="4" date="6" type="HOLIDAY"/>
+        <date year="2026" month="5" date="14" type="HOLIDAY"/>
+        <date year="2026" month="5" date="15" type="HOLIDAY"/>
+        <date year="2026" month="5" date="25" type="HOLIDAY"/>
+        <date year="2026" month="6" date="1" type="WORKING_DAY" color="#ffffff"/>
+    </calendars>
+    <tasks empty-milestones="true">
+        <taskproperties>
+            <taskproperty id="tpd0" name="type" type="default" valuetype="icon"/>
+            <taskproperty id="tpd1" name="priority" type="default" valuetype="icon"/>
+            <taskproperty id="tpd2" name="info" type="default" valuetype="icon"/>
+            <taskproperty id="tpd3" name="name" type="default" valuetype="text"/>
+            <taskproperty id="tpd4" name="begindate" type="default" valuetype="date"/>
+            <taskproperty id="tpd5" name="enddate" type="default" valuetype="date"/>
+            <taskproperty id="tpd6" name="duration" type="default" valuetype="int"/>
+            <taskproperty id="tpd7" name="completion" type="default" valuetype="int"/>
+            <taskproperty id="tpd8" name="coordinator" type="default" valuetype="text"/>
+            <taskproperty id="tpd9" name="predecessorsr" type="default" valuetype="text"/>
+        </taskproperties>
+        <task id="0" uid="9afb696b6a884a94884ed5d1fe8a89f3" name="Sprint1 : Environement" color="#000000" meeting="false" start="2026-02-03" duration="16" complete="0" priority="2" expand="true">
+            <task id="1" uid="e521833e387040a1a4ce583a9a9246f5" name="Firewall" color="#3333ff" meeting="false" start="2026-02-03" duration="16" complete="0" expand="true">
+                <task id="25" uid="2e179a9e01144126bd0bbf797eb33c66" name="Gantt Project" color="#3333ff" meeting="false" start="2026-02-03" duration="3" complete="5" expand="true">
+                    <depend id="19" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="19" uid="72669f4f54df492ba55382c298d7d66a" name="Comparaison parefeu" color="#3333ff" meeting="false" start="2026-02-06" duration="1" complete="0" expand="true">
+                    <depend id="30" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="30" uid="338888c387a5498ea2119fbe4d288285" name="Installation et configuration + mise en place de la DMZ" color="#3333ff" meeting="false" start="2026-02-10" duration="10" complete="0" expand="true">
+                    <depend id="31" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="31" uid="67d0b02196af4575a4faf48d51510e49" name="Rédaction fiche recette" color="#3333ff" meeting="false" start="2026-03-12" duration="2" complete="0" expand="true"/>
+            </task>
+            <task id="2" uid="a2ab5104cc9647748bdb3c909a3786f2" name="Outil CI-CD" color="#33ff33" meeting="false" start="2026-02-03" duration="9" complete="0" expand="true">
+                <task id="43" uid="c0d5cb84bcae48a0b1b4431882dd0797" name="Comparaison outis d'intégrations" color="#33ff33" meeting="false" start="2026-02-03" duration="3" complete="0" expand="true">
+                    <depend id="44" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="44" uid="44fc06bdb59146e086d4e285a514fef1" name="Installation du service" color="#33ff33" meeting="false" start="2026-02-06" duration="6" complete="0" expand="true">
+                    <depend id="45" type="2" difference="0" hardness="Strong"/>
+                </task>
+            </task>
+            <task id="45" uid="811fc0876cae48d08efc59f23e6e42ce" name="Rédaction manuel d'installation" color="#33ff33" meeting="false" start="2026-03-04" duration="3" complete="0" expand="true"/>
+            <task id="3" uid="68e0b459dcfe4d1e8f0b2fedc376b93f" name="Serveur WEB" color="#ffff33" meeting="false" start="2026-02-03" duration="12" complete="0" expand="true">
+                <task id="38" uid="fe5172153d634b6c8c1ad541741e8424" name="Comparaison serveur WEB" color="#ffff33" meeting="false" start="2026-02-03" duration="2" complete="0" expand="true">
+                    <depend id="39" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="39" uid="f5a5c37031be4ee8b93cce8b983b88f8" name="Sélection et installation du serveur WEB" color="#ffff33" meeting="false" start="2026-02-05" duration="5" complete="0" expand="true">
+                    <depend id="40" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="40" uid="1cf56d1d11754943a5e8bce7702ba3d4" name="Configuration serveur WEB" color="#ffff33" meeting="false" start="2026-02-13" duration="3" complete="0" expand="true">
+                    <depend id="41" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="41" uid="67c11f04930c4381846520f63abbb740" name="Rédaction fiche recette" color="#ffff33" meeting="false" start="2026-03-05" duration="2" complete="0" expand="true"/>
+            </task>
+            <task id="4" uid="8119408d4a9d4c92bb1626478811af28" name="Onduleur" color="#ff00ff" meeting="false" start="2026-02-03" duration="9" complete="0" expand="true">
+                <task id="36" uid="5d8b9d43673e4d739b62356f15c3c2a2" name="Mise en place serveur" color="#ff00ff" meeting="false" start="2026-02-03" duration="2" complete="0" expand="true">
+                    <depend id="35" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="35" uid="477bcf7aa9114777b7e43cfbd49d091d" name="Etude de onduleur" color="#ff00ff" meeting="false" start="2026-02-05" duration="1" complete="0" expand="true">
+                    <depend id="42" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="42" uid="a8feaefeebac4eeda04883e7209f3c89" name="Mise en place onduleur" color="#ff00ff" meeting="false" start="2026-02-06" duration="5" complete="0" expand="true">
+                    <depend id="37" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="37" uid="96fcf2d6ce0a43faa9770a10871fd34f" name="Fiche recette" color="#ff00ff" meeting="false" start="2026-03-03" duration="1" complete="0" expand="true"/>
+            </task>
+        </task>
+        <task id="6" uid="01670136b7a940e38f2de5cd4a516e7f" name="Revue 1" meeting="false" start="2026-02-12" duration="1" complete="0" expand="true"/>
+        <task id="5" uid="3315601bad034ce0aab4eff69b45a2da" name="Sprint2 : Outils logiciels" color="#000000" meeting="false" start="2026-03-04" duration="16" complete="0" expand="true">
+            <depend id="13" type="2" difference="0" hardness="Strong"/>
+            <task id="8" uid="fc9d8d5a75624abd9520384b10feaadd" name="Serveur LDAP" color="#3333ff" meeting="false" start="2026-03-17" duration="9" complete="0" expand="true">
+                <task id="32" uid="4902ab119806467a86d8513790133adc" name="Comparaison service d'annuaire" color="#3333ff" meeting="false" start="2026-03-17" duration="1" complete="0" expand="true">
+                    <depend id="33" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="33" uid="e68cb62326ed4271af6e8fbf01a9bcf5" name="Sélection et installation d’un service d’annuaire" color="#3333ff" meeting="false" start="2026-03-18" duration="6" complete="0" expand="true">
+                    <depend id="34" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="34" uid="070058b45f6c4c359a7eb646916fdcd2" name="Rédaction d’une fiche recette" color="#3333ff" meeting="false" start="2026-03-27" duration="2" complete="0" expand="true"/>
+            </task>
+            <task id="9" uid="b49c6a3b55b74ff592fb7998e5e742f8" name="Serveur VPN" color="#33ff33" meeting="false" start="2026-03-11" duration="12" complete="0" expand="true">
+                <task id="46" uid="fa0dc43c1180447095c4c3c76faab163" name="Comparaison VPN" color="#33ff33" meeting="false" start="2026-03-11" duration="2" complete="0" expand="true">
+                    <depend id="47" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="47" uid="184861653bce4eb4b9fbbd605a821fe1" name="Installation et configuration VPN" color="#33ff33" meeting="false" start="2026-03-13" duration="8" complete="0" expand="true">
+                    <depend id="48" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="48" uid="9bd7cf740227497d83e4ae54d7a65c6f" name="Fiche recette + manuel d'utilisation" color="#33ff33" meeting="false" start="2026-03-27" duration="2" complete="0" expand="true"/>
+            </task>
+            <task id="10" uid="f173c1c6f2e2475d83c3e4e714be5c37" name="IDS/IPS" color="#ffff33" meeting="false" start="2026-03-11" duration="12" complete="0" expand="true">
+                <task id="49" uid="b6e3aadce0f94736a4f6126ece89f16e" name="Mise en place IDS/IPS" color="#ffff33" meeting="false" start="2026-03-11" duration="2" complete="0" expand="true">
+                    <depend id="51" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="51" uid="74298472d4b64d81ad32fd37f635d09a" name="Etablir les règles" color="#ffff33" meeting="false" start="2026-03-13" duration="8" complete="0" expand="true">
+                    <depend id="52" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="52" uid="d262cb0fd9aa4eb2acbd61e425d958a8" name="Fiche recette" color="#ffff33" meeting="false" start="2026-03-27" duration="2" complete="0" expand="true"/>
+            </task>
+            <task id="11" uid="21fead6d754643c099fe5ba45d7a0451" name="Serveur GLPI" color="#ff00ff" meeting="false" start="2026-03-04" duration="16" complete="0" expand="true">
+                <task id="53" uid="400c82e842bd4a388ea2fc3559afd493" name="Instalation serveur GLPI" color="#ff00ff" meeting="false" start="2026-03-04" duration="2" complete="0" expand="true">
+                    <depend id="54" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="54" uid="ec66ea06174047bf8b7500f957b22d98" name="Ajouts des utilisateurs" color="#ff00ff" meeting="false" start="2026-03-06" duration="12" complete="0" expand="true">
+                    <depend id="55" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="55" uid="8e4658cd48314681b9b31432eedab3a1" name="Rédaction manuel d'utilisation pour les mécaniciens" color="#ff00ff" meeting="false" start="2026-03-27" duration="2" complete="0" expand="true"/>
+            </task>
+        </task>
+        <task id="13" uid="a8a47ff795794793b59aa3f8417a9e76" name="Sprint3 : Interface" color="#000000" meeting="false" start="2026-04-01" duration="13" complete="0" expand="true">
+            <depend id="20" type="2" difference="0" hardness="Strong"/>
+            <task id="14" uid="7f89a07326324ac0946f939a13b15979" name="Formulaire 1er contact &amp; facturation" color="#3333ff" meeting="false" start="2026-04-01" duration="13" complete="0" expand="true">
+                <task id="56" uid="fae3379bb6b4435687949956da8f0918" name="Création page 1er contact" color="#3333ff" meeting="false" start="2026-04-01" duration="6" complete="0" expand="true">
+                    <depend id="57" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="57" uid="8e0fcf414f7f4bb9a6a6c6e3e8e83834" name="Création page génération facture" color="#3333ff" meeting="false" start="2026-04-10" duration="5" complete="0" expand="true">
+                    <depend id="58" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="58" uid="500fa71f32b5422f8a6a5fad3d677942" name="Fiches recettes" color="#3333ff" meeting="false" start="2026-05-06" duration="2" complete="0" expand="true"/>
+            </task>
+            <task id="15" uid="33c054cc761b45399eb11ba9079055df" name="Connexion éleve/prof &amp; Gestion clients" color="#33ff33" meeting="false" start="2026-04-01" duration="13" complete="0" expand="true">
+                <task id="59" uid="2667db3226aa4826a4e73b003b30487a" name="Modif BDD pour rôles users" color="#33ff33" meeting="false" start="2026-04-01" duration="3" complete="0" expand="true">
+                    <depend id="60" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="60" uid="6c5cd7eb7d4f41b3bb659973da7c5042" name="Page élève/prof" color="#33ff33" meeting="false" start="2026-04-07" duration="3" complete="0" expand="true">
+                    <depend id="61" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="61" uid="4058746809394ac58292793882239882" name="Fiche recette" color="#33ff33" meeting="false" start="2026-04-10" duration="1" complete="0" expand="true">
+                    <depend id="62" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="62" uid="a3211190010d426a910e575c32909efd" name="Modif BDD ajout clients" color="#33ff33" meeting="false" start="2026-04-28" duration="3" complete="0" expand="true">
+                    <depend id="63" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="63" uid="182521ca93dc4b8ea743210da648eb23" name="Developpement" color="#33ff33" meeting="false" start="2026-05-05" duration="2" complete="0" expand="true">
+                    <depend id="64" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="64" uid="6afa8fdcc0794d5a936697b60e069366" name="Fiche recette" color="#33ff33" meeting="false" start="2026-05-07" duration="1" complete="0" expand="true"/>
+            </task>
+            <task id="16" uid="4f730d23bd2944d3afa8d956fa31ea6b" name="Gestion OR + interface recherche réparation" color="#ffff33" meeting="false" start="2026-04-07" duration="10" complete="0" expand="true">
+                <task id="65" uid="589ec47c531845f3b7e741e1270cfce7" name="Page de gestion de l'OR" color="#ffff33" meeting="false" start="2026-04-07" duration="4" complete="0" expand="true">
+                    <depend id="66" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="66" uid="c7ff4a043f39475781ba49cdb611e0f7" name="Page de recherche et réparation" color="#ffff33" meeting="false" start="2026-04-28" duration="4" complete="0" expand="true">
+                    <depend id="67" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="67" uid="66a4675161fe4607be173e6ec6c84983" name="Fiche recette" color="#ffff33" meeting="false" start="2026-05-06" duration="2" complete="0" expand="true"/>
+            </task>
+            <task id="17" uid="5adc274bcd314af9a7111fe117a4e528" name="Lecture Vin + ajout véhicule dans la base" color="#ff00ff" meeting="false" start="2026-04-01" duration="13" complete="0" expand="true">
+                <task id="68" uid="70b75420a7ab4f55896af5a6fa48fe69" name="Lecteur VIN via prise OBD" color="#ff00ff" meeting="false" start="2026-04-01" duration="6" complete="0" expand="true">
+                    <depend id="69" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="69" uid="a20f404f5a5e44a5856abc6620d61744" name="Ajout des véhicule + VIN dnas la BDD" color="#ff00ff" meeting="false" start="2026-04-10" duration="7" complete="0" expand="true"/>
+            </task>
+        </task>
+        <task id="12" uid="629af318141b4332806549323794f118" name="Revue 2" meeting="false" start="2026-04-09" duration="1" complete="0" expand="true"/>
+        <task id="20" uid="562368713299463f81dac897496fbade" name="Sprint4 : Sécurité" color="#000000" meeting="false" start="2026-05-12" duration="10" complete="0" expand="true">
+            <depend id="29" type="2" difference="0" hardness="Strong"/>
+            <task id="21" uid="e3b1b18008494c3aa997dc640238f3b2" name="Failles Interfaces" color="#3333ff" meeting="false" start="2026-05-12" duration="10" complete="0" expand="true">
+                <task id="70" uid="dfca34c5a3784eae80fbac60f1dd1eb8" name="Etude et recherche failles interfaces web" color="#3333ff" meeting="false" start="2026-05-12" duration="6" complete="0" expand="true">
+                    <depend id="71" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="71" uid="45e7e9f478904307b161adc37b4b45c8" name="Rapport de sécurité et remédiation" color="#3333ff" meeting="false" start="2026-05-26" duration="4" complete="0" expand="true"/>
+            </task>
+            <task id="22" uid="957e113f7bdc4727a97c617b4bf0dca6" name="Failles services" color="#33ff33" meeting="false" start="2026-05-12" duration="10" complete="0" expand="true">
+                <task id="72" uid="e7c0cacdd3054171870fb6f9e2d318a2" name="Etude et recherche failles services" color="#33ff33" meeting="false" start="2026-05-12" duration="4" complete="0" expand="true">
+                    <depend id="73" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="73" uid="0f7946a7f10b465e9471c6ac6fc17118" name="Outils d'automatisation" color="#33ff33" meeting="false" start="2026-05-21" duration="3" complete="0" expand="true">
+                    <depend id="74" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="74" uid="5eb7bc83a1484cb3b31eb87e8c2e7184" name="Rapport de sécurité et remédiation" color="#33ff33" meeting="false" start="2026-05-27" duration="3" complete="0" expand="true"/>
+            </task>
+            <task id="23" uid="a5d78d4f58f04b5fb41a1c8c23843b65" name="Failles matérielles" color="#ffff33" meeting="false" start="2026-05-12" duration="10" complete="0" expand="true">
+                <task id="77" uid="2b9b14ff2f554a2a9c8461a3292e60cc" name="Etude et recherche failles matériel" color="#ffff33" meeting="false" start="2026-05-12" duration="4" complete="0" expand="true">
+                    <depend id="78" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="78" uid="e083cdd0ef79416e8dc6a7febce41710" name="Outls d'automatisation" color="#ffff33" meeting="false" start="2026-05-21" duration="3" complete="0" expand="true">
+                    <depend id="75" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="75" uid="5478464d86ce4e19972e5bc4fb361494" name="Rapport de sécurité et remédiation" color="#ffff33" meeting="false" start="2026-05-27" duration="3" complete="0" expand="true"/>
+            </task>
+            <task id="24" uid="6f9732d2847749b0a8eb1126f70cc7ef" name="Outils monitoring" color="#ff00ff" meeting="false" start="2026-05-12" duration="10" complete="0" expand="true">
+                <task id="79" uid="a106dfdf4735415ab0adce57b26ca5c2" name="Installation outils monitoring" color="#ff00ff" meeting="false" start="2026-05-12" duration="4" complete="0" expand="true">
+                    <depend id="80" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="80" uid="dc93dd6fa76a45739e0ea183d9651989" name="Détection de problèmes" color="#ff00ff" meeting="false" start="2026-05-21" duration="3" complete="0" expand="true">
+                    <depend id="76" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="76" uid="b93f6b3ae9a6464e869cd500a8a13487" name="Rapport de sécurité et remédiation" color="#ff00ff" meeting="false" start="2026-05-27" duration="3" complete="0" expand="true"/>
+            </task>
+        </task>
+        <task id="27" uid="f63fc3b96247409b92d3ff3794d5ed9d" name="Revue 3" meeting="false" start="2026-05-20" duration="1" complete="0" expand="true"/>
+        <task id="29" uid="1593ce247fa94f9fb77780696d403387" name="Soutenance Finale" color="#ff6600" meeting="false" start="2026-06-01" duration="3" complete="0" expand="true"/>
+    </tasks>
+    <resources>
+        <resource id="0" name="Noah" function="Default:0" contacts="" phone=""/>
+        <resource id="1" name="Gagny" function="Default:0" contacts="" phone=""/>
+        <resource id="2" name="Lenny" function="Default:0" contacts="" phone=""/>
+        <resource id="3" name="Loïc" function="Default:0" contacts="" phone=""/>
+    </resources>
+    <allocations>
+        <allocation task-id="2" resource-id="0" function="2" responsible="true" load="100.0"/>
+        <allocation task-id="9" resource-id="0" function="2" responsible="true" load="100.0"/>
+        <allocation task-id="12" resource-id="0" function="2" responsible="false" load="100.0"/>
+        <allocation task-id="6" resource-id="0" function="2" responsible="false" load="100.0"/>
+        <allocation task-id="15" resource-id="0" function="2" responsible="true" load="100.0"/>
+        <allocation task-id="22" resource-id="0" function="Default:0" responsible="true" load="100.0"/>
+        <allocation task-id="27" resource-id="0" function="2" responsible="false" load="100.0"/>
+        <allocation task-id="29" resource-id="0" function="2" responsible="false" load="100.0"/>
+        <allocation task-id="3" resource-id="1" function="3" responsible="true" load="100.0"/>
+        <allocation task-id="10" resource-id="1" function="3" responsible="true" load="100.0"/>
+        <allocation task-id="12" resource-id="1" function="3" responsible="false" load="100.0"/>
+        <allocation task-id="6" resource-id="1" function="3" responsible="false" load="100.0"/>
+        <allocation task-id="16" resource-id="1" function="3" responsible="true" load="100.0"/>
+        <allocation task-id="23" resource-id="1" function="3" responsible="true" load="100.0"/>
+        <allocation task-id="27" resource-id="1" function="3" responsible="false" load="100.0"/>
+        <allocation task-id="29" resource-id="1" function="3" responsible="false" load="100.0"/>
+        <allocation task-id="4" resource-id="2" function="4" responsible="true" load="100.0"/>
+        <allocation task-id="12" resource-id="2" function="4" responsible="false" load="100.0"/>
+        <allocation task-id="6" resource-id="2" function="4" responsible="false" load="100.0"/>
+        <allocation task-id="11" resource-id="2" function="4" responsible="true" load="100.0"/>
+        <allocation task-id="17" resource-id="2" function="4" responsible="true" load="100.0"/>
+        <allocation task-id="24" resource-id="2" function="4" responsible="true" load="100.0"/>
+        <allocation task-id="27" resource-id="2" function="4" responsible="false" load="100.0"/>
+        <allocation task-id="29" resource-id="2" function="4" responsible="false" load="100.0"/>
+        <allocation task-id="1" resource-id="3" function="1" responsible="true" load="100.0"/>
+        <allocation task-id="8" resource-id="3" function="1" responsible="true" load="100.0"/>
+        <allocation task-id="12" resource-id="3" function="1" responsible="false" load="100.0"/>
+        <allocation task-id="6" resource-id="3" function="1" responsible="false" load="100.0"/>
+        <allocation task-id="14" resource-id="3" function="1" responsible="true" load="100.0"/>
+        <allocation task-id="21" resource-id="3" function="1" responsible="true" load="100.0"/>
+        <allocation task-id="27" resource-id="3" function="1" responsible="false" load="100.0"/>
+        <allocation task-id="29" resource-id="3" function="1" responsible="false" load="100.0"/>
+    </allocations>
+    <vacations/>
+    <previous/>
+    <roles roleset-name="Default"/>
+    <roles>
+        <role id="1" name="Eleve1"/>
+        <role id="2" name="Eleve2"/>
+        <role id="3" name="Eleve3"/>
+        <role id="4" name="Eleve4"/>
+    </roles>
+</project>

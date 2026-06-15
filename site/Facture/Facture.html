@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Générateur de facture</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial;
+      margin: 20px;
+      background: #f5f5f5;
+    }
+    h1 { text-align: center; }
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 800px;
+      margin: auto;
+    }
+    input {
+      margin: 5px;
+      padding: 5px;
+    }
+    table {
+      width: 100%;
+      margin-top: 15px;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+    button {
+      margin: 10px 5px;
+      padding: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Générateur de facture</h1>
+
+  <h3>Informations client</h3>
+  <input type="text" id="client" placeholder="Nom du client">
+  <input type="text" id="date" placeholder="Date">
+
+  <h3>Ajouter un produit</h3>
+  <input type="text" id="desc" placeholder="Description">
+  <input type="number" id="qty" placeholder="Quantité">
+  <input type="number" id="price" placeholder="Prix (€)">
+  <button onclick="addItem()">Ajouter</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th>Quantité</th>
+        <th>Prix</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody id="items"></tbody>
+  </table>
+
+  <h3>Total : <span id="total">0</span> €</h3>
+
+  <button onclick="generatePDF()">Télécharger en PDF</button>
+</div>
+
+<script>
+  let total = 0;
+
+  function addItem() {
+    let desc = document.getElementById("desc").value;
+    let qty = parseFloat(document.getElementById("qty").value);
+    let price = parseFloat(document.getElementById("price").value);
+
+    if (!desc || !qty || !price) {
+      alert("Remplis tous les champs !");
+      return;
+    }
+
+    let row = document.createElement("tr");
+    let itemTotal = qty * price;
+    total += itemTotal;
+
+    row.innerHTML = `
+      <td>${desc}</td>
+      <td>${qty}</td>
+      <td>${price} €</td>
+      <td>${itemTotal.toFixed(2)} €</td>
+    `;
+
+    document.getElementById("items").appendChild(row);
+    document.getElementById("total").innerText = total.toFixed(2);
+
+    document.getElementById("desc").value = "";
+    document.getElementById("qty").value = "";
+    document.getElementById("price").value = "";
+  }
+
+  async function generatePDF() {
+    const { jsPDF } = window.jspdf;
+    let doc = new jsPDF();
+
+    let client = document.getElementById("client").value;
+    let date = document.getElementById("date").value;
+
+    doc.text("Facture", 10, 10);
+    doc.text("Client : " + client, 10, 20);
+    doc.text("Date : " + date, 10, 30);
+
+    let y = 40;
+    document.querySelectorAll("#items tr").forEach(row => {
+      let cols = row.querySelectorAll("td");
+      let text = `${cols[0].innerText} | ${cols[1].innerText} | ${cols[2].innerText} | ${cols[3].innerText}`;
+      doc.text(text, 10, y);
+      y += 10;
+    });
+
+    doc.text("Total : " + total.toFixed(2) + " €", 10, y + 10);
+
+    doc.save("facture.pdf");
+  }
+</script>
+
+</body>
+</html>

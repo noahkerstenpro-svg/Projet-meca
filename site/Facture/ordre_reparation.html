@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ordre de Réparation – Cité scolaire de Brocéliande</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Sans 3', Arial, sans-serif;
+    background: #e8e4dc;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px 20px 60px;
+    min-height: 100vh;
+  }
+
+  h1.page-title {
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 18px;
+    font-weight: 600;
+  }
+
+  /* ── Boutons ── */
+  .toolbar {
+    display: flex; gap: 10px; margin-bottom: 22px;
+  }
+  .btn {
+    padding: 8px 20px; border: none; border-radius: 4px;
+    font-size: 13px; font-family: inherit; cursor: pointer;
+    font-weight: 600; letter-spacing: .5px; transition: .15s;
+  }
+  .btn-primary { background: #2a5c99; color: #fff; }
+  .btn-primary:hover { background: #1e4477; }
+  .btn-secondary { background: #fff; color: #2a5c99; border: 1.5px solid #2a5c99; }
+  .btn-secondary:hover { background: #f0f5ff; }
+  .btn-danger { background: #c0392b; color: #fff; }
+  .btn-danger:hover { background: #96281b; }
+
+  /* ── Feuille ── */
+  #document {
+    background: #fff;
+    width: 210mm;
+    min-height: 297mm;
+    padding: 12mm 14mm;
+    box-shadow: 0 4px 32px rgba(0,0,0,.18);
+    border: 1px solid #ccc;
+  }
+
+  /* ── Titre principal ── */
+  .doc-title {
+    background: #555;
+    color: #fff;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 5px 0;
+    margin-bottom: 0;
+  }
+
+  /* ── En-tête ── */
+  .header-block {
+    display: flex;
+    border: 1px solid #aaa;
+    border-top: none;
+  }
+
+  .header-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-right: 1px solid #aaa;
+    min-width: 220px;
+  }
+
+  .logo-circle {
+    width: 52px; height: 52px; min-width: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1a5fa8 0%, #2a8a5c 100%);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; position: relative;
+  }
+  .logo-circle svg { width: 44px; height: 44px; }
+
+  .logo-text-block { font-size: 9.5px; line-height: 1.5; color: #222; }
+  .logo-name { font-size: 13px; font-weight: 700; color: #1a5fa8; display: block; }
+
+  .header-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .header-info-top {
+    display: flex;
+    border-bottom: 1px solid #aaa;
+  }
+  .header-cell {
+    flex: 1;
+    padding: 5px 8px;
+    border-right: 1px solid #aaa;
+    font-size: 10px;
+  }
+  .header-cell:last-child { border-right: none; }
+  .header-cell label { display: block; font-size: 9px; color: #666; margin-bottom: 2px; }
+  .header-cell input, .header-cell select {
+    width: 100%; border: none; border-bottom: 1px solid #bbb;
+    font-size: 11px; font-family: inherit; outline: none;
+    background: transparent; padding: 1px 2px;
+  }
+  .cell-label-dark {
+    background: #bbb; font-weight: 700; font-size: 10px;
+    padding: 3px 8px; color: #333;
+  }
+
+  .num-display {
+    font-weight: 700; font-size: 13px; color: #222; padding-top: 2px;
+  }
+
+  /* Client block */
+  .client-block {
+    display: flex;
+    border: 1px solid #aaa;
+    border-top: none;
+  }
+  .client-left {
+    flex: 1;
+    padding: 6px 10px;
+    border-right: 1px solid #aaa;
+    font-size: 10px;
+  }
+  .client-left label { font-size: 10px; }
+  .client-left input {
+    border: none; border-bottom: 1px solid #bbb;
+    font-size: 11px; font-family: inherit; outline: none;
+    background: transparent; width: calc(100% - 4px); margin-left: 4px;
+  }
+  .client-row { display: flex; align-items: center; margin: 3px 0; gap: 4px; }
+  .client-row span { font-size: 13px; }
+
+  .client-right {
+    min-width: 180px;
+    padding: 6px 10px;
+    font-size: 10px;
+    background: #f5f5f5;
+  }
+  .client-right label { font-size: 9px; color: #666; display: block; margin-bottom: 2px; }
+  .cell-label-dark2 {
+    background: #bbb; font-weight: 700; font-size: 10px;
+    padding: 2px 8px; margin-bottom: 4px; color: #333;
+  }
+  .client-right input {
+    border: none; border-bottom: 1px solid #bbb;
+    font-size: 11px; font-family: inherit; outline: none;
+    background: transparent; width: 100%;
+  }
+
+  /* ── Description de l'appareil ── */
+  .section-label {
+    font-size: 9.5px; font-weight: 700; color: #fff;
+    background: #777; padding: 3px 8px; margin-top: 0;
+    letter-spacing: .5px; text-transform: uppercase;
+  }
+
+  .device-block {
+    border: 1px solid #aaa;
+    border-top: none;
+  }
+  .device-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    border-bottom: 1px solid #aaa;
+  }
+  .device-cell {
+    padding: 5px 8px;
+    border-right: 1px solid #aaa;
+    font-size: 10px;
+  }
+  .device-cell:last-child { border-right: none; }
+  .device-cell label { display: block; font-size: 9px; color: #666; margin-bottom: 2px; }
+  .device-cell input, .device-cell select, .device-cell textarea {
+    width: 100%; border: none; border-bottom: 1px solid #bbb;
+    font-size: 11px; font-family: inherit; outline: none;
+    background: transparent; resize: none;
+  }
+
+  .description-area {
+    padding: 6px 8px; font-size: 10px;
+    border-bottom: 1px solid #aaa;
+  }
+  .description-area label { font-size: 9px; color: #666; display: block; margin-bottom: 3px; }
+  .description-area textarea {
+    width: 100%; border: 1px solid #ddd; font-size: 11px;
+    font-family: inherit; outline: none; resize: vertical;
+    padding: 3px; min-height: 60px; background: #fafafa;
+  }
+
+  /* ── Tableau fournitures ── */
+  .fournitures-section { margin-top: 14px; }
+
+  .table-fournitures {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10.5px;
+  }
+  .table-fournitures th {
+    background: #888;
+    color: #fff;
+    padding: 4px 6px;
+    text-align: left;
+    font-weight: 600;
+    border: 1px solid #aaa;
+    font-size: 10px;
+  }
+  .table-fournitures td {
+    border: 1px solid #bbb;
+    padding: 3px 6px;
+    height: 22px;
+  }
+  .table-fournitures td input {
+    width: 100%; border: none; outline: none;
+    font-size: 10.5px; font-family: inherit; background: transparent;
+  }
+  .table-fournitures .col-designation { width: 45%; }
+  .table-fournitures .col-qte { width: 10%; text-align: center; }
+  .table-fournitures .col-ref { width: 25%; }
+  .table-fournitures .col-prix { width: 20%; text-align: right; }
+
+  .row-fixed { background: #f8f8f8; }
+  .row-fixed td { font-size: 10px; color: #444; }
+
+  /* Main d'oeuvre */
+  .mo-row {
+    display: flex;
+    border: 1px solid #bbb;
+    border-top: none;
+    font-size: 10.5px;
+  }
+  .mo-label {
+    flex: 1; padding: 5px 8px;
+    background: #eee; font-weight: 600;
+    border-right: 1px solid #bbb; font-size: 10px;
+  }
+  .mo-heures {
+    width: 80px; padding: 3px 6px;
+    border-right: 1px solid #bbb; text-align: center;
+  }
+  .mo-heures input {
+    width: 100%; border: none; outline: none;
+    font-size: 10.5px; font-family: inherit;
+    text-align: center; background: transparent;
+  }
+  .mo-taux-label {
+    padding: 3px 8px; font-size: 10px; color: #555;
+    border-right: 1px solid #bbb; white-space: nowrap;
+    display: flex; align-items: center;
+  }
+  .mo-taux {
+    width: 80px; padding: 3px 6px; border-right: 1px solid #bbb;
+  }
+  .mo-taux input {
+    width: 100%; border: none; outline: none;
+    font-size: 10.5px; font-family: inherit; background: transparent;
+  }
+  .mo-total-label {
+    background: #555; color: #fff; font-weight: 700;
+    padding: 3px 8px; font-size: 10px;
+    display: flex; align-items: center;
+    white-space: nowrap; border-right: 1px solid #888;
+  }
+  .mo-total {
+    width: 90px; padding: 3px 6px; font-weight: 700; font-size: 11px;
+  }
+  .mo-total input {
+    width: 100%; border: none; outline: none;
+    font-size: 11px; font-family: inherit; font-weight: 700;
+    text-align: right; background: transparent;
+  }
+
+  /* ── Signatures ── */
+  .signatures-block {
+    margin-top: 18px;
+    border: 1px solid #aaa;
+  }
+  .sig-header-row {
+    display: flex;
+    border-bottom: 1px solid #aaa;
+  }
+  .sig-header-cell {
+    flex: 1;
+    background: #888;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    text-align: center;
+    padding: 4px 4px;
+    border-right: 1px solid #999;
+  }
+  .sig-header-cell:last-child { border-right: none; }
+  .sig-body-row {
+    display: flex;
+    height: 60px;
+  }
+  .sig-cell {
+    flex: 1;
+    border-right: 1px solid #bbb;
+    padding: 4px 6px;
+    font-size: 9px;
+    color: #aaa;
+    display: flex; align-items: flex-end;
+  }
+  .sig-cell:last-child { border-right: none; }
+  .sig-cell input {
+    width: 100%; border: none; border-bottom: 1px solid #ddd;
+    font-size: 10px; font-family: inherit; outline: none;
+    background: transparent;
+  }
+
+  /* ── Bouton ligne ── */
+  .add-row-btn {
+    background: none; border: 1.5px dashed #aaa; color: #888;
+    font-size: 10px; padding: 3px 10px; cursor: pointer;
+    border-radius: 3px; margin: 4px 0; font-family: inherit;
+    transition: .15s;
+  }
+  .add-row-btn:hover { background: #f0f5ff; color: #2a5c99; border-color: #2a5c99; }
+
+  .delete-row-btn {
+    background: none; border: none; color: #c0392b;
+    cursor: pointer; font-size: 13px; padding: 0 4px;
+  }
+
+  /* Print */
+  @media print {
+    body { background: #fff; padding: 0; }
+    .toolbar, .page-title, .add-row-btn, .delete-row-btn { display: none !important; }
+    #document { box-shadow: none; border: none; width: 100%; padding: 10mm; }
+    @page { size: A4; margin: 8mm; }
+  }
+</style>
+</head>
+<body>
+
+<p class="page-title">Générateur – Ordre de Réparation</p>
+
+<div class="toolbar">
+  <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimer / PDF</button>
+  <button class="btn btn-secondary" onclick="calculTotal()">🔄 Calculer le total</button>
+  <button class="btn btn-danger" onclick="resetForm()">↺ Réinitialiser</button>
+</div>
+
+<div id="document">
+
+  <!-- ── TITRE ── -->
+  <div class="doc-title">ORDRE DE RÉPARATION</div>
+
+  <!-- ── EN-TÊTE ── -->
+  <div class="header-block">
+    <div class="header-logo">
+      <!-- Logo SVG stylisé Brocéliande -->
+      <div class="logo-circle">
+        <svg viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="22" cy="22" r="21" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1"/>
+          <!-- forêt stylisée -->
+          <polygon points="22,6 28,20 16,20" fill="rgba(255,255,255,.85)"/>
+          <polygon points="18,14 24,26 12,26" fill="rgba(255,255,255,.6)"/>
+          <polygon points="26,14 32,26 20,26" fill="rgba(255,255,255,.6)"/>
+          <rect x="20" y="26" width="4" height="6" fill="rgba(255,255,255,.5)" rx="1"/>
+          <!-- arc texte -->
+          <text x="22" y="40" text-anchor="middle" font-size="5" fill="white" font-family="Arial">Brocéliande</text>
+        </svg>
+      </div>
+      <div class="logo-text-block">
+        <span class="logo-name">Brocéliande</span>
+        Cité scolaire de Brocéliande<br>
+        4 avenue de Brocéliande<br>
+        Bellevue – Coëtquidan<br>
+        56380 GUER
+      </div>
+    </div>
+
+    <div class="header-info">
+      <div class="header-info-top">
+        <div class="header-cell">
+          <label>Date de réception</label>
+          <input type="date" id="dateReception">
+        </div>
+        <div class="header-cell" style="background:#f5f5f5;">
+          <div class="cell-label-dark" style="margin: -5px -8px 4px; padding: 3px 8px;">Ordre de réparation</div>
+          <div class="num-display">N <input id="numOrdre" style="width:90px;font-weight:700;font-size:13px;border:none;border-bottom:1px solid #bbb;outline:none;background:transparent;" placeholder="99/°25-26"></div>
+        </div>
+      </div>
+      <div class="header-cell" style="background:#f5f5f5; flex:1;">
+        <div class="cell-label-dark" style="margin: -5px -8px 4px; padding: 3px 8px;">Professeur Référent</div>
+        <input type="text" id="professeur" placeholder="Nom du professeur référent">
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CLIENT ── -->
+  <div class="client-block">
+    <div class="client-left">
+      <div class="client-row">
+        <label><strong>Client (Nom, prénom) :</strong></label>
+        <input type="text" id="clientNom" placeholder="Nom Prénom" style="flex:1;">
+      </div>
+      <div class="client-row">
+        <span>📍</span>
+        <input type="text" id="clientAdresse" placeholder="Adresse" style="flex:1;">
+      </div>
+      <div class="client-row">
+        <span>📞</span>
+        <input type="text" id="clientTel" placeholder="Téléphone" style="flex:1;">
+      </div>
+      <div class="client-row">
+        <span>✉️</span>
+        <input type="text" id="clientEmail" placeholder="E-mail" style="flex:1;">
+      </div>
+    </div>
+    <div class="client-right">
+      <div class="cell-label-dark2">Professeur Référent</div>
+      <input type="text" id="professeur2" placeholder="Professeur référent">
+    </div>
+  </div>
+
+  <!-- ── APPAREIL ── -->
+  <div class="section-label" style="margin-top:10px;">Description de l'appareil</div>
+  <div class="device-block">
+    <div class="device-grid">
+      <div class="device-cell">
+        <label>Type d'appareil</label>
+        <select id="typeAppareil">
+          <option value="">-- Sélectionner --</option>
+          <option>Ordinateur portable</option>
+          <option>Ordinateur fixe</option>
+          <option>Imprimante</option>
+          <option>Tablette</option>
+          <option>Smartphone</option>
+          <option>Autre</option>
+        </select>
+      </div>
+      <div class="device-cell">
+        <label>Marque / Modèle</label>
+        <input type="text" id="marque" placeholder="ex : Dell Latitude 5410">
+      </div>
+      <div class="device-cell">
+        <label>Numéro de série</label>
+        <input type="text" id="serie" placeholder="S/N">
+      </div>
+    </div>
+    <div class="device-grid" style="border-top: 1px solid #aaa;">
+      <div class="device-cell">
+        <label>État à la réception</label>
+        <input type="text" id="etat" placeholder="Bon / Endommagé / ...">
+      </div>
+      <div class="device-cell">
+        <label>Accessoires fournis</label>
+        <input type="text" id="accessoires" placeholder="Chargeur, souris, ...">
+      </div>
+      <div class="device-cell">
+        <label>Mot de passe (si fourni)</label>
+        <input type="text" id="motdepasse" placeholder="•••••••">
+      </div>
+    </div>
+    <div class="description-area">
+      <label>Description de la panne / Travaux demandés</label>
+      <textarea id="description" placeholder="Décrire le problème constaté et les travaux à effectuer..."></textarea>
+    </div>
+  </div>
+
+  <!-- ── TABLEAU FOURNITURES ── -->
+  <div class="fournitures-section">
+    <table class="table-fournitures" id="tableFournitures">
+      <thead>
+        <tr>
+          <th class="col-designation">Forfait / Fournitures / Consommables :</th>
+          <th class="col-qte">Qté :</th>
+          <th class="col-ref">Référence :</th>
+          <th class="col-prix">Prix total TTC :</th>
+        </tr>
+      </thead>
+      <tbody id="lignesFournitures">
+        <!-- lignes dynamiques -->
+        <tr>
+          <td><input type="text" placeholder="Désignation..."></td>
+          <td><input type="number" min="0" step="1" placeholder="1" oninput="calculTotal()"></td>
+          <td><input type="text" placeholder="Référence..."></td>
+          <td><input type="number" min="0" step="0.01" placeholder="0,00 €" oninput="calculTotal()"></td>
+        </tr>
+        <tr>
+          <td><input type="text" placeholder="Désignation..."></td>
+          <td><input type="number" min="0" step="1" placeholder="1" oninput="calculTotal()"></td>
+          <td><input type="text" placeholder="Référence..."></td>
+          <td><input type="number" min="0" step="0.01" placeholder="0,00 €" oninput="calculTotal()"></td>
+        </tr>
+        <tr>
+          <td><input type="text" placeholder="Désignation..."></td>
+          <td><input type="number" min="0" step="1" placeholder="1" oninput="calculTotal()"></td>
+          <td><input type="text" placeholder="Référence..."></td>
+          <td><input type="number" min="0" step="0.01" placeholder="0,00 €" oninput="calculTotal()"></td>
+        </tr>
+        <tr>
+          <td><input type="text" placeholder="Désignation..."></td>
+          <td><input type="number" min="0" step="1" placeholder="1" oninput="calculTotal()"></td>
+          <td><input type="text" placeholder="Référence..."></td>
+          <td><input type="number" min="0" step="0.01" placeholder="0,00 €" oninput="calculTotal()"></td>
+        </tr>
+        <!-- Lignes fixes -->
+        <tr class="row-fixed">
+          <td>Forfait recyclage</td>
+          <td style="text-align:center;">1</td>
+          <td>FRC</td>
+          <td style="text-align:right;">2 €</td>
+        </tr>
+        <tr class="row-fixed">
+          <td>Forfait petite fourniture</td>
+          <td style="text-align:center;">1</td>
+          <td>FPF</td>
+          <td style="text-align:right;">5 €</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <button class="add-row-btn" onclick="ajouterLigne()">+ Ajouter une ligne</button>
+
+    <!-- Main d'œuvre -->
+    <div class="mo-row">
+      <div class="mo-label">Main d'œuvre (nb d'heures)</div>
+      <div class="mo-heures">
+        <input type="number" id="nbHeures" min="0" step="0.5" placeholder="0" oninput="calculTotal()">
+      </div>
+      <div class="mo-taux-label">Taux horaire :</div>
+      <div class="mo-taux">
+        <input type="number" id="tauxHoraire" min="0" step="0.01" placeholder="0,00 €" oninput="calculTotal()">
+      </div>
+      <div class="mo-total-label">TOTAL TTC :</div>
+      <div class="mo-total">
+        <input type="text" id="totalTTC" placeholder="0,00 €" readonly>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SIGNATURES ── -->
+  <div class="signatures-block">
+    <div class="sig-header-row">
+      <div class="sig-header-cell">Date de restitution</div>
+      <div class="sig-header-cell">Signature référent</div>
+      <div class="sig-header-cell">Signature client</div>
+      <div class="sig-header-cell">Signature DDF</div>
+      <div class="sig-header-cell">Visa Gestion</div>
+    </div>
+    <div class="sig-body-row">
+      <div class="sig-cell">
+        <input type="date" id="dateRestitution">
+      </div>
+      <div class="sig-cell"></div>
+      <div class="sig-cell"></div>
+      <div class="sig-cell"></div>
+      <div class="sig-cell"></div>
+    </div>
+  </div>
+
+</div><!-- /document -->
+
+<script>
+  function ajouterLigne() {
+    const tbody = document.getElementById('lignesFournitures');
+    // Insérer avant les lignes fixes (les 2 dernières)
+    const rows = tbody.querySelectorAll('tr');
+    const insertBefore = rows[rows.length - 2];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" placeholder="Désignation..."></td>
+      <td><input type="number" min="0" step="1" placeholder="1" oninput="calculTotal()"></td>
+      <td><input type="text" placeholder="Référence..."></td>
+      <td style="display:flex;align-items:center;">
+        <input type="number" min="0" step="0.01" placeholder="0,00 €" oninput="calculTotal()" style="flex:1;">
+        <button class="delete-row-btn" onclick="this.closest('tr').remove();calculTotal()">✕</button>
+      </td>
+    `;
+    tbody.insertBefore(tr, insertBefore);
+  }
+
+  function calculTotal() {
+    // Somme des lignes dynamiques (prix)
+    const prixInputs = document.querySelectorAll('#lignesFournitures tr:not(.row-fixed) td:last-child input[type=number]');
+    let somme = 0;
+    prixInputs.forEach(inp => {
+      const v = parseFloat(inp.value);
+      if (!isNaN(v)) somme += v;
+    });
+    // Forfaits fixes
+    somme += 2 + 5; // FRC + FPF
+
+    // Main d'œuvre
+    const heures = parseFloat(document.getElementById('nbHeures').value) || 0;
+    const taux   = parseFloat(document.getElementById('tauxHoraire').value) || 0;
+    somme += heures * taux;
+
+    document.getElementById('totalTTC').value = somme.toFixed(2) + ' €';
+  }
+
+  function resetForm() {
+    if (!confirm('Réinitialiser tous les champs ?')) return;
+    document.querySelectorAll('input:not([readonly]), select, textarea').forEach(el => {
+      if (el.tagName === 'SELECT') el.selectedIndex = 0;
+      else el.value = '';
+    });
+    // Remettre les lignes dynamiques ajoutées
+    const addedRows = document.querySelectorAll('#lignesFournitures tr:not(.row-fixed)');
+    addedRows.forEach((r, i) => { if (i > 3) r.remove(); });
+    document.getElementById('totalTTC').value = '';
+  }
+
+  // Sync professeur fields
+  document.getElementById('professeur').addEventListener('input', e => {
+    document.getElementById('professeur2').value = e.target.value;
+  });
+  document.getElementById('professeur2').addEventListener('input', e => {
+    document.getElementById('professeur').value = e.target.value;
+  });
+</script>
+
+</body>
+</html>
